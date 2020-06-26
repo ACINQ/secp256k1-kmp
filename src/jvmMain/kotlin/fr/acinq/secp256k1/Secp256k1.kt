@@ -39,8 +39,6 @@ public actual object Secp256k1 {
 
     public actual fun cleanup(): Unit = NativeSecp256k1.cleanup()
 
-    public actual fun cloneContext(): Long = NativeSecp256k1.cloneContext()
-
     public actual fun privKeyNegate(privkey: ByteArray): ByteArray = NativeSecp256k1.privKeyNegate(privkey)
 
     public actual fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray = NativeSecp256k1.privKeyTweakMul(privkey, tweak)

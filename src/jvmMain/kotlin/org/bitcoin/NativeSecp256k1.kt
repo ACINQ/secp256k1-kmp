@@ -226,16 +226,6 @@ public object NativeSecp256k1 {
     }
 
     @JvmStatic
-    public fun cloneContext(): Long {
-        r.lock()
-        return try {
-            secp256k1_ctx_clone(Secp256k1Context.getContext())
-        } finally {
-            r.unlock()
-        }
-    }
-
-    @JvmStatic
     @Throws(AssertFailException::class)
     public fun privKeyNegate(privkey: ByteArray): ByteArray {
         require(privkey.size == 32)
@@ -343,7 +333,7 @@ public object NativeSecp256k1 {
     @Throws(AssertFailException::class)
     public fun pubKeyTweakAdd(pubkey: ByteArray, tweak: ByteArray): ByteArray {
         require(pubkey.size == 33 || pubkey.size == 65)
-        val byteBuff = pack(pubkey, tweak!!)
+        val byteBuff = pack(pubkey, tweak)
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
@@ -476,7 +466,6 @@ public object NativeSecp256k1 {
         }
     }
 
-    @JvmStatic private external fun secp256k1_ctx_clone(context: Long): Long
     @JvmStatic private external fun secp256k1_context_randomize(byteBuff: ByteBuffer, context: Long): Int
     @JvmStatic private external fun secp256k1_privkey_negate(byteBuff: ByteBuffer, context: Long): Array<ByteArray>
     @JvmStatic private external fun secp256k1_privkey_tweak_add(byteBuff: ByteBuffer, context: Long): Array<ByteArray>

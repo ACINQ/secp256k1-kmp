@@ -35,8 +35,6 @@ public expect object Secp256k1 {
 
     public fun cleanup()
 
-    public fun cloneContext(): Long
-
     public fun privKeyNegate(privkey: ByteArray): ByteArray
 
     public fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray
