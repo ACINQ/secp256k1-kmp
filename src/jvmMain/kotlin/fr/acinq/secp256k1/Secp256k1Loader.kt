@@ -26,7 +26,7 @@ import java.util.*
  *
  * @author leo
  */
-public object Secp256k1Loader {
+internal actual object Secp256k1Loader {
     private var extracted = false
 
     /**
@@ -38,13 +38,12 @@ public object Secp256k1Loader {
     @JvmStatic
     @Synchronized
     @Throws(Exception::class)
-    public fun initialize(): Boolean {
+    actual fun initialize() {
         // only cleanup before the first extract
         if (!extracted) {
             cleanup()
         }
         loadSecp256k1NativeLibrary()
-        return extracted
     }
 
     private val tempDir: File
@@ -55,7 +54,7 @@ public object Secp256k1Loader {
      * on VM-Exit (bug #80)
      */
     @JvmStatic
-    public fun cleanup() {
+    fun cleanup() {
         val tempFolder = tempDir.absolutePath
         val dir = File(tempFolder)
         val nativeLibFiles = dir.listFiles(object : FilenameFilter {

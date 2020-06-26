@@ -9,6 +9,7 @@ build/
 .gradle
 local.properties
 .gradletasknamecache
+.cxx
 
 # OS
 .DS_Store

@@ -34,23 +34,7 @@ public object Secp256k1Context {
     @JvmStatic private external fun secp256k1_init_context(): Long
 
     init { //static initializer
-        var isEnabled = true
-        var contextRef: Long = -1
-        try {
-            if ("The Android Project" == System.getProperty("java.vm.vendor")) {
-                System.loadLibrary("secp256k1")
-            } else {
-                initialize()
-            }
-            contextRef = secp256k1_init_context()
-        } catch (e: UnsatisfiedLinkError) {
-            println("Cannot load secp256k1 native library: $e")
-            isEnabled = false
-        } catch (e: Exception) {
-            println("Cannot load secp256k1 native library: $e")
-            isEnabled = false
-        }
-        this.isEnabled = isEnabled
-        this.context = contextRef
+        isEnabled = true
+        context = secp256k1_init_context()
     }
 }

@@ -78,7 +78,12 @@ public object NativeSecp256k1 {
         val byteBuff = pack(data, signature, pub)
         r.lock()
         return try {
-            secp256k1_ecdsa_verify(byteBuff, Secp256k1Context.getContext(), signature.size, pub.size) == 1
+            secp256k1_ecdsa_verify(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                signature.size,
+                pub.size
+            ) == 1
         } finally {
             r.unlock()
         }
@@ -100,14 +105,21 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ecdsa_sign(byteBuff, Secp256k1Context.getContext())
+            secp256k1_ecdsa_sign(
+                byteBuff,
+                Secp256k1Context.getContext()
+            )
         } finally {
             r.unlock()
         }
         val sigArr = retByteArray[0]
         val sigLen = BigInteger(byteArrayOf(retByteArray[1][0])).toInt()
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
-        NativeSecp256k1Util.assertEquals(sigArr.size, sigLen, "Got bad signature length.")
+        NativeSecp256k1Util.assertEquals(
+            sigArr.size,
+            sigLen,
+            "Got bad signature length."
+        )
         return if (retVal == 0) ByteArray(0) else sigArr
     }
 
@@ -130,14 +142,21 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ecdsa_sign_compact(byteBuff, Secp256k1Context.getContext())
+            secp256k1_ecdsa_sign_compact(
+                byteBuff,
+                Secp256k1Context.getContext()
+            )
         } finally {
             r.unlock()
         }
         val sigArr = retByteArray[0]
         val sigLen = BigInteger(byteArrayOf(retByteArray[1][0])).toInt()
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
-        NativeSecp256k1Util.assertEquals(sigArr.size, sigLen, "Got bad signature length.")
+        NativeSecp256k1Util.assertEquals(
+            sigArr.size,
+            sigLen,
+            "Got bad signature length."
+        )
         return if (retVal == 0) ByteArray(0) else sigArr
     }
 
@@ -153,7 +172,10 @@ public object NativeSecp256k1 {
         val byteBuff = pack(seckey)
         r.lock()
         return try {
-            secp256k1_ec_seckey_verify(byteBuff, Secp256k1Context.getContext()) == 1
+            secp256k1_ec_seckey_verify(
+                byteBuff,
+                Secp256k1Context.getContext()
+            ) == 1
         } finally {
             r.unlock()
         }
@@ -175,7 +197,10 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ec_pubkey_create(byteBuff, Secp256k1Context.getContext())
+            secp256k1_ec_pubkey_create(
+                byteBuff,
+                Secp256k1Context.getContext()
+            )
         } finally {
             r.unlock()
         }
@@ -199,12 +224,16 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ec_pubkey_parse(byteBuff, Secp256k1Context.getContext(), pubkey.size)
+            secp256k1_ec_pubkey_parse(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                pubkey.size
+            )
         } finally {
             r.unlock()
         }
         val pubArr = retByteArray[0]
-        val pubLen = BigInteger(byteArrayOf(retByteArray[1][0])).toInt()
+        BigInteger(byteArrayOf(retByteArray[1][0])).toInt()
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
         NativeSecp256k1Util.assertEquals(pubArr.size, 65, "Got bad pubkey length.")
         return if (retVal == 0) ByteArray(0) else pubArr
@@ -233,14 +262,21 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_privkey_negate(byteBuff, Secp256k1Context.getContext())
+            secp256k1_privkey_negate(
+                byteBuff,
+                Secp256k1Context.getContext()
+            )
         } finally {
             r.unlock()
         }
         val privArr = retByteArray[0]
         val privLen: Int = BigInteger(byteArrayOf(retByteArray[1][0])).toInt() and 0xFF
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
-        NativeSecp256k1Util.assertEquals(privArr.size, privLen, "Got bad privkey length.")
+        NativeSecp256k1Util.assertEquals(
+            privArr.size,
+            privLen,
+            "Got bad privkey length."
+        )
         NativeSecp256k1Util.assertEquals(retVal, 1, "Failed return value check.")
         return privArr
     }
@@ -257,18 +293,25 @@ public object NativeSecp256k1 {
     @Throws(AssertFailException::class)
     public fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray {
         require(privkey.size == 32)
-        val byteBuff = pack(privkey, tweak!!)
+        val byteBuff = pack(privkey, tweak)
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_privkey_tweak_mul(byteBuff, Secp256k1Context.getContext())
+            secp256k1_privkey_tweak_mul(
+                byteBuff,
+                Secp256k1Context.getContext()
+            )
         } finally {
             r.unlock()
         }
         val privArr = retByteArray[0]
         val privLen: Int = BigInteger(byteArrayOf(retByteArray[1][0])).toInt() and 0xFF
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
-        NativeSecp256k1Util.assertEquals(privArr.size, privLen, "Got bad privkey length.")
+        NativeSecp256k1Util.assertEquals(
+            privArr.size,
+            privLen,
+            "Got bad privkey length."
+        )
         NativeSecp256k1Util.assertEquals(retVal, 1, "Failed return value check.")
         return privArr
     }
@@ -285,11 +328,14 @@ public object NativeSecp256k1 {
     @Throws(AssertFailException::class)
     public fun privKeyTweakAdd(privkey: ByteArray, tweak: ByteArray): ByteArray {
         require(privkey.size == 32)
-        val byteBuff = pack(privkey, tweak!!)
+        val byteBuff = pack(privkey, tweak)
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_privkey_tweak_add(byteBuff, Secp256k1Context.getContext())
+            secp256k1_privkey_tweak_add(
+                byteBuff,
+                Secp256k1Context.getContext()
+            )
         } finally {
             r.unlock()
         }
@@ -309,7 +355,11 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_pubkey_negate(byteBuff, Secp256k1Context.getContext(), pubkey.size)
+            secp256k1_pubkey_negate(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                pubkey.size
+            )
         } finally {
             r.unlock()
         }
@@ -337,7 +387,11 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_pubkey_tweak_add(byteBuff, Secp256k1Context.getContext(), pubkey.size)
+            secp256k1_pubkey_tweak_add(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                pubkey.size
+            )
         } finally {
             r.unlock()
         }
@@ -361,11 +415,15 @@ public object NativeSecp256k1 {
     @Throws(AssertFailException::class)
     public fun pubKeyTweakMul(pubkey: ByteArray, tweak: ByteArray): ByteArray {
         require(pubkey.size == 33 || pubkey.size == 65)
-        val byteBuff = pack(pubkey, tweak!!)
+        val byteBuff = pack(pubkey, tweak)
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_pubkey_tweak_mul(byteBuff, Secp256k1Context.getContext(), pubkey.size)
+            secp256k1_pubkey_tweak_mul(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                pubkey.size
+            )
         } finally {
             r.unlock()
         }
@@ -386,7 +444,12 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ec_pubkey_add(byteBuff, Secp256k1Context.getContext(), pubkey1.size, pubkey2.size)
+            secp256k1_ec_pubkey_add(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                pubkey1.size,
+                pubkey2.size
+            )
         } finally {
             r.unlock()
         }
@@ -414,7 +477,11 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ecdh(byteBuff, Secp256k1Context.getContext(), pubkey.size)
+            secp256k1_ecdh(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                pubkey.size
+            )
         } finally {
             r.unlock()
         }
@@ -434,7 +501,11 @@ public object NativeSecp256k1 {
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ecdsa_recover(byteBuff, Secp256k1Context.getContext(), recid)
+            secp256k1_ecdsa_recover(
+                byteBuff,
+                Secp256k1Context.getContext(),
+                recid
+            )
         } finally {
             r.unlock()
         }
@@ -460,7 +531,10 @@ public object NativeSecp256k1 {
         val byteBuff = pack(seed)
         w.lock()
         return try {
-            secp256k1_context_randomize(byteBuff, Secp256k1Context.getContext()) == 1
+            secp256k1_context_randomize(
+                byteBuff,
+                Secp256k1Context.getContext()
+            ) == 1
         } finally {
             w.unlock()
         }

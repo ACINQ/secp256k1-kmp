@@ -17,7 +17,10 @@
 package fr.acinq.secp256k1
 
 import org.bitcoin.NativeSecp256k1
-import java.math.BigInteger
+
+internal expect object Secp256k1Loader {
+    fun initialize()
+}
 
 public actual object Secp256k1 {
 

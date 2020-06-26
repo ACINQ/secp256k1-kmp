@@ -19,9 +19,9 @@ make
 cd ..
 
 mkdir -p build/$TARGET
-cp -r secp256k1/.libs/libsecp256k1.a build/$TARGET/
+cp -v secp256k1/.libs/libsecp256k1.a build/$TARGET/
 
-GCC=gcc
+CC=gcc
 JNI_HEADERS=$TARGET
 
 if [ "$TARGET" == "linux" ]; then
@@ -31,11 +31,9 @@ elif [ "$TARGET" == "darwin" ]; then
   ADD_LIB=-lgmp
 elif [ "$TARGET" == "mingw" ]; then
   OUTFILE=secp256k1-jni.dll
-  GCC=/usr/src/mxe/usr/bin/x86_64-w64-mingw32.static-gcc
+  CC=/usr/src/mxe/usr/bin/x86_64-w64-mingw32.static-gcc
   JNI_HEADERS=linux
-  GCC_OPTS="-fpic"
+  CC_OPTS="-fpic"
 fi
 
-echo $GCC -shared $GCC_OPTS -o build/$TARGET/$OUTFILE jni/src/org_bitcoin_NativeSecp256k1.c jni/src/org_bitcoin_Secp256k1Context.c -Ijni/headers/ -Ijni/headers/$JNI_HEADERS/ -Isecp256k1/ -lsecp256k1 -Lbuild/$TARGET/ $ADD_LIB
-
-$GCC -shared $GCC_OPTS -o build/$TARGET/$OUTFILE jni/src/org_bitcoin_NativeSecp256k1.c jni/src/org_bitcoin_Secp256k1Context.c -Ijni/headers/ -Ijni/headers/$JNI_HEADERS/ -Isecp256k1/ -lsecp256k1 -Lbuild/$TARGET/ $ADD_LIB
+$CC -shared $CC_OPTS -o build/$TARGET/$OUTFILE jni/src/org_bitcoin_NativeSecp256k1.c jni/src/org_bitcoin_Secp256k1Context.c -Ijni/headers/ -Ijni/headers/$JNI_HEADERS/ -Isecp256k1/ -lsecp256k1 -Lbuild/$TARGET/ $ADD_LIB

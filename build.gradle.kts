@@ -1,11 +1,13 @@
 plugins {
     kotlin("multiplatform") version "1.4-M2-mt"
+    id("com.android.library") version "4.0.0"
 }
 group = "fr.acinq.phoenix"
 version = "1.0-1.4-M2"
 
 repositories {
     jcenter()
+    google()
     maven(url = "https://dl.bintray.com/kotlin/kotlin-eap")
     maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
@@ -27,6 +29,13 @@ kotlin {
         }
     }
 
+    val jvmAndAndroidMain by sourceSets.creating {
+        dependsOn(commonMain)
+        dependencies {
+            implementation(kotlin("stdlib-jdk8"))
+        }
+    }
+
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
@@ -35,11 +44,21 @@ kotlin {
             dependsOn("copyJni")
             from(buildDir.resolve("jniResources"))
         }
-        compilations["main"].dependencies {
-            implementation(kotlin("stdlib-jdk8"))
-        }
+        compilations["main"].defaultSourceSet.dependsOn(jvmAndAndroidMain)
         compilations["test"].dependencies {
             implementation(kotlin("test-junit"))
+        }
+    }
+
+    android {
+        compilations.all {
+            kotlinOptions.jvmTarget = "1.8"
+        }
+        sourceSets["androidMain"].dependsOn(jvmAndAndroidMain)
+        sourceSets["androidTest"].dependencies {
+            implementation(kotlin("test-junit"))
+            implementation("androidx.test.ext:junit:1.1.1")
+            implementation("androidx.test.espresso:espresso-core:3.2.0")
         }
     }
 
@@ -75,6 +94,26 @@ kotlin {
 
 }
 
+android {
+    defaultConfig {
+        compileSdkVersion(30)
+        minSdkVersion(21)
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {}
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            setPath("src/androidMain/CMakeLists.txt")
+        }
+    }
+    ndkVersion = "21.3.6528147"
+
+    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+}
+
 val buildSecp256k1 by tasks.creating { group = "build" }
 fun creatingBuildSecp256k1(target: String, cross: String? = null, env: String = "", configuration: Task.() -> Unit = {}) = tasks.creating(Exec::class) {
     group = "build"
@@ -95,6 +134,14 @@ val buildSecp256k1Darwin by creatingBuildSecp256k1("darwin")
 val buildSecp256k1Linux by creatingBuildSecp256k1("linux", cross = if (currentOs.isMacOsX) "linux-x64" else null)
 val buildSecp256k1Mingw by creatingBuildSecp256k1("mingw", cross = "windows-x64", env = "CONF_OPTS=--host=x86_64-w64-mingw32")
 
+val copyJni by tasks.creating(Sync::class) {
+    dependsOn(buildSecp256k1)
+    from(projectDir.resolve("native/build/linux/libsecp256k1-jni.so")) { rename { "libsecp256k1-jni-linux-x86_64.so" } }
+    from(projectDir.resolve("native/build/darwin/libsecp256k1-jni.dylib")) { rename { "libsecp256k1-jni-darwin-x86_64.dylib" } }
+    from(projectDir.resolve("native/build/mingw/secp256k1-jni.dll")) { rename { "secp256k1-jni-mingw-x86_64.dll" } }
+    into(buildDir.resolve("jniResources/fr/acinq/secp256k1/native"))
+}
+
 val buildSecp256k1Ios by tasks.creating(Exec::class) {
     group = "build"
     buildSecp256k1.dependsOn(this)
@@ -106,10 +153,42 @@ val buildSecp256k1Ios by tasks.creating(Exec::class) {
     commandLine("./build-ios.sh")
 }
 
-val copyJni by tasks.creating(Sync::class) {
-    dependsOn(buildSecp256k1)
-    from(projectDir.resolve("native/build/linux/libsecp256k1-jni.so")) { rename { "libsecp256k1-jni-linux-x86_64.so" } }
-    from(projectDir.resolve("native/build/darwin/libsecp256k1-jni.dylib")) { rename { "libsecp256k1-jni-darwin-x86_64.dylib" } }
-    from(projectDir.resolve("native/build/mingw/secp256k1-jni.dll")) { rename { "secp256k1-jni-mingw-x86_64.dll" } }
-    into(buildDir.resolve("jniResources/fr/acinq/secp256k1/native"))
+val buildSecp256k1Android by tasks.creating { group = "build" }
+fun creatingBuildSecp256k1Android(arch: String) = tasks.creating(Exec::class) {
+    group = "build"
+    buildSecp256k1Android.dependsOn(this)
+
+    inputs.files(projectDir.resolve("native/build-android.sh"))
+    outputs.dir(projectDir.resolve("native/build/android/$arch"))
+
+    workingDir = projectDir.resolve("native")
+
+    val toolchain = when {
+        currentOs.isMacOsX -> "darwin-x86_64"
+        else -> error("Cannot build for Android on this OS")
+    }
+    environment("TOOLCHAIN", toolchain)
+    environment("ARCH", arch)
+    environment("ANDROID_NDK", android.ndkDirectory)
+    commandLine("./build-android.sh")
+}
+val buildSecp256k1AndroidX86_64 by creatingBuildSecp256k1Android("x86_64")
+val buildSecp256k1AndroidX86 by creatingBuildSecp256k1Android("x86")
+val buildSecp256k1AndroidArm64v8a by creatingBuildSecp256k1Android("arm64-v8a")
+val buildSecp256k1AndroidArmeabiv7a by creatingBuildSecp256k1Android("armeabi-v7a")
+
+afterEvaluate {
+    configure(listOf("Debug", "Release").map { tasks["externalNativeBuild$it"] }) {
+        dependsOn(buildSecp256k1Android)
+    }
+}
+
+tasks["clean"].doLast {
+    delete(projectDir.resolve("native/build"))
+}
+
+afterEvaluate {
+    tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
+        enabled = false
+    }
 }
