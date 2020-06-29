@@ -93,6 +93,32 @@ kotlin {
 
 }
 
+// Disable cross compilation
+afterEvaluate {
+    val currentOs = org.gradle.internal.os.OperatingSystem.current()
+    val targets = when {
+        currentOs.isLinux -> listOf()
+        currentOs.isMacOsX -> listOf("linux")
+        currentOs.isWindows -> listOf("linux")
+        else -> listOf("linux")
+    }.mapNotNull { kotlin.targets.findByName(it) as? org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget }
+
+    configure(targets) {
+        compilations.all {
+            cinterops.all { tasks[interopProcessingTaskName].enabled = false }
+            compileKotlinTask.enabled = false
+            tasks[processResourcesTaskName].enabled = false
+        }
+        binaries.all { linkTask.enabled = false }
+
+        mavenPublication {
+            val publicationToDisable = this
+            tasks.withType<AbstractPublishToMaven>().all { onlyIf { publication != publicationToDisable } }
+            tasks.withType<GenerateModuleMetadata>().all { onlyIf { publication.get() != publicationToDisable } }
+        }
+    }
+}
+
 android {
     defaultConfig {
         compileSdkVersion(30)
@@ -117,14 +143,14 @@ val buildSecp256k1 by tasks.creating { group = "build" }
 sealed class Cross {
     abstract fun cmd(target: String, nativeDir: File): List<String>
     class DockCross(val cross: String) : Cross() {
-        override fun cmd(target: String, nativeDir: File): List<String> = listOf("./dockcross-$cross", "bash", "-c", "TARGET=$target ./build.sh")
+        override fun cmd(target: String, nativeDir: File): List<String> = listOf("./dockcross-$cross", "bash", "-c", "CROSS=1 TARGET=$target ./build.sh")
     }
     class MultiArch(val crossTriple: String) : Cross() {
         override fun cmd(target: String, nativeDir: File): List<String> {
             val uid = Runtime.getRuntime().exec("id -u").inputStream.use { it.reader().readText() }.trim().toInt()
             return listOf(
                 "docker", "run", "--rm", "-v", "${nativeDir.absolutePath}:/workdir",
-                "-e", "CROSS_TRIPLE=$crossTriple", "-e", "TARGET=$target", "-e", "TO_UID=$uid",
+                "-e", "CROSS_TRIPLE=$crossTriple", "-e", "TARGET=$target", "-e", "TO_UID=$uid", "-e", "CROSS=1",
                 "multiarch/crossbuild", "./build.sh"
             )
         }
