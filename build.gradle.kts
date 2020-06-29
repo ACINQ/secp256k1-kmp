@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 group = "fr.acinq.secp256k1"
-version = "0.2.0-1.4-M2"
+version = "0.2.1-1.4-M2"
 
 repositories {
     jcenter()
@@ -51,6 +51,7 @@ kotlin {
     }
 
     android {
+        publishLibraryVariants("release", "debug")
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
         }
@@ -129,6 +130,11 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
     externalNativeBuild {
         cmake {
             setPath("src/androidMain/CMakeLists.txt")
@@ -137,6 +143,12 @@ android {
     ndkVersion = "21.3.6528147"
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+
+    afterEvaluate {
+        tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
+            enabled = false
+        }
+    }
 }
 
 val buildSecp256k1 by tasks.creating { group = "build" }
@@ -229,12 +241,6 @@ afterEvaluate {
 
 tasks["clean"].doLast {
     delete(projectDir.resolve("native/build"))
-}
-
-afterEvaluate {
-    tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
-        enabled = false
-    }
 }
 
 publishing {

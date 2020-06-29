@@ -1,13 +1,9 @@
 pluginManagement {
     repositories {
-        mavenCentral()
         google()
-        gradlePluginPortal()
-        maven {
-            url = uri("https://dl.bintray.com/kotlin/kotlin-eap")
-        }
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
-        maven("https://plugins.gradle.org/m2/")
+        gradlePluginPortal()
+        jcenter()
     }
 
     resolutionStrategy {
