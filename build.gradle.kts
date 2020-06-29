@@ -1,15 +1,15 @@
 plugins {
     kotlin("multiplatform") version "1.4-M2-mt"
     id("com.android.library") version "4.0.0"
+    `maven-publish`
 }
-group = "fr.acinq.phoenix"
-version = "1.0-1.4-M2"
+group = "fr.acinq.secp256k1"
+version = "0.1.0-1.4-M2"
 
 repositories {
     jcenter()
     google()
     maven(url = "https://dl.bintray.com/kotlin/kotlin-eap")
-    maven("https://dl.bintray.com/kotlin/kotlin-eap")
 }
 
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
@@ -66,7 +66,6 @@ kotlin {
         compilations["main"].cinterops {
             val libsecp256k1 by creating {
                 includeDirs.headerFilterOnly(project.file("native/secp256k1/include/"))
-//                includeDirs("/usr/local/lib")
                 tasks[interopProcessingTaskName].dependsOn("buildSecp256k1Ios")
             }
         }
@@ -209,5 +208,46 @@ tasks["clean"].doLast {
 afterEvaluate {
     tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
         enabled = false
+    }
+}
+
+publishing {
+    val snapshotName: String? by project
+    val snapshotNumber: String? by project
+
+    val bintrayUsername: String? = (properties["bintrayUsername"] as String?) ?: System.getenv("BINTRAY_USER")
+    val bintrayApiKey: String? = (properties["bintrayApiKey"] as String?) ?: System.getenv("BINTRAY_APIKEY")
+    if (bintrayUsername == null || bintrayApiKey == null) logger.warn("Skipping bintray configuration as bintrayUsername or bintrayApiKey is not defined")
+    else {
+        val btRepo = if (snapshotNumber != null) "snapshots" else "libs"
+        repositories {
+            maven {
+                name = "bintray"
+                setUrl("https://api.bintray.com/maven/acinq/$btRepo/${project.name}/;publish=0")
+                credentials {
+                    username = bintrayUsername
+                    password = bintrayApiKey
+                }
+            }
+        }
+    }
+
+    publications.withType<MavenPublication>().configureEach {
+        if (snapshotName != null && snapshotNumber != null) version = "${project.version}-${snapshotName}-${snapshotNumber}"
+        pom {
+            description.set("Bitcoin's secp256k1 library ported to Kotlin/Multiplatform for JVM, Android, iOS & Linux")
+            url.set("https://github.com/ACINQ/secp256k1-kmp")
+            licenses {
+                name.set("Apache License v2.0")
+                url.set("https://www.apache.org/licenses/LICENSE-2.0")
+            }
+            issueManagement {
+                system.set("Github")
+                url.set("https://github.com/ACINQ/secp256k1-kmp/issues")
+            }
+            scm {
+                connection.set("https://github.com/ACINQ/secp256k1-kmp.git")
+            }
+        }
     }
 }
