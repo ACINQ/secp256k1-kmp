@@ -30,15 +30,15 @@ public actual object Secp256k1 {
 
     public actual fun verify(data: ByteArray, signature: ByteArray, pub: ByteArray): Boolean = NativeSecp256k1.verify(data, signature, pub)
 
-    public actual fun sign(data: ByteArray, sec: ByteArray): ByteArray = NativeSecp256k1.sign(data, sec)
+    public actual fun sign(data: ByteArray, sec: ByteArray, format: SigFormat): ByteArray = NativeSecp256k1.sign(data, sec, format == SigFormat.COMPACT)
 
-    public actual fun signCompact(data: ByteArray, sec: ByteArray): ByteArray = NativeSecp256k1.signCompact(data, sec)
+    public actual fun signatureNormalize(sig: ByteArray, format: SigFormat): Pair<ByteArray, Boolean> = NativeSecp256k1.signatureNormalize(sig, format == SigFormat.COMPACT)
 
     public actual fun secKeyVerify(seckey: ByteArray): Boolean = NativeSecp256k1.secKeyVerify(seckey)
 
-    public actual fun computePubkey(seckey: ByteArray): ByteArray = NativeSecp256k1.computePubkey(seckey)
+    public actual fun computePubkey(seckey: ByteArray, format: PubKeyFormat): ByteArray = NativeSecp256k1.computePubkey(seckey, format == PubKeyFormat.COMPRESSED)
 
-    public actual fun parsePubkey(pubkey: ByteArray): ByteArray = NativeSecp256k1.parsePubkey(pubkey)
+    public actual fun parsePubkey(pubkey: ByteArray, format: PubKeyFormat): ByteArray = NativeSecp256k1.parsePubkey(pubkey, format == PubKeyFormat.COMPRESSED)
 
     public actual fun cleanup(): Unit = NativeSecp256k1.cleanup()
 
@@ -58,7 +58,7 @@ public actual object Secp256k1 {
 
     public actual fun createECDHSecret(seckey: ByteArray, pubkey: ByteArray): ByteArray = NativeSecp256k1.createECDHSecret(seckey, pubkey)
 
-    public actual fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray = NativeSecp256k1.ecdsaRecover(sig, message, recid)
+    public actual fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int, format: PubKeyFormat): ByteArray = NativeSecp256k1.ecdsaRecover(sig, message, recid, format == PubKeyFormat.COMPRESSED)
 
     public actual fun randomize(seed: ByteArray): Boolean = NativeSecp256k1.randomize(seed)
 

@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 group = "fr.acinq.secp256k1"
-version = "0.1.0-1.4-M2"
+version = "0.2.0-1.4-M2"
 
 repositories {
     jcenter()

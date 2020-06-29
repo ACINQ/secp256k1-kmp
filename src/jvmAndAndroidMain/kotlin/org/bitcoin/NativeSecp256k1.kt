@@ -92,14 +92,15 @@ public object NativeSecp256k1 {
     /**
      * libsecp256k1 Create an ECDSA signature.
      *
-     * @param data Message hash, 32 bytes
-     * @param sec  Secret key, 32 bytes
+     * @param data    Message hash, 32 bytes
+     * @param sec     Secret key, 32 bytes
+     * @param compact True for compact signature, false for DER
      * @return a signature, or an empty array is signing failed
      * @throws AssertFailException in case of failure
      */
     @JvmStatic
     @Throws(AssertFailException::class)
-    public fun sign(data: ByteArray, sec: ByteArray): ByteArray {
+    public fun sign(data: ByteArray, sec: ByteArray, compact: Boolean): ByteArray {
         require(data.size == 32 && sec.size <= 32)
         val byteBuff = pack(data, sec)
         val retByteArray: Array<ByteArray>
@@ -107,6 +108,7 @@ public object NativeSecp256k1 {
         retByteArray = try {
             secp256k1_ecdsa_sign(
                 byteBuff,
+                compact,
                 Secp256k1Context.getContext()
             )
         } finally {
@@ -123,27 +125,18 @@ public object NativeSecp256k1 {
         return if (retVal == 0) ByteArray(0) else sigArr
     }
 
-    /**
-     * libsecp256k1 Create an ECDSA signature.
-     *
-     * @param data Message hash, 32 bytes
-     * @param sec  Secret key, 32 bytes
-     *
-     *
-     * Return values
-     * @return a signature, or an empty array is signing failed
-     * @throws AssertFailException in case of failure
-     */
     @JvmStatic
     @Throws(AssertFailException::class)
-    public fun signCompact(data: ByteArray, sec: ByteArray): ByteArray {
-        require(data.size == 32 && sec.size <= 32)
-        val byteBuff = pack(data, sec)
+    public fun signatureNormalize(sig: ByteArray, compact: Boolean): Pair<ByteArray, Boolean> {
+        require(sig.size == 64 || sig.size in 70..73)
+        val byteBuff = pack(sig)
         val retByteArray: Array<ByteArray>
         r.lock()
         retByteArray = try {
-            secp256k1_ecdsa_sign_compact(
+            secp256k1_ecdsa_normalize(
                 byteBuff,
+                sig.size,
+                compact,
                 Secp256k1Context.getContext()
             )
         } finally {
@@ -152,12 +145,13 @@ public object NativeSecp256k1 {
         val sigArr = retByteArray[0]
         val sigLen = BigInteger(byteArrayOf(retByteArray[1][0])).toInt()
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
+        val retBool = BigInteger(byteArrayOf(retByteArray[1][2])).toInt()
         NativeSecp256k1Util.assertEquals(
             sigArr.size,
             sigLen,
             "Got bad signature length."
         )
-        return if (retVal == 0) ByteArray(0) else sigArr
+        return (if (retVal == 0) ByteArray(0) else sigArr) to (retBool == 1)
     }
 
     /**
@@ -191,7 +185,7 @@ public object NativeSecp256k1 {
     //TODO add a 'compressed' arg
     @JvmStatic
     @Throws(AssertFailException::class)
-    public fun computePubkey(seckey: ByteArray): ByteArray {
+    public fun computePubkey(seckey: ByteArray, compressed: Boolean): ByteArray {
         require(seckey.size == 32)
         val byteBuff = pack(seckey)
         val retByteArray: Array<ByteArray>
@@ -199,6 +193,7 @@ public object NativeSecp256k1 {
         retByteArray = try {
             secp256k1_ec_pubkey_create(
                 byteBuff,
+                compressed,
                 Secp256k1Context.getContext()
             )
         } finally {
@@ -218,7 +213,7 @@ public object NativeSecp256k1 {
      */
     @JvmStatic
     @Throws(AssertFailException::class)
-    public fun parsePubkey(pubkey: ByteArray): ByteArray {
+    public fun parsePubkey(pubkey: ByteArray, compressed: Boolean): ByteArray {
         require(pubkey.size == 33 || pubkey.size == 65)
         val byteBuff = pack(pubkey)
         val retByteArray: Array<ByteArray>
@@ -227,7 +222,8 @@ public object NativeSecp256k1 {
             secp256k1_ec_pubkey_parse(
                 byteBuff,
                 Secp256k1Context.getContext(),
-                pubkey.size
+                pubkey.size,
+                compressed
             )
         } finally {
             r.unlock()
@@ -235,7 +231,7 @@ public object NativeSecp256k1 {
         val pubArr = retByteArray[0]
         BigInteger(byteArrayOf(retByteArray[1][0])).toInt()
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
-        NativeSecp256k1Util.assertEquals(pubArr.size, 65, "Got bad pubkey length.")
+        NativeSecp256k1Util.assertEquals(pubArr.size, if (compressed) 33 else 65, "Got bad pubkey length.")
         return if (retVal == 0) ByteArray(0) else pubArr
     }
 
@@ -456,7 +452,7 @@ public object NativeSecp256k1 {
         val pubArr = retByteArray[0]
         val pubLen: Int = BigInteger(byteArrayOf(retByteArray[1][0])).toInt() and 0xFF
         val retVal = BigInteger(byteArrayOf(retByteArray[1][1])).toInt()
-        NativeSecp256k1Util.assertEquals(65, pubLen, "Got bad pubkey length.")
+        NativeSecp256k1Util.assertEquals(pubkey1.size, pubLen, "Got bad pubkey length.")
         NativeSecp256k1Util.assertEquals(retVal, 1, "Failed return value check.")
         return pubArr
     }
@@ -494,7 +490,7 @@ public object NativeSecp256k1 {
 
     @JvmStatic
     @Throws(AssertFailException::class)
-    public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray {
+    public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int, compressed: Boolean): ByteArray {
         require(sig.size == 64)
         require(message.size == 32)
         val byteBuff = pack(sig, message)
@@ -504,14 +500,15 @@ public object NativeSecp256k1 {
             secp256k1_ecdsa_recover(
                 byteBuff,
                 Secp256k1Context.getContext(),
-                recid
+                recid,
+                compressed
             )
         } finally {
             r.unlock()
         }
         val resArr = retByteArray[0]
         val retVal = BigInteger(byteArrayOf(retByteArray[1][0])).toInt()
-        NativeSecp256k1Util.assertEquals(resArr.size, 65, "Got bad result length.")
+        NativeSecp256k1Util.assertEquals(resArr.size, if (compressed) 33 else 65, "Got bad result length.")
         NativeSecp256k1Util.assertEquals(retVal, 1, "Failed return value check.")
         return resArr
     }
@@ -549,23 +546,12 @@ public object NativeSecp256k1 {
     @JvmStatic private external fun secp256k1_pubkey_tweak_mul(byteBuff: ByteBuffer, context: Long, pubLen: Int): Array<ByteArray>
     @JvmStatic private external fun secp256k1_destroy_context(context: Long)
     @JvmStatic private external fun secp256k1_ecdsa_verify(byteBuff: ByteBuffer, context: Long, sigLen: Int, pubLen: Int): Int
-    @JvmStatic private external fun secp256k1_ecdsa_sign(byteBuff: ByteBuffer, context: Long): Array<ByteArray>
-    @JvmStatic private external fun secp256k1_ecdsa_sign_compact(byteBuff: ByteBuffer, context: Long): Array<ByteArray>
+    @JvmStatic private external fun secp256k1_ecdsa_sign(byteBuff: ByteBuffer, compact: Boolean, context: Long): Array<ByteArray>
+    @JvmStatic private external fun secp256k1_ecdsa_normalize(byteBuff: ByteBuffer, sigLen: Int, compact: Boolean, context: Long): Array<ByteArray>
     @JvmStatic private external fun secp256k1_ec_seckey_verify(byteBuff: ByteBuffer, context: Long): Int
-    @JvmStatic private external fun secp256k1_ec_pubkey_create(byteBuff: ByteBuffer, context: Long): Array<ByteArray>
-    @JvmStatic private external fun secp256k1_ec_pubkey_parse(
-        byteBuff: ByteBuffer,
-        context: Long,
-        inputLen: Int
-    ): Array<ByteArray>
-
-    @JvmStatic private external fun secp256k1_ec_pubkey_add(
-        byteBuff: ByteBuffer,
-        context: Long,
-        lent1: Int,
-        len2: Int
-    ): Array<ByteArray>
-
+    @JvmStatic private external fun secp256k1_ec_pubkey_create(byteBuff: ByteBuffer, compressed: Boolean, context: Long): Array<ByteArray>
+    @JvmStatic private external fun secp256k1_ec_pubkey_parse(byteBuff: ByteBuffer, context: Long, inputLen: Int, compressed: Boolean): Array<ByteArray>
+    @JvmStatic private external fun secp256k1_ec_pubkey_add(byteBuff: ByteBuffer, context: Long, lent1: Int, len2: Int): Array<ByteArray>
     @JvmStatic private external fun secp256k1_ecdh(byteBuff: ByteBuffer, context: Long, inputLen: Int): Array<ByteArray>
-    @JvmStatic private external fun secp256k1_ecdsa_recover(byteBuff: ByteBuffer, context: Long, recid: Int): Array<ByteArray>
+    @JvmStatic private external fun secp256k1_ecdsa_recover(byteBuff: ByteBuffer, context: Long, recid: Int, compressed: Boolean): Array<ByteArray>
 }

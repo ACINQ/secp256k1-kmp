@@ -19,19 +19,23 @@ package fr.acinq.secp256k1
 import kotlin.jvm.JvmStatic
 import kotlin.jvm.Synchronized
 
+public enum class SigFormat(internal val size: Int) { COMPACT(64), DER(72) }
+
+public enum class PubKeyFormat(internal val size: Int) { COMPRESSED(33), UNCOMPRESSED(65) }
+
 public expect object Secp256k1 {
 
     public fun verify(data: ByteArray, signature: ByteArray, pub: ByteArray): Boolean
 
-    public fun sign(data: ByteArray, sec: ByteArray): ByteArray
+    public fun sign(data: ByteArray, sec: ByteArray, format: SigFormat): ByteArray
 
-    public fun signCompact(data: ByteArray, sec: ByteArray): ByteArray
+    public fun signatureNormalize(sig: ByteArray, format: SigFormat): Pair<ByteArray, Boolean>
 
     public fun secKeyVerify(seckey: ByteArray): Boolean
 
-    public fun computePubkey(seckey: ByteArray): ByteArray
+    public fun computePubkey(seckey: ByteArray, format: PubKeyFormat): ByteArray
 
-    public fun parsePubkey(pubkey: ByteArray): ByteArray
+    public fun parsePubkey(pubkey: ByteArray, format: PubKeyFormat): ByteArray
 
     public fun cleanup()
 
@@ -51,7 +55,7 @@ public expect object Secp256k1 {
 
     public fun createECDHSecret(seckey: ByteArray, pubkey: ByteArray): ByteArray
 
-    public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray
+    public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int, format: PubKeyFormat): ByteArray
 
     public fun randomize(seed: ByteArray): Boolean
 }
