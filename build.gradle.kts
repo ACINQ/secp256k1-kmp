@@ -115,7 +115,23 @@ android {
 }
 
 val buildSecp256k1 by tasks.creating { group = "build" }
-fun creatingBuildSecp256k1(target: String, cross: String? = null, env: String = "", configuration: Task.() -> Unit = {}) = tasks.creating(Exec::class) {
+sealed class Cross {
+    abstract fun cmd(target: String, nativeDir: File): List<String>
+    class DockCross(val cross: String) : Cross() {
+        override fun cmd(target: String, nativeDir: File): List<String> = listOf("./dockcross-$cross", "bash", "-c", "TARGET=$target ./build.sh")
+    }
+    class MultiArch(val crossTriple: String) : Cross() {
+        override fun cmd(target: String, nativeDir: File): List<String> {
+            val uid = Runtime.getRuntime().exec("id -u").inputStream.use { it.reader().readText() }.trim().toInt()
+            return listOf(
+                "docker", "run", "--rm", "-v", "${nativeDir.absolutePath}:/workdir",
+                "-e", "CROSS_TRIPLE=$crossTriple", "-e", "TARGET=$target", "-e", "TO_UID=$uid",
+                "multiarch/crossbuild", "./build.sh"
+            )
+        }
+    }
+}
+fun creatingBuildSecp256k1(target: String, cross: Cross?) = tasks.creating(Exec::class) {
     group = "build"
     buildSecp256k1.dependsOn(this)
 
@@ -124,15 +140,11 @@ fun creatingBuildSecp256k1(target: String, cross: String? = null, env: String = 
 
     workingDir = projectDir.resolve("native")
     environment("TARGET", target)
-    if (cross == null) commandLine("./build.sh")
-    else commandLine("./dockcross-$cross", "bash", "-c", "TARGET=$target ./build.sh")
-
-    configuration()
+    commandLine((cross?.cmd(target, workingDir) ?: emptyList()) + "./build.sh")
 }
-
-val buildSecp256k1Darwin by creatingBuildSecp256k1("darwin")
-val buildSecp256k1Linux by creatingBuildSecp256k1("linux", cross = if (currentOs.isMacOsX) "linux-x64" else null)
-val buildSecp256k1Mingw by creatingBuildSecp256k1("mingw", cross = "windows-x64", env = "CONF_OPTS=--host=x86_64-w64-mingw32")
+val buildSecp256k1Darwin by creatingBuildSecp256k1("darwin", if (currentOs.isMacOsX) null else Cross.MultiArch("x86_64-apple-darwin"))
+val buildSecp256k1Linux by creatingBuildSecp256k1("linux", if (currentOs.isLinux) null else Cross.DockCross("linux-x64"))
+val buildSecp256k1Mingw by creatingBuildSecp256k1("mingw", if (currentOs.isWindows) null else Cross.DockCross("windows-x64"))
 
 val copyJni by tasks.creating(Sync::class) {
     dependsOn(buildSecp256k1)
@@ -146,6 +158,8 @@ val buildSecp256k1Ios by tasks.creating(Exec::class) {
     group = "build"
     buildSecp256k1.dependsOn(this)
 
+    onlyIf { currentOs.isMacOsX }
+
     inputs.files(projectDir.resolve("native/build-ios.sh"))
     outputs.dir(projectDir.resolve("native/build/ios"))
 
@@ -153,7 +167,10 @@ val buildSecp256k1Ios by tasks.creating(Exec::class) {
     commandLine("./build-ios.sh")
 }
 
-val buildSecp256k1Android by tasks.creating { group = "build" }
+val buildSecp256k1Android by tasks.creating {
+    group = "build"
+    buildSecp256k1.dependsOn(this)
+}
 fun creatingBuildSecp256k1Android(arch: String) = tasks.creating(Exec::class) {
     group = "build"
     buildSecp256k1Android.dependsOn(this)
@@ -164,8 +181,10 @@ fun creatingBuildSecp256k1Android(arch: String) = tasks.creating(Exec::class) {
     workingDir = projectDir.resolve("native")
 
     val toolchain = when {
+        currentOs.isLinux -> "linux-x86_64"
         currentOs.isMacOsX -> "darwin-x86_64"
-        else -> error("Cannot build for Android on this OS")
+        currentOs.isWindows -> "windows-x86_64"
+        else -> error("No Android toolchain defined for this OS: $currentOs")
     }
     environment("TOOLCHAIN", toolchain)
     environment("ARCH", arch)

@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-ANDROID_NDK=/Users/salomonbrys/Library/Android/sdk/ndk/21.3.6528147
-TOOLCHAIN=darwin-x86_64
-
 [[ -z "$ANDROID_NDK" ]] && echo "Please set the ANDROID_NDK variable" && exit 1
 [[ -z "$ARCH" ]] && echo "Please set the ARCH variable" && exit 1
 [[ -z "$TOOLCHAIN" ]] && echo "Please set the TOOLCHAIN variable" && exit 1
