@@ -15,8 +15,6 @@
  */
 package org.bitcoin
 
-import kotlin.jvm.JvmStatic
-
 /**
  * This class holds the context reference used in native methods
  * to handle ECDSA operations.
@@ -35,6 +33,7 @@ public object Secp256k1Context {
 
     init { //static initializer
         isEnabled = true
-        context = secp256k1_init_context()
+        context =
+            secp256k1_init_context()
     }
 }

@@ -15,7 +15,6 @@
  */
 package org.bitcoin
 
-import kotlin.jvm.Throws
 import java.lang.Exception
 
 internal object NativeSecp256k1Util {

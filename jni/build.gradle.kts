@@ -11,6 +11,7 @@ kotlin {
 
     val commonMain by sourceSets.getting {
         dependencies {
+            api(rootProject)
             implementation(kotlin("stdlib-common"))
         }
     }

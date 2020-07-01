@@ -18,60 +18,49 @@ package fr.acinq.secp256k1
 
 import kotlin.jvm.JvmStatic
 
-public enum class SigFormat(internal val size: Int) { COMPACT(64), DER(72) }
+public enum class SigFormat(public val maxSize: Int) { COMPACT(64), DER(72) }
 
-public enum class PubKeyFormat(internal val size: Int) { COMPRESSED(33), UNCOMPRESSED(65) }
+public enum class PubKeyFormat(public val maxSize: Int) { COMPRESSED(33), UNCOMPRESSED(65) }
 
-public expect object Secp256k1 {
+public interface Secp256k1 {
 
-    @JvmStatic
     public fun verify(data: ByteArray, signature: ByteArray, pub: ByteArray): Boolean
 
-    @JvmStatic
     public fun sign(data: ByteArray, sec: ByteArray, format: SigFormat): ByteArray
 
-    @JvmStatic
     public fun signatureNormalize(sig: ByteArray, format: SigFormat): Pair<ByteArray, Boolean>
 
-    @JvmStatic
     public fun secKeyVerify(seckey: ByteArray): Boolean
 
-    @JvmStatic
     public fun computePubkey(seckey: ByteArray, format: PubKeyFormat): ByteArray
 
-    @JvmStatic
     public fun parsePubkey(pubkey: ByteArray, format: PubKeyFormat): ByteArray
 
-    @JvmStatic
     public fun cleanup()
 
-    @JvmStatic
     public fun privKeyNegate(privkey: ByteArray): ByteArray
 
-    @JvmStatic
     public fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray
 
-    @JvmStatic
     public fun privKeyTweakAdd(privkey: ByteArray, tweak: ByteArray): ByteArray
 
-    @JvmStatic
     public fun pubKeyNegate(pubkey: ByteArray): ByteArray
 
-    @JvmStatic
     public fun pubKeyTweakAdd(pubkey: ByteArray, tweak: ByteArray): ByteArray
 
-    @JvmStatic
     public fun pubKeyTweakMul(pubkey: ByteArray, tweak: ByteArray): ByteArray
 
-    @JvmStatic
     public fun pubKeyAdd(pubkey1: ByteArray, pubkey2: ByteArray): ByteArray
 
-    @JvmStatic
     public fun createECDHSecret(seckey: ByteArray, pubkey: ByteArray): ByteArray
 
-    @JvmStatic
     public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int, format: PubKeyFormat): ByteArray
 
-    @JvmStatic
     public fun randomize(seed: ByteArray): Boolean
+
+    public companion object : Secp256k1 by getSecpk256k1() {
+        @JvmStatic public fun get(): Secp256k1 = this
+    }
 }
+
+internal expect fun getSecpk256k1(): Secp256k1
