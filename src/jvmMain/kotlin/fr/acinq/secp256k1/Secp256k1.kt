@@ -17,15 +17,18 @@
 package fr.acinq.secp256k1
 
 import org.bitcoin.NativeSecp256k1
-
-internal expect object Secp256k1Loader {
-    fun initialize()
-}
+import java.lang.IllegalStateException
 
 public actual object Secp256k1 {
 
     init {
-        Secp256k1Loader.initialize()
+        try {
+            val cls = Class.forName("fr.acinq.secp256k1.jni.NativeSecp256k1Loader")
+            val load = cls.getMethod("load")
+            load.invoke(null)
+        } catch (ex: ClassNotFoundException) {
+            throw IllegalStateException("Could not load native Secp256k1 JNI library. Have you added the JNI dependency?", ex)
+        }
     }
 
     public actual fun verify(data: ByteArray, signature: ByteArray, pub: ByteArray): Boolean = NativeSecp256k1.verify(data, signature, pub)

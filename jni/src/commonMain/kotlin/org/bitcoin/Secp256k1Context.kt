@@ -15,7 +15,7 @@
  */
 package org.bitcoin
 
-import fr.acinq.secp256k1.Secp256k1Loader.initialize
+import kotlin.jvm.JvmStatic
 
 /**
  * This class holds the context reference used in native methods
