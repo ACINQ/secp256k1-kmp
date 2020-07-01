@@ -10,5 +10,8 @@ rootProject.name = "secp256k1-kmp"
 
 include(
     ":native",
-    ":jni"
+    ":jni",
+    ":jni:android",
+    ":jni:jvm"
+//    ":jni"
 )

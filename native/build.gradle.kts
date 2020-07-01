@@ -1,8 +1,15 @@
-evaluationDependsOn(":jni")
+evaluationDependsOn(":jni:android")
 
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
 
 val buildSecp256k1 by tasks.creating { group = "build" }
+
+val generateJniHeaders by tasks.creating(Sync::class) {
+    group = "build"
+    dependsOn(":jni:generateJniHeaders")
+    from(rootDir.resolve("jni/build/generated/jni"))
+    into(projectDir.resolve("jni/headers/java"))
+}
 
 sealed class Cross {
     abstract fun cmd(target: String, nativeDir: File): List<String>
@@ -73,7 +80,7 @@ fun creatingBuildSecp256k1Android(arch: String) = tasks.creating(Exec::class) {
     }
     environment("TOOLCHAIN", toolchain)
     environment("ARCH", arch)
-    environment("ANDROID_NDK", (project(":jni").extensions["android"] as com.android.build.gradle.LibraryExtension).ndkDirectory)
+    environment("ANDROID_NDK", (project(":jni:android").extensions["android"] as com.android.build.gradle.LibraryExtension).ndkDirectory)
     commandLine("./build-android.sh")
 }
 val buildSecp256k1AndroidX86_64 by creatingBuildSecp256k1Android("x86_64")
@@ -82,6 +89,7 @@ val buildSecp256k1AndroidArm64v8a by creatingBuildSecp256k1Android("arm64-v8a")
 val buildSecp256k1AndroidArmeabiv7a by creatingBuildSecp256k1Android("armeabi-v7a")
 
 val clean by tasks.creating {
+    group = "build"
     doLast {
         delete(projectDir.resolve("build"))
     }

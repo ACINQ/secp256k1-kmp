@@ -50,7 +50,7 @@ elif [ "$TARGET" == "mingw" ]; then
   CC_OPTS="-fpic"
 fi
 
-$CC -shared $CC_OPTS -o build/$TARGET/$OUTFILE jni/src/org_bitcoin_NativeSecp256k1.c jni/src/org_bitcoin_Secp256k1Context.c -Ijni/headers/ -Ijni/headers/$JNI_HEADERS/ -Isecp256k1/ -lsecp256k1 -Lbuild/$TARGET/ $ADD_LIB
+$CC -shared $CC_OPTS -o build/$TARGET/$OUTFILE jni/src/org_bitcoin_Secp256k1CFunctions.c -Ijni/headers/ -Ijni/headers/java -Ijni/headers/$JNI_HEADERS/ -Isecp256k1/ -lsecp256k1 -Lbuild/$TARGET/ $ADD_LIB
 
 [[ ! -z "$TO_UID" ]] && chown -R $TO_UID:$TO_UID build
 

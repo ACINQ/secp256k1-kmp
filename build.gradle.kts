@@ -51,7 +51,7 @@ kotlin {
             implementation(kotlin("stdlib-jdk8"))
         }
         compilations["test"].dependencies {
-            implementation(project(":jni"))
+            implementation(project(":jni:jvm"))
             implementation(kotlin("stdlib-jdk8"))
             implementation(kotlin("test-junit"))
         }
