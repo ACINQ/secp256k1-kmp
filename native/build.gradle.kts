@@ -4,29 +4,23 @@ val currentOs = org.gradle.internal.os.OperatingSystem.current()
 
 val buildSecp256k1 by tasks.creating { group = "build" }
 
-val generateJniHeaders by tasks.creating(Sync::class) {
-    group = "build"
-    dependsOn(":jni:generateJniHeaders")
-    from(rootDir.resolve("jni/build/generated/jni"))
-    into(projectDir.resolve("jni/headers/java"))
-}
-
 sealed class Cross {
-    abstract fun cmd(target: String, nativeDir: File): List<String>
+    abstract fun cmd(target: String, project: Project): List<String>
     class DockCross(val cross: String) : Cross() {
-        override fun cmd(target: String, nativeDir: File): List<String> = listOf("./dockcross-$cross", "bash", "-c", "CROSS=1 TARGET=$target ./build.sh")
+        override fun cmd(target: String, project: Project): List<String> = listOf("${project.rootDir}/cross-scripts/dockcross-$cross", "bash", "-c", "CROSS=1 TARGET=$target ./build.sh")
     }
     class MultiArch(val crossTriple: String) : Cross() {
-        override fun cmd(target: String, nativeDir: File): List<String> {
+        override fun cmd(target: String, project: Project): List<String> {
             val uid = Runtime.getRuntime().exec("id -u").inputStream.use { it.reader().readText() }.trim().toInt()
             return listOf(
-                "docker", "run", "--rm", "-v", "${nativeDir.absolutePath}:/workdir",
+                "docker", "run", "--rm", "-v", "${project.projectDir.absolutePath}:/workdir",
                 "-e", "CROSS_TRIPLE=$crossTriple", "-e", "TARGET=$target", "-e", "TO_UID=$uid", "-e", "CROSS=1",
                 "multiarch/crossbuild", "./build.sh"
             )
         }
     }
 }
+
 val buildSecp256k1Jvm by tasks.creating {
     group = "build"
     buildSecp256k1.dependsOn(this)
@@ -40,7 +34,7 @@ fun creatingBuildSecp256k1(target: String, cross: Cross?) = tasks.creating(Exec:
 
     workingDir = projectDir
     environment("TARGET", target)
-    commandLine((cross?.cmd(target, workingDir) ?: emptyList()) + "./build.sh")
+    commandLine((cross?.cmd(target, project) ?: emptyList()) + "./build.sh")
 }
 val buildSecp256k1Darwin by creatingBuildSecp256k1("darwin", if (currentOs.isMacOsX) null else Cross.MultiArch("x86_64-apple-darwin"))
 val buildSecp256k1Linux by creatingBuildSecp256k1("linux", if (currentOs.isLinux) null else Cross.DockCross("linux-x64"))

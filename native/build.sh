@@ -7,6 +7,8 @@ if [ "$(id -u)" == "0" ]; then
   [[ -z "$TO_UID" ]] && echo "Please set the TO_UID variable" && exit 1
 fi
 
+cd "$(dirname "$0")"
+
 cd secp256k1
 
 if [ "$TARGET" == "mingw" ]; then
@@ -29,28 +31,6 @@ cd ..
 
 mkdir -p build/$TARGET
 cp -v secp256k1/.libs/libsecp256k1.a build/$TARGET/
-
-[[ ! -z "$TO_UID" ]] && chown -R $TO_UID:$TO_UID build
-
-CC=gcc
-JNI_HEADERS=$TARGET
-
-if [ "$TARGET" == "linux" ]; then
-  OUTFILE=libsecp256k1-jni.so
-    ADD_LIB=-lgmp
-elif [ "$TARGET" == "darwin" ]; then
-  OUTFILE=libsecp256k1-jni.dylib
-  if [ -z "$CROSS_TRIPLE" ]; then
-    ADD_LIB=-lgmp
-  fi
-elif [ "$TARGET" == "mingw" ]; then
-  OUTFILE=secp256k1-jni.dll
-  CC=/usr/src/mxe/usr/bin/x86_64-w64-mingw32.static-gcc
-  JNI_HEADERS=linux
-  CC_OPTS="-fpic"
-fi
-
-$CC -shared $CC_OPTS -o build/$TARGET/$OUTFILE jni/src/org_bitcoin_Secp256k1CFunctions.c -Ijni/headers/ -Ijni/headers/java -Ijni/headers/$JNI_HEADERS/ -Isecp256k1/ -lsecp256k1 -Lbuild/$TARGET/ $ADD_LIB
 
 [[ ! -z "$TO_UID" ]] && chown -R $TO_UID:$TO_UID build
 

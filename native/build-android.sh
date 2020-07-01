@@ -41,5 +41,5 @@ make
 
 cd ..
 
-mkdir -p build/android/$ARCH
-cp -v secp256k1/.libs/libsecp256k1.a build/android/$ARCH
+mkdir -p build/android-$ARCH
+cp -v secp256k1/.libs/libsecp256k1.a build/android-$ARCH
