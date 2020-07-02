@@ -43,7 +43,7 @@ public object Secp256k1Native : Secp256k1 {
     private fun MemScope.serializePubkey(pubkey: secp256k1_pubkey): ByteArray {
         val serialized = allocArray<UByteVar>(65)
         val outputLen = alloc<size_tVar>()
-        outputLen.value = 65UL
+        outputLen.value = 65.convert()
         secp256k1_ec_pubkey_serialize(ctx, serialized, outputLen.ptr, pubkey.ptr, SECP256K1_EC_UNCOMPRESSED.convert()).requireSuccess()
         return serialized.readBytes(outputLen.value.convert())
     }
