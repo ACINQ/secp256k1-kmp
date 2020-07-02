@@ -121,7 +121,7 @@ allprojects {
                 repositories {
                     maven {
                         name = "bintray"
-                        setUrl("https://api.bintray.com/maven/acinq/$btRepo/${project.name}/;publish=0")
+                        setUrl("https://api.bintray.com/maven/acinq/$btRepo/${rootProject.name}/;publish=0")
                         credentials {
                             username = bintrayUsername
                             password = bintrayApiKey

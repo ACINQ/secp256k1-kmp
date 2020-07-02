@@ -60,7 +60,7 @@ public interface Secp256k1 {
                 pub1[0] = if (pubkey.last() % 2 == 0) 2.toByte() else 3.toByte()
                 pub1
             }
-            else -> throw RuntimeException("invalid public key")
+            else -> throw Secp256k1Exception("invalid public key")
         }
     }
 
