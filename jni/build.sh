@@ -29,7 +29,7 @@ fi
 
 mkdir -p build/jni/$TARGET
 
-$CC -shared $CC_OPTS -o build/jni/$TARGET/$OUTFILE c/src/org_bitcoin_Secp256k1CFunctions.c -Ic/headers/ -Ic/headers/java -Ic/headers/$JNI_HEADERS/ -I../native/secp256k1/ -lsecp256k1 -L../native/build/$TARGET/ $ADD_LIB
+$CC -shared $CC_OPTS -o build/jni/$TARGET/$OUTFILE c/src/fr_acinq_secp256k1_Secp256k1CFunctions.c -Ic/headers/ -Ic/headers/java -Ic/headers/$JNI_HEADERS/ -I../native/secp256k1/ -lsecp256k1 -L../native/build/$TARGET/ $ADD_LIB
 
 [[ ! -z "$TO_UID" ]] && chown -R $TO_UID:$TO_UID .
 

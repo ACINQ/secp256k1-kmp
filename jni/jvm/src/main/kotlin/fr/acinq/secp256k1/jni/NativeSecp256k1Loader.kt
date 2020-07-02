@@ -1,7 +1,7 @@
 package fr.acinq.secp256k1.jni
 
 import fr.acinq.secp256k1.Secp256k1
-import org.bitcoin.NativeSecp256k1
+import fr.acinq.secp256k1.NativeSecp256k1
 import java.io.*
 import java.util.*
 

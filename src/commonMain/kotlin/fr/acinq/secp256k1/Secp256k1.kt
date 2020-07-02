@@ -18,23 +18,19 @@ package fr.acinq.secp256k1
 
 import kotlin.jvm.JvmStatic
 
-public enum class SigFormat(public val maxSize: Int) { COMPACT(64), DER(72) }
-
-public enum class PubKeyFormat(public val maxSize: Int) { COMPRESSED(33), UNCOMPRESSED(65) }
-
 public interface Secp256k1 {
 
-    public fun verify(data: ByteArray, signature: ByteArray, pub: ByteArray): Boolean
+    public fun verify(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean
 
-    public fun sign(data: ByteArray, sec: ByteArray, format: SigFormat): ByteArray
+    public fun sign(data: ByteArray, sec: ByteArray): ByteArray
 
-    public fun signatureNormalize(sig: ByteArray, format: SigFormat): Pair<ByteArray, Boolean>
+    public fun signatureNormalize(sig: ByteArray): Pair<ByteArray, Boolean>
 
     public fun secKeyVerify(seckey: ByteArray): Boolean
 
-    public fun computePubkey(seckey: ByteArray, format: PubKeyFormat): ByteArray
+    public fun pubkeyCreate(seckey: ByteArray): ByteArray
 
-    public fun parsePubkey(pubkey: ByteArray, format: PubKeyFormat): ByteArray
+    public fun pubkeyParse(pubkey: ByteArray): ByteArray
 
     public fun cleanup()
 
@@ -52,11 +48,21 @@ public interface Secp256k1 {
 
     public fun pubKeyAdd(pubkey1: ByteArray, pubkey2: ByteArray): ByteArray
 
-    public fun createECDHSecret(seckey: ByteArray, pubkey: ByteArray): ByteArray
+    public fun ecdh(seckey: ByteArray, pubkey: ByteArray): ByteArray
 
-    public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int, format: PubKeyFormat): ByteArray
+    public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray
 
-    public fun randomize(seed: ByteArray): Boolean
+    public fun pubKeyCompress(pubkey: ByteArray) : ByteArray {
+        return when {
+            pubkey.size == 33 && (pubkey[0] == 2.toByte() || pubkey[0] == 3.toByte()) -> pubkey
+            pubkey.size == 65 && pubkey[0] == 4.toByte() -> {
+                val pub1 = pubkey.copyOf(33)
+                pub1[0] = if (pubkey.last() % 2 == 0) 2.toByte() else 3.toByte()
+                pub1
+            }
+            else -> throw RuntimeException("invalid public key")
+        }
+    }
 
     public companion object : Secp256k1 by getSecpk256k1() {
         @JvmStatic public fun get(): Secp256k1 = this
@@ -64,3 +70,8 @@ public interface Secp256k1 {
 }
 
 internal expect fun getSecpk256k1(): Secp256k1
+
+public class Secp256k1Exception : RuntimeException {
+    public constructor() : super() {}
+    public constructor(message: String?) : super(message) {}
+}
