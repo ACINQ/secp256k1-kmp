@@ -13,24 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bitcoin
+package fr.acinq.secp256k1
 
-/**
- * This class holds the context reference used in native methods
- * to handle ECDSA operations.
- */
-public object Secp256k1Context {
-    @JvmStatic
-    public val isEnabled: Boolean //true if the library is loaded
-    private val context: Long //ref to pointer to context obj
+import java.lang.Exception
 
-    @JvmStatic
-    public fun getContext(): Long {
-        return if (!isEnabled) -1 else context //sanity check
+internal object NativeSecp256k1Util {
+    @Throws(AssertFailException::class)
+    fun assertEquals(val1: Int, val2: Int, message: String) {
+        if (val1 != val2) throw AssertFailException("FAIL: $message")
     }
 
-    init { //static initializer
-        isEnabled = true
-        context = Secp256k1CFunctions.secp256k1_init_context()
-    }
+    class AssertFailException(message: String?) : Exception(message)
 }
