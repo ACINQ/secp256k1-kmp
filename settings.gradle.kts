@@ -12,6 +12,6 @@ include(
     ":native",
     ":jni",
     ":jni:android",
-    ":jni:jvm"
-//    ":jni"
+    ":jni:jvm",
+    ":tests"
 )
