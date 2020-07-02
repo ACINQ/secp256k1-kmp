@@ -8,9 +8,7 @@ import kotlin.test.*
  */
 class Secp256k1Test {
     //TODO improve comments/add more tests
-    /**
-     * This tests verify() for a valid signature
-     */
+
     @Test
     fun testVerifyPos() {
         var result: Boolean
@@ -24,9 +22,6 @@ class Secp256k1Test {
         assertTrue(result, "testVerifyPos")
     }
 
-    /**
-     * This tests verify() for a non-valid signature
-     */
     @Test
     fun testVerifyNeg() {
         var result: Boolean
@@ -34,13 +29,9 @@ class Secp256k1Test {
         val sig: ByteArray = Hex.decode("3044022079BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F817980220294F14E883B3F525B5367756C2A11EF6CF84B730B36C17CB0C56F0AAB2C98589".toLowerCase())
         val pub: ByteArray = Hex.decode("040A629506E1B65CD9D2E0BA9C75DF9C4FED0DB16DC9625ED14397F0AFC836FAE595DC53F8B0EFE61E703075BD9B143BAC75EC0E19F82A2208CAEB32BE53414C40".toLowerCase())
         result = Secp256k1.verify(sig, data, pub)
-        //System.out.println(" TEST " + new BigInteger(1, resultbytes).toString(16));
         assertFalse(result, "testVerifyNeg")
     }
 
-    /**
-     * This tests secret key verify() for a valid secretkey
-     */
     @Test
     fun testSecKeyVerifyPos() {
         var result: Boolean
@@ -49,9 +40,6 @@ class Secp256k1Test {
         assertTrue(result, "testSecKeyVerifyPos")
     }
 
-    /**
-     * This tests secret key verify() for an invalid secretkey
-     */
     @Test
     fun testSecKeyVerifyNeg() {
         var result: Boolean
@@ -60,9 +48,6 @@ class Secp256k1Test {
         assertFalse(result, "testSecKeyVerifyNeg")
     }
 
-    /**
-     * This tests public key create() for a valid secretkey
-     */
     @Test
     fun testPubKeyCreatePos() {
         val sec: ByteArray = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".toLowerCase())
@@ -75,9 +60,6 @@ class Secp256k1Test {
         )
     }
 
-    /**
-     * This tests public key create() for a invalid secretkey
-     */
     @Test
     fun testPubKeyCreateNeg() {
         val sec: ByteArray = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".toLowerCase())
@@ -105,9 +87,6 @@ class Secp256k1Test {
         )
     }
 
-    /**
-     * This tests public key create() for a valid secretkey
-     */
     @Test
     fun testPubKeyParse() {
         val pub: ByteArray = Hex.decode("02C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D".toLowerCase())
@@ -133,9 +112,6 @@ class Secp256k1Test {
         )
     }
 
-    /**
-     * This tests sign() for a valid secretkey
-     */
     @Test
     fun testSignPos() {
         val data: ByteArray = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".toLowerCase()) //sha256hash of "testing"
@@ -162,9 +138,6 @@ class Secp256k1Test {
         assertFalse(isHighS, "isHighS")
     }
 
-    /**
-     * This tests sign() for a invalid secretkey
-     */
     @Test
     fun testSignNeg() {
         val data: ByteArray = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".toLowerCase()) //sha256hash of "testing"
@@ -185,7 +158,6 @@ class Secp256k1Test {
             sigString,
             "testSignCompactPos"
         )
-        //assertEquals( sigString, "30 44 02 20 182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A2 02 20 1C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9" , "testSignPos");
     }
 
     @Test
@@ -201,9 +173,6 @@ class Secp256k1Test {
         assertTrue(sec.contentEquals(sec2))
     }
 
-    /**
-     * This tests private key tweak-add
-     */
     @Test
     fun testPrivKeyTweakAdd_1() {
         val sec: ByteArray = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".toLowerCase())
@@ -217,9 +186,6 @@ class Secp256k1Test {
         )
     }
 
-    /**
-     * This tests private key tweak-mul
-     */
     @Test
     fun testPrivKeyTweakMul_1() {
         val sec: ByteArray = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".toLowerCase())
@@ -233,9 +199,6 @@ class Secp256k1Test {
         )
     }
 
-    /**
-     * This tests private key tweak-add uncompressed
-     */
     @Test
     fun testPrivKeyTweakAdd_2() {
         val pub: ByteArray = Hex.decode("040A629506E1B65CD9D2E0BA9C75DF9C4FED0DB16DC9625ED14397F0AFC836FAE595DC53F8B0EFE61E703075BD9B143BAC75EC0E19F82A2208CAEB32BE53414C40".toLowerCase())
@@ -249,9 +212,6 @@ class Secp256k1Test {
         )
     }
 
-    /**
-     * This tests private key tweak-mul uncompressed
-     */
     @Test
     fun testPrivKeyTweakMul_2() {
         val pub: ByteArray = Hex.decode("040A629506E1B65CD9D2E0BA9C75DF9C4FED0DB16DC9625ED14397F0AFC836FAE595DC53F8B0EFE61E703075BD9B143BAC75EC0E19F82A2208CAEB32BE53414C40".toLowerCase())
