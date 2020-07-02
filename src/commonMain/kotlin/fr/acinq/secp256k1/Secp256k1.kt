@@ -52,6 +52,18 @@ public interface Secp256k1 {
 
     public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray
 
+    public fun pubKeyCompress(pubkey: ByteArray) : ByteArray {
+        return when {
+            pubkey.size == 33 && (pubkey[0] == 2.toByte() || pubkey[0] == 3.toByte()) -> pubkey
+            pubkey.size == 65 && pubkey[0] == 4.toByte() -> {
+                val pub1 = pubkey.copyOf(33)
+                pub1[0] = if (pubkey.last() % 2 == 0) 2.toByte() else 3.toByte()
+                pub1
+            }
+            else -> throw RuntimeException("invalid public key")
+        }
+    }
+
     public companion object : Secp256k1 by getSecpk256k1() {
         @JvmStatic public fun get(): Secp256k1 = this
     }
