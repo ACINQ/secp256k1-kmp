@@ -687,3 +687,38 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
     return jpubkey;
 }
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_compact_to_der
+ * Signature: (J[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1compact_1to_1der
+  (JNIEnv *penv, jclass clazz, jlong jctx, jbyteArray jsig)
+{
+    secp256k1_context* ctx = (secp256k1_context *)jctx;
+    jbyte *sig;
+    secp256k1_ecdsa_signature signature;;
+    unsigned char der[73];
+    size_t size;
+    int result = 0;
+
+    if (jctx == 0) return 0;
+    if (jsig == NULL) return 0;
+    CHECKRESULT((*penv)->GetArrayLength(penv, jsig) != 64, "invalid signature size");
+
+    size = (*penv)->GetArrayLength(penv, jsig);
+    sig = (*penv)->GetByteArrayElements(penv, jsig, 0);
+    result = secp256k1_ecdsa_signature_parse_compact(ctx, &signature, (unsigned char*)sig);
+    (*penv)->ReleaseByteArrayElements(penv, jsig, sig, 0);
+    CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_compact failed");
+
+    size = 73;
+    result = secp256k1_ecdsa_signature_serialize_der(ctx, der, &size, &signature);
+    CHECKRESULT(!result, "secp256k1_ecdsa_signature_serialize_der failed");
+    jsig = (*penv)->NewByteArray(penv, size);
+    sig = (*penv)->GetByteArrayElements(penv, jsig, 0);
+    memcpy(sig, der, size);
+    (*penv)->ReleaseByteArrayElements(penv, jsig, sig, 0);
+    return jsig;
+}

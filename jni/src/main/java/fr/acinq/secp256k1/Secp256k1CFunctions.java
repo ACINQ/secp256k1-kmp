@@ -64,4 +64,6 @@ public class Secp256k1CFunctions {
     public static native byte[] secp256k1_ecdh(long ctx, byte[] seckey, byte[] pubkey);
 
     public static native byte[] secp256k1_ecdsa_recover(long ctx, byte[] sig, byte[] msg32, int recid);
+
+    public static native byte[] secp256k1_compact_to_der(long ctx, byte[] sig);
 }

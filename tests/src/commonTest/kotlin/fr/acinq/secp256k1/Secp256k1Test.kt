@@ -255,4 +255,14 @@ class Secp256k1Test {
         val pub1: ByteArray = Secp256k1.ecdsaRecover(sig, data, 1)
         assertTrue(pub.contentEquals(pub0) || pub.contentEquals(pub1), "testEcdsaRecover")
     }
+
+    @Test
+    fun testCompactToDER() {
+        val sig: ByteArray = Hex.decode("182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9".toLowerCase()) //sha256hash of "testing"
+        val der: ByteArray = Secp256k1.compact2der(sig)
+        assertEquals(
+            "30440220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A202201C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
+            Hex.encode(der).toUpperCase(),
+        )
+    }
 }

@@ -83,4 +83,8 @@ public object NativeSecp256k1 : Secp256k1 {
     override fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray {
         return Secp256k1CFunctions.secp256k1_ecdsa_recover(Secp256k1Context.getContext(), sig, message, recid)
     }
+
+    override fun compact2der(sig: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_compact_to_der(Secp256k1Context.getContext(), sig)
+    }
 }

@@ -215,6 +215,18 @@ public object Secp256k1Native : Secp256k1 {
             return serializePubkey(pubkey)
         }
     }
+
+    public override fun compact2der(sig: ByteArray): ByteArray {
+        require(sig.size == 64)
+        memScoped {
+            val nSig = allocSignature(sig)
+            val natOutput = allocArray<UByteVar>(73)
+            val len = alloc<size_tVar>()
+            len.value = 73.convert()
+            secp256k1_ecdsa_signature_serialize_der(ctx, natOutput, len.ptr, nSig.ptr).requireSuccess("secp256k1_ecdsa_signature_serialize_der() failed")
+            return natOutput.readBytes(len.value.toInt())
+        }
+    }
 }
 
 internal actual fun getSecpk256k1(): Secp256k1 = Secp256k1Native

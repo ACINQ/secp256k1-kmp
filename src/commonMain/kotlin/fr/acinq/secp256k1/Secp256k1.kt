@@ -52,6 +52,8 @@ public interface Secp256k1 {
 
     public fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray
 
+    public fun compact2der(sig: ByteArray): ByteArray
+
     public fun pubKeyCompress(pubkey: ByteArray) : ByteArray {
         return when {
             pubkey.size == 33 && (pubkey[0] == 2.toByte() || pubkey[0] == 3.toByte()) -> pubkey
