@@ -29,37 +29,39 @@ public class Secp256k1CFunctions {
     public static int SECP256K1_EC_COMPRESSED = (SECP256K1_FLAGS_TYPE_COMPRESSION | SECP256K1_FLAGS_BIT_COMPRESSION);
     public static int SECP256K1_EC_UNCOMPRESSED = (SECP256K1_FLAGS_TYPE_COMPRESSION);
 
-    public static native long secp256k1_context_create(int flags) throws Secp256k1Exception;
+    public static native long secp256k1_context_create(int flags);
 
-    public static native void secp256k1_context_destroy(long ctx) throws Secp256k1Exception;
+    public static native void secp256k1_context_destroy(long ctx);
 
-    public static native byte[] secp256k1_ec_pubkey_parse(long ctx, byte[] pubkey) throws Secp256k1Exception;
+    public static native int secp256k1_ec_seckey_verify(long ctx, byte[] seckey);
+    
+    public static native byte[] secp256k1_ec_pubkey_parse(long ctx, byte[] pubkey);
 
-    public static native byte[] secp256k1_ec_pubkey_create(long ctx, byte[] seckey) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_pubkey_create(long ctx, byte[] seckey);
 
-    public static native byte[] secp256k1_ecdsa_sign(long ctx, byte[] msg, byte[] seckey) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ecdsa_sign(long ctx, byte[] msg, byte[] seckey);
 
-    public static native int secp256k1_ecdsa_verify(long ctx, byte[] sig, byte[] msg, byte[] pubkey) throws Secp256k1Exception;
+    public static native int secp256k1_ecdsa_verify(long ctx, byte[] sig, byte[] msg, byte[] pubkey);
 
-    public static native int secp256k1_ecdsa_signature_normalize(long ctx, byte[] sigin, byte[] sigout) throws Secp256k1Exception;
+    public static native int secp256k1_ecdsa_signature_normalize(long ctx, byte[] sigin, byte[] sigout);
 
-    public static native byte[] secp256k1_ec_privkey_negate(long ctx, byte[] privkey) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_privkey_negate(long ctx, byte[] privkey);
 
-    public static native byte[] secp256k1_ec_pubkey_negate(long ctx, byte[] pubkey) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_pubkey_negate(long ctx, byte[] pubkey);
 
-    public static native byte[] secp256k1_ec_privkey_tweak_add(long ctx, byte[] seckey, byte[] tweak) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_privkey_tweak_add(long ctx, byte[] seckey, byte[] tweak);
 
-    public static native byte[] secp256k1_ec_pubkey_tweak_add(long ctx, byte[] pubkey, byte[] tweak) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_pubkey_tweak_add(long ctx, byte[] pubkey, byte[] tweak);
 
-    public static native byte[] secp256k1_ec_privkey_tweak_mul(long ctx, byte[] seckey, byte[] tweak) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_privkey_tweak_mul(long ctx, byte[] seckey, byte[] tweak);
 
-    public static native byte[] secp256k1_ec_pubkey_tweak_mul(long ctx, byte[] pubkey, byte[] tweak) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_pubkey_tweak_mul(long ctx, byte[] pubkey, byte[] tweak);
 
-    public static native byte[] secp256k1_ec_pubkey_add(long ctx, byte[] pubkey1, byte[] pubkey2) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_pubkey_add(long ctx, byte[] pubkey1, byte[] pubkey2);
 
-    public static native byte[] secp256k1_ec_pubkey_combine(long ctx, byte[][] pubkeys) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ec_pubkey_combine(long ctx, byte[][] pubkeys);
 
-    public static native byte[] secp256k1_ecdh(long ctx, byte[] seckey, byte[] pubkey) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ecdh(long ctx, byte[] seckey, byte[] pubkey);
 
-    public static native byte[] secp256k1_ecdsa_recover(long ctx, byte[] sig, byte[] msg32, int recid) throws Secp256k1Exception;
+    public static native byte[] secp256k1_ecdsa_recover(long ctx, byte[] sig, byte[] msg32, int recid);
 }

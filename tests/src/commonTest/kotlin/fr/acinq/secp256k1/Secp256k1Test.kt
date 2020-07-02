@@ -39,6 +39,28 @@ class Secp256k1Test {
     }
 
     /**
+     * This tests secret key verify() for a valid secretkey
+     */
+    @Test
+    fun testSecKeyVerifyPos() {
+        var result: Boolean
+        val sec: ByteArray = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".toLowerCase())
+        result = Secp256k1.secKeyVerify(sec)
+        assertTrue(result, "testSecKeyVerifyPos")
+    }
+
+    /**
+     * This tests secret key verify() for an invalid secretkey
+     */
+    @Test
+    fun testSecKeyVerifyNeg() {
+        var result: Boolean
+        val sec: ByteArray = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".toLowerCase())
+        result = Secp256k1.secKeyVerify(sec)
+        assertFalse(result, "testSecKeyVerifyNeg")
+    }
+
+    /**
      * This tests public key create() for a valid secretkey
      */
     @Test
@@ -59,10 +81,8 @@ class Secp256k1Test {
     @Test
     fun testPubKeyCreateNeg() {
         val sec: ByteArray = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".toLowerCase())
-        assertFails {
-            val resultArr: ByteArray = Secp256k1.pubkeyCreate(sec)
-            val pubkeyString: String = Hex.encode(resultArr).toUpperCase()
-            assertEquals("", pubkeyString, "testPubKeyCreateNeg")
+        assertFailsWith<Secp256k1Exception> {
+            Secp256k1.pubkeyCreate(sec)
         }
     }
 
@@ -149,10 +169,8 @@ class Secp256k1Test {
     fun testSignNeg() {
         val data: ByteArray = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".toLowerCase()) //sha256hash of "testing"
         val sec: ByteArray = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".toLowerCase())
-        assertFails {
-            val resultArr: ByteArray = Secp256k1.sign(data, sec)
-            val sigString: String = Hex.encode(resultArr)
-            assertEquals("", sigString, "testSignNeg")
+        assertFailsWith<Secp256k1Exception> {
+            Secp256k1.sign(data, sec)
         }
     }
 

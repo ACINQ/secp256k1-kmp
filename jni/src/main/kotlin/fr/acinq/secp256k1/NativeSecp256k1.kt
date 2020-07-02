@@ -31,6 +31,11 @@ public object NativeSecp256k1 : Secp256k1 {
         return Pair(sigout, result == 1)
     }
 
+    override fun secKeyVerify(seckey: ByteArray): Boolean {
+        val result = Secp256k1CFunctions.secp256k1_ec_seckey_verify(Secp256k1Context.getContext(), seckey);
+        return result == 1;
+    }
+
     override fun pubkeyCreate(seckey: ByteArray): ByteArray {
         return Secp256k1CFunctions.secp256k1_ec_pubkey_create(Secp256k1Context.getContext(), seckey)
     }

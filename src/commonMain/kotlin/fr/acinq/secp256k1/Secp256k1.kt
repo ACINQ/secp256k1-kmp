@@ -26,6 +26,8 @@ public interface Secp256k1 {
 
     public fun signatureNormalize(sig: ByteArray): Pair<ByteArray, Boolean>
 
+    public fun secKeyVerify(seckey: ByteArray): Boolean
+
     public fun pubkeyCreate(seckey: ByteArray): ByteArray
 
     public fun pubkeyParse(pubkey: ByteArray): ByteArray
@@ -57,7 +59,7 @@ public interface Secp256k1 {
 
 internal expect fun getSecpk256k1(): Secp256k1
 
-public class Secp256k1Exception : Exception {
+public class Secp256k1Exception : RuntimeException {
     public constructor() : super() {}
     public constructor(message: String?) : super(message) {}
 }

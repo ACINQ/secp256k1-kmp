@@ -59,6 +59,27 @@ JNIEXPORT void JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1co
 }
 
 /*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_ec_seckey_verify
+ * Signature: (J[B)I
+ */
+JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1seckey_1verify
+  (JNIEnv *penv, jclass clazz, jlong jctx, jbyteArray jseckey)
+{
+    secp256k1_context* ctx = (secp256k1_context *)jctx;
+    jbyte *seckey;
+    int result = 0;
+
+    if (jctx == 0) return 0;
+    if (jseckey == NULL) return 0;
+    CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
+    seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
+    result = secp256k1_ec_seckey_verify(ctx, (unsigned char*)seckey);
+    (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
+    return result;
+}
+
+/*
  * Class:     fr_acinq_bitcoin_Secp256k1Bindings
  * Method:    secp256k1_ec_pubkey_parse
  * Signature: (J[B)[B
