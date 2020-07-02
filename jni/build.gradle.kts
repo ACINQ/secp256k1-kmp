@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    `maven-publish`
 }
 
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
@@ -68,5 +69,14 @@ val buildNativeJniMingw by creatingBuildNativeJni("mingw", if (currentOs.isWindo
 afterEvaluate {
     tasks["clean"].doLast {
         delete(buildDir.resolve("build/cmake"))
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("jvm") {
+            artifactId = "secp256k1-jni-common"
+            from(components["java"])
+        }
     }
 }

@@ -1,6 +1,7 @@
 plugins {
     id("com.android.library")
     kotlin("android")
+    `maven-publish`
 }
 
 kotlin {
@@ -44,5 +45,22 @@ android {
 afterEvaluate {
     configure(listOf("Debug", "Release").map { tasks["externalNativeBuild$it"] }) {
         dependsOn(":native:buildSecp256k1Android")
+    }
+}
+
+android {
+    afterEvaluate {
+        publishing {
+            publications {
+                create<MavenPublication>("android") {
+                    artifactId = "secp256k1-jni-android"
+                    from(components["release"])
+                }
+//                create<MavenPublication>("androidDebug") {
+//                    artifactId = "secp256k1-jni-android-debug"
+//                    from(components["debug"])
+//                }
+            }
+        }
     }
 }
