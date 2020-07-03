@@ -1,4 +1,4 @@
-name: publish snapshot
+name: Publish snapshot
 
 on:
   push:
