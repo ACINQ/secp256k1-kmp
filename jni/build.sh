@@ -15,6 +15,7 @@ JNI_HEADERS=$TARGET
 if [ "$TARGET" == "linux" ]; then
   OUTFILE=libsecp256k1-jni.so
   ADD_LIB=-lgmp
+  CC_OPTS="-fPIC"
 elif [ "$TARGET" == "darwin" ]; then
   OUTFILE=libsecp256k1-jni.dylib
   if [ -z "$CROSS_TRIPLE" ]; then

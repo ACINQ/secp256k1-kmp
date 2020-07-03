@@ -3,23 +3,66 @@ name: check
 on: [push]
 
 jobs:
-  check:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macOS-latest]
+
+  linux:
+    name: JNI & Linux
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Check out
+        uses: actions/checkout@v2
         with:
           submodules: 'true'
-      - name: Install automake
-        if: matrix.os == 'macOS-latest'
-        run: brew install automake
+      - name: Restore cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-konan-
       - name: Set up JDK 11
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Check
+      - name: Check JNI
         uses: eskatos/gradle-command-action@v1
         with:
-          arguments: check --no-daemon
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          arguments: jvmTest -PnoCrossCompile=true
+      - name: Check Linux
+        uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: linuxTest -PnoCrossCompile=true
+
+  macos:
+    name: iOS & Android
+    runs-on: macos-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+      - name: Restore cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-konan-
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Install Automake
+        run: brew install automake
+      - name: Check iOS
+        uses: eskatos/gradle-command-action@v1
+        with:
+          wrapper-cache-enabled: true
+          dependencies-cache-enabled: true
+          arguments: iosX64Test -PnoCrossCompile=true
+      - name: Check Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          ndk: 21.3.6528147
+          cmake: 3.10.2.4988404
+          script: ./gradlew connectedCheck  -PnoCrossCompile=true
