@@ -1,6 +1,6 @@
 # Secp256k1 for Kotlin/Multiplatform
 
-Bitcoin's secp256k1 library ported to Kotlin/Multiplatform for JVM, Android, iOS & Linux.
+Kotlin/Multiplatform wrapper for Bitcoin Core's secp256k1 library. Targets: JVM, Android, iOS & Linux.
 
 ## Installation
 
