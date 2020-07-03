@@ -24,7 +24,7 @@ elif [ "$TARGET" == "mingw" ]; then
   OUTFILE=secp256k1-jni.dll
   CC=/usr/src/mxe/usr/bin/x86_64-w64-mingw32.static-gcc
   JNI_HEADERS=linux
-  CC_OPTS="-fpic"
+  CC_OPTS="-fPIC"
 fi
 
 mkdir -p build/jni/$TARGET
