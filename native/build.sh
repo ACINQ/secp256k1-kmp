@@ -12,12 +12,15 @@ cd "$(dirname "$0")"
 cd secp256k1
 
 if [ "$TARGET" == "mingw" ]; then
-  CONF_OPTS="CFLAGS=-fpic --host=x86_64-w64-mingw32"
+  CONF_OPTS="CFLAGS=-fPIC --host=x86_64-w64-mingw32"
 elif [ "$TARGET" == "linux" ]; then
-  CONF_OPTS="CFLAGS=-fpic"
+  CONF_OPTS="CFLAGS=-fPIC"
   [ "$CROSS" == "1" ] && sudo apt -y install libgmp-dev
 elif [ "$TARGET" == "darwin" ]; then
   CONF_OPTS="--host=x86_64-w64-darwin"
+else
+  echo "Unknown TARGET=$TARGET"
+  exit 1
 fi
 
 ./autogen.sh

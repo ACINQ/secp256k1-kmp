@@ -25,9 +25,12 @@ val buildSecp256k1Jvm by tasks.creating {
     group = "build"
     buildSecp256k1.dependsOn(this)
 }
+val noCrossCompile: String? by project
 fun creatingBuildSecp256k1(target: String, cross: Cross?) = tasks.creating(Exec::class) {
     group = "build"
     buildSecp256k1Jvm.dependsOn(this)
+
+    if (noCrossCompile == "true") onlyIf { cross == null }
 
     inputs.files(projectDir.resolve("build.sh"))
     outputs.dir(projectDir.resolve("build/$target"))

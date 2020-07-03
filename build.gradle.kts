@@ -17,7 +17,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.1.0-1.4-M2"
+    version = "0.1.1-1.4-M2"
 
     repositories {
         jcenter()
@@ -110,7 +110,6 @@ allprojects {
 allprojects {
     plugins.withId("maven-publish") {
         publishing {
-            val snapshotName: String? by project
             val snapshotNumber: String? by project
 
             val bintrayUsername: String? = (properties["bintrayUsername"] as String?) ?: System.getenv("BINTRAY_USER")
@@ -130,8 +129,12 @@ allprojects {
                 }
             }
 
+            val gitRef: String? by project
+            val gitSha: String? by project
+            val eapBranch = gitRef?.split("/")?.last() ?: "dev"
+            val eapSuffix = gitSha?.let { "-${it.substring(0, 7)}" } ?: ""
             publications.withType<MavenPublication>().configureEach {
-                if (snapshotName != null && snapshotNumber != null) version = "${project.version}-${snapshotName}-${snapshotNumber}"
+                if (snapshotNumber != null) version = "${project.version}-$eapBranch-$snapshotNumber$eapSuffix"
                 pom {
                     description.set("Bitcoin's secp256k1 library ported to Kotlin/Multiplatform for JVM, Android, iOS & Linux")
                     url.set("https://github.com/ACINQ/secp256k1-kmp")
