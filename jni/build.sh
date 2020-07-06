@@ -14,13 +14,12 @@ JNI_HEADERS=$TARGET
 
 if [ "$TARGET" == "linux" ]; then
   OUTFILE=libsecp256k1-jni.so
+  [ "$CROSS" == "1" ] && sudo apt -y install libgmp-dev
   ADD_LIB=-lgmp
   CC_OPTS="-fPIC"
 elif [ "$TARGET" == "darwin" ]; then
   OUTFILE=libsecp256k1-jni.dylib
-  if [ -z "$CROSS_TRIPLE" ]; then
-    ADD_LIB=-lgmp
-  fi
+  ADD_LIB=-lgmp
 elif [ "$TARGET" == "mingw" ]; then
   OUTFILE=secp256k1-jni.dll
   CC=/usr/src/mxe/usr/bin/x86_64-w64-mingw32.static-gcc

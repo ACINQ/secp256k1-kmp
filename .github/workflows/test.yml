@@ -1,16 +1,22 @@
 name: Check
 
 on:
-  push:
-    branches:
-      - 'master'
-    pull_request:
+  pull_request:
     paths-ignore:
       - '**.md'
       - '**.adoc'
       - '**/.gitignore'
-      - './github/**'
-      - '!./github/workflow/test.yml'
+      - '.github/**'
+      - '!.github/workflows/test.yml'
+  push:
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.md'
+      - '**.adoc'
+      - '**/.gitignore'
+      - '.github/**'
+      - '!.github/workflows/test.yml'
 
 jobs:
 
@@ -35,12 +41,14 @@ jobs:
       - name: Check JNI
         uses: eskatos/gradle-command-action@v1
         with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
+          wrapper-cache-enabled: false # https://github.com/eskatos/gradle-command-action/issues/24
+          dependencies-cache-enabled: false
           arguments: jvmTest -PnoCrossCompile=true
       - name: Check Linux
         uses: eskatos/gradle-command-action@v1
         with:
+          wrapper-cache-enabled: false # https://github.com/eskatos/gradle-command-action/issues/24
+          dependencies-cache-enabled: false
           arguments: linuxTest -PnoCrossCompile=true
 
   macos:
@@ -66,8 +74,8 @@ jobs:
       - name: Check iOS
         uses: eskatos/gradle-command-action@v1
         with:
-          wrapper-cache-enabled: true
-          dependencies-cache-enabled: true
+          wrapper-cache-enabled: false  # https://github.com/eskatos/gradle-command-action/issues/24
+          dependencies-cache-enabled: false
           arguments: iosX64Test -PnoCrossCompile=true
       - name: Check Android
         uses: reactivecircus/android-emulator-runner@v2
