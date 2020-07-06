@@ -4,6 +4,19 @@ Kotlin/Multiplatform wrapper for Bitcoin Core's secp256k1 library. Targets: JVM,
 
 ## Installation
 
+[ ![Download](https://api.bintray.com/packages/acinq/libs/secp256k1-kmp/images/download.svg) ](https://bintray.com/acinq/libs/secp256k1-kmp/0.1.0-1.4-M2/link)
+
+First, you need to add the ACINQ libraries repository:
+
+```kotlin
+// build.gradle.kts
+repositories {
+    maven(url = "https://dl.bintray.com/acinq/libs")
+}
+```
+
+Then, the actual dependency depends on your targeted platform(s):
+
 ### Multiplatform
 
 Add the `secp256k1` dependency to the common sourceSet, and the JNI dependencies to JVM and Android sourcesets:
@@ -44,7 +57,7 @@ kotlin {
 
 Native targets include libsecp256k1, called through KMP's c-interop, simply add the `fr.acinq.secp256k1:secp256k1` dependency.
 
-### JVM target & Android
+### JVM targets & Android
 
 The JVM library uses JNI bindings for libsecp256k1, which is much faster than BouncyCastle. It will extract and load native bindings for your operating system in a temporary directory.
 

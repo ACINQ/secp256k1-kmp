@@ -117,10 +117,11 @@ allprojects {
             if (bintrayUsername == null || bintrayApiKey == null) logger.warn("Skipping bintray configuration as bintrayUsername or bintrayApiKey is not defined")
             else {
                 val btRepo = if (snapshotNumber != null) "snapshots" else "libs"
+                val btPublish = if (snapshotNumber != null) "1" else "0"
                 repositories {
                     maven {
                         name = "bintray"
-                        setUrl("https://api.bintray.com/maven/acinq/$btRepo/${rootProject.name}/;publish=0")
+                        setUrl("https://api.bintray.com/maven/acinq/$btRepo/${rootProject.name}/;publish=$btPublish")
                         credentials {
                             username = bintrayUsername
                             password = bintrayApiKey

@@ -2,8 +2,15 @@ name: Check
 
 on:
   push:
-    branches-ignore:
-      - 'snapshot/*'
+    branches:
+      - 'master'
+    pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.adoc'
+      - '**/.gitignore'
+      - './github/**'
+      - '!./github/workflow/test.yml'
 
 jobs:
 
