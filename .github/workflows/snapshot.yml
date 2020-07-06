@@ -8,8 +8,8 @@ on:
       - '**.md'
       - '**.adoc'
       - '**/.gitignore'
-      - './github/**'
-      - '!./github/workflow/snapshot.yml'
+      - '.github/**'
+      - '!.github/workflows/snapshot.yml'
 
 jobs:
 

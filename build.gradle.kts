@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.4-M2-mt"
+    kotlin("multiplatform") version "1.4-M3"
     `maven-publish`
 }
 
@@ -17,7 +17,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.1.1-1.4-M2"
+    version = "0.1.0-1.4-M3"
 
     repositories {
         jcenter()
