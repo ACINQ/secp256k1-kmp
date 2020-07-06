@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - 'snapshot/*'
+    paths-ignore:
+      - '**.md'
+      - '**.adoc'
+      - '**/.gitignore'
+      - './github/**'
+      - '!./github/workflow/snapshot.yml'
 
 jobs:
 
