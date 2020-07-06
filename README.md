@@ -6,7 +6,7 @@ Kotlin/Multiplatform wrapper for Bitcoin Core's secp256k1 library. Targets: JVM,
 
 [ ![Download](https://api.bintray.com/packages/acinq/libs/secp256k1-kmp/images/download.svg) ](https://bintray.com/acinq/libs/secp256k1-kmp/0.1.0-1.4-M2/link)
 
-You first, need to add the ACinq libraries repository:
+First, you need to add the ACINQ libraries repository:
 
 ```kotlin
 // build.gradle.kts
