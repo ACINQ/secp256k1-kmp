@@ -2,8 +2,9 @@ name: Check
 
 on:
   push:
-    branches-ignore:
-      - 'snapshot/*'
+    branches:
+      - 'master'
+    pull_request:
 
 jobs:
 
