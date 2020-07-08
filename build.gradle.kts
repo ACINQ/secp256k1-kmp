@@ -131,11 +131,9 @@ allprojects {
             }
 
             val gitRef: String? by project
-            val gitSha: String? by project
             val eapBranch = gitRef?.split("/")?.last() ?: "dev"
-            val eapSuffix = gitSha?.let { "-${it.substring(0, 7)}" } ?: ""
             publications.withType<MavenPublication>().configureEach {
-                if (snapshotNumber != null) version = "${project.version}-$eapBranch-$snapshotNumber$eapSuffix"
+                if (snapshotNumber != null) version = "${project.version}-$eapBranch-$snapshotNumber"
                 pom {
                     description.set("Bitcoin's secp256k1 library ported to Kotlin/Multiplatform for JVM, Android, iOS & Linux")
                     url.set("https://github.com/ACINQ/secp256k1-kmp")
