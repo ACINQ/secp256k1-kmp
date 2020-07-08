@@ -14,7 +14,6 @@ JNI_HEADERS=$TARGET
 
 if [ "$TARGET" == "linux" ]; then
   OUTFILE=libsecp256k1-jni.so
-  [ "$CROSS" == "1" ] && sudo apt -y install libgmp-dev
   ADD_LIB=-lgmp
   CC_OPTS="-fPIC"
 elif [ "$TARGET" == "darwin" ]; then
@@ -29,7 +28,7 @@ fi
 
 mkdir -p build/jni/$TARGET
 
-$CC -shared $CC_OPTS -o build/jni/$TARGET/$OUTFILE c/src/fr_acinq_secp256k1_Secp256k1CFunctions.c -Ic/headers/ -Ic/headers/java -Ic/headers/$JNI_HEADERS/ -I../native/secp256k1/ -lsecp256k1 -L../native/build/$TARGET/ $ADD_LIB
+$CC -shared $CC_OPTS -o build/$TARGET/$OUTFILE ../c/src/fr_acinq_secp256k1_Secp256k1CFunctions.c -I../c/headers/ -I../c/headers/java -I../c/headers/$JNI_HEADERS/ -I../../native/secp256k1/ -lsecp256k1 -L../../native/build/$TARGET/ $ADD_LIB
 
 [[ ! -z "$TO_UID" ]] && chown -R $TO_UID:$TO_UID .
 

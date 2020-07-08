@@ -187,7 +187,7 @@ public object NativeSecp256k1Loader {
 
        // Try loading library from fr.acinq.secp256k1.lib.path library path */
        val libraryPath = System.getProperty("fr.acinq.secp256k1.lib.path")
-       val libraryName = System.getProperty("fr.acinq.secp256k1.lib.name") ?: System.mapLibraryName("secp256k1-jni-${OSInfo.nativeSuffix}")
+       val libraryName = System.getProperty("fr.acinq.secp256k1.lib.name") ?: System.mapLibraryName("secp256k1-jni")
        if (libraryPath != null) {
            if (loadNativeLibrary(libraryPath, libraryName)) {
                extracted = true
@@ -197,7 +197,7 @@ public object NativeSecp256k1Loader {
 
        // Load the os-dependent library from the jar file
        val packagePath = NativeSecp256k1Loader::class.java.getPackage().name.replace("\\.".toRegex(), "/")
-       val embeddedLibraryPath = "/$packagePath/native"
+       val embeddedLibraryPath = "/$packagePath/native/${OSInfo.nativeSuffix}"
        val hasNativeLib = NativeSecp256k1Loader::class.java.getResource("$embeddedLibraryPath/$libraryName") != null
        if (!hasNativeLib) {
            error("No native library found: at $embeddedLibraryPath/$libraryName")

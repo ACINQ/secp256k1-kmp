@@ -17,7 +17,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.1.0-1.4-M3"
+    version = "0.2.0-1.4-M3"
 
     repositories {
         jcenter()
@@ -58,7 +58,7 @@ kotlin {
     val nativeMain by sourceSets.creating { dependsOn(commonMain) }
 
     linuxX64("linux") {
-        secp256k1CInterop("linux")
+        secp256k1CInterop("host")
         // https://youtrack.jetbrains.com/issue/KT-39396
         compilations["main"].kotlinOptions.freeCompilerArgs += listOf("-include-binary", "$rootDir/native/build/linux/libsecp256k1.a")
         compilations["main"].defaultSourceSet.dependsOn(nativeMain)
