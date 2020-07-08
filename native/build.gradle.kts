@@ -1,6 +1,7 @@
 evaluationDependsOn(":jni:android")
 
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
+val bash = if (currentOs.isWindows) "bash.exe" else "bash"
 
 val buildSecp256k1 by tasks.creating { group = "build" }
 
@@ -20,7 +21,7 @@ val buildSecp256k1Host by tasks.creating(Exec::class) {
 
     workingDir = projectDir
     environment("TARGET", target)
-    commandLine("./build.sh")
+    commandLine(bash, "build.sh")
 }
 
 val buildSecp256k1Ios by tasks.creating(Exec::class) {
@@ -33,7 +34,7 @@ val buildSecp256k1Ios by tasks.creating(Exec::class) {
     outputs.dir(projectDir.resolve("build/ios"))
 
     workingDir = projectDir
-    commandLine("./build-ios.sh")
+    commandLine(bash, "build-ios.sh")
 }
 
 val buildSecp256k1Android by tasks.creating {
@@ -58,7 +59,7 @@ fun creatingBuildSecp256k1Android(arch: String) = tasks.creating(Exec::class) {
     environment("TOOLCHAIN", toolchain)
     environment("ARCH", arch)
     environment("ANDROID_NDK", (project(":jni:android").extensions["android"] as com.android.build.gradle.LibraryExtension).ndkDirectory)
-    commandLine("./build-android.sh")
+    commandLine(bash, "build-android.sh")
 }
 val buildSecp256k1AndroidX86_64 by creatingBuildSecp256k1Android("x86_64")
 val buildSecp256k1AndroidX86 by creatingBuildSecp256k1Android("x86")

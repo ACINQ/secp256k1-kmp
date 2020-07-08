@@ -4,6 +4,7 @@ plugins {
 }
 
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
+val bash = if (currentOs.isWindows) "bash.exe" else "bash"
 
 val buildNativeHost by tasks.creating(Exec::class) {
     group = "build"
@@ -20,9 +21,9 @@ val buildNativeHost by tasks.creating(Exec::class) {
     inputs.files(projectDir.resolve("build.sh"))
     outputs.dir(buildDir.resolve(target))
 
-    workingDir = rootDir
+    workingDir = projectDir
     environment("TARGET", target)
-    commandLine("jni/jvm/build.sh")
+    commandLine(bash, "build.sh")
 }
 
 dependencies {

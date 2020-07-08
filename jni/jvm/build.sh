@@ -21,9 +21,7 @@ elif [ "$TARGET" == "darwin" ]; then
   ADD_LIB=-lgmp
 elif [ "$TARGET" == "mingw" ]; then
   OUTFILE=secp256k1-jni.dll
-  CC=/usr/src/mxe/usr/bin/x86_64-w64-mingw32.static-gcc
-  JNI_HEADERS=linux
-  CC_OPTS="-fPIC"
+  CC=x86_64-w64-mingw32-gcc
 fi
 
 mkdir -p build/jni/$TARGET

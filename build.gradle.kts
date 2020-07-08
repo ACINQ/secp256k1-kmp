@@ -1,3 +1,10 @@
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.StringEntity
+import org.apache.http.impl.auth.BasicScheme
+import org.apache.http.auth.UsernamePasswordCredentials
+
 plugins {
     kotlin("multiplatform") version "1.4-M3"
     `maven-publish`
@@ -107,21 +114,25 @@ allprojects {
     }
 }
 
+val snapshotNumber: String? by project
+val gitRef: String? by project
+val eapBranch = gitRef?.split("/")?.last() ?: "dev"
+val bintrayVersion = if (snapshotNumber != null) "${project.version}-$eapBranch-$snapshotNumber" else project.version.toString()
+val bintrayRepo = if (snapshotNumber != null) "snapshots" else "libs"
+
+val bintrayUsername: String? = (properties["bintrayUsername"] as String?) ?: System.getenv("BINTRAY_USER")
+val bintrayApiKey: String? = (properties["bintrayApiKey"] as String?) ?: System.getenv("BINTRAY_APIKEY")
+val hasBintray = bintrayUsername != null && bintrayApiKey != null
+if (!hasBintray) logger.warn("Skipping bintray configuration as bintrayUsername or bintrayApiKey is not defined")
+
 allprojects {
     plugins.withId("maven-publish") {
         publishing {
-            val snapshotNumber: String? by project
-
-            val bintrayUsername: String? = (properties["bintrayUsername"] as String?) ?: System.getenv("BINTRAY_USER")
-            val bintrayApiKey: String? = (properties["bintrayApiKey"] as String?) ?: System.getenv("BINTRAY_APIKEY")
-            if (bintrayUsername == null || bintrayApiKey == null) logger.warn("Skipping bintray configuration as bintrayUsername or bintrayApiKey is not defined")
-            else {
-                val btRepo = if (snapshotNumber != null) "snapshots" else "libs"
-                val btPublish = if (snapshotNumber != null) "1" else "0"
+            if (hasBintray) {
                 repositories {
                     maven {
                         name = "bintray"
-                        setUrl("https://api.bintray.com/maven/acinq/$btRepo/${rootProject.name}/;publish=$btPublish")
+                        setUrl("https://api.bintray.com/maven/acinq/$bintrayRepo/${rootProject.name}/;publish=0")
                         credentials {
                             username = bintrayUsername
                             password = bintrayApiKey
@@ -130,10 +141,8 @@ allprojects {
                 }
             }
 
-            val gitRef: String? by project
-            val eapBranch = gitRef?.split("/")?.last() ?: "dev"
             publications.withType<MavenPublication>().configureEach {
-                if (snapshotNumber != null) version = "${project.version}-$eapBranch-$snapshotNumber"
+                version = bintrayVersion
                 pom {
                     description.set("Bitcoin's secp256k1 library ported to Kotlin/Multiplatform for JVM, Android, iOS & Linux")
                     url.set("https://github.com/ACINQ/secp256k1-kmp")
@@ -150,6 +159,42 @@ allprojects {
                     }
                 }
             }
+        }
+    }
+}
+
+if (hasBintray) {
+    val postBintrayPublish by tasks.creating {
+        doLast {
+            HttpClients.createDefault().use { client ->
+                val post = HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish").apply {
+                    entity = StringEntity("{}", ContentType.APPLICATION_JSON)
+                    addHeader(BasicScheme().authenticate(UsernamePasswordCredentials(bintrayUsername, bintrayApiKey), this, null))
+                }
+                client.execute(post)
+            }
+        }
+    }
+
+    val postBintrayDiscard by tasks.creating {
+        doLast {
+            HttpClients.createDefault().use { client ->
+                val post = HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish").apply {
+                    entity = StringEntity("{ \"discard\": true }", ContentType.APPLICATION_JSON)
+                    addHeader(BasicScheme().authenticate(UsernamePasswordCredentials(bintrayUsername, bintrayApiKey), this, null))
+                }
+                client.execute(post)
+            }
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.withType<AbstractTestTask>() {
+        testLogging {
+            events("passed", "skipped", "failed", "standard_out", "standard_error")
+            showExceptions = true
+            showStackTraces = true
         }
     }
 }
