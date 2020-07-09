@@ -18,10 +18,10 @@ public object Secp256k1Native : Secp256k1 {
         val sig = alloc<secp256k1_ecdsa_signature>()
         val nativeBytes = toNat(input)
 
-        val result = when (input.size) {
-            64 -> secp256k1_ecdsa_signature_parse_compact(ctx, sig.ptr, nativeBytes)
-            in 70..73 -> secp256k1_ecdsa_signature_parse_der(ctx, sig.ptr, nativeBytes, input.size.convert())
-            else -> throw Secp256k1Exception("Unknown signature format")
+        val result = when {
+            input.size == 64 -> secp256k1_ecdsa_signature_parse_compact(ctx, sig.ptr, nativeBytes)
+            input.size < 64 -> throw Secp256k1Exception("Unknown signature format")
+            else -> secp256k1_ecdsa_signature_parse_der(ctx, sig.ptr, nativeBytes, input.size.convert())
         }
         result.requireSuccess("cannot parse signature (size = ${input.size} sig = ${Hex.encode(input)}")
         return sig
