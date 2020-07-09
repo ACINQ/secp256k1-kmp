@@ -1,5 +1,6 @@
 package fr.acinq.secp256k1
 
+import kotlin.random.Random
 import kotlin.test.*
 
 
@@ -264,5 +265,25 @@ class Secp256k1Test {
             "30440220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A202201C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
             Hex.encode(der).toUpperCase(),
         )
+    }
+
+    @Test
+    fun testFormatConversion() {
+        val random = Random.Default
+
+        fun randomBytes(length: Int): ByteArray {
+            val buffer = ByteArray(length)
+            random.nextBytes(buffer)
+            return buffer
+        }
+
+        repeat(200) {
+            val priv = randomBytes(32)
+            val pub = Secp256k1.pubkeyCreate(priv)
+            val data = randomBytes(32)
+            val sig = Secp256k1.sign(data, priv)
+            val der = Secp256k1.compact2der(sig)
+            Secp256k1.verify(der, data, pub)
+        }
     }
 }
