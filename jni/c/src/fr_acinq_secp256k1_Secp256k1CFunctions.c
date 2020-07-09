@@ -186,18 +186,9 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
 int GetSignatureFormat(size_t size)
 {
-    switch(size) {
-        case 64:
-            return SIG_FORMAT_COMPACT;
-            break;
-        case 70:
-        case 71:
-        case 72:
-        case 73:
-            return SIG_FORMAT_DER;
-            break;
-        default: return SIG_FORMAT_UNKNOWN;
-    }
+    if (size == 64) return SIG_FORMAT_COMPACT;
+    if (size < 64) return SIG_FORMAT_UNKNOWN;
+    return SIG_FORMAT_DER;
 }
 
 /*
