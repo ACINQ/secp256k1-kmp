@@ -68,12 +68,19 @@ JNI libraries are included for:
 
 Along this library, you **must** specify which JNI native library to use in your dependency manager:
 
-* For desktop or server JVMs, you must add the `fr.acinq.secp256k1:secp256k1-jni-jvm` dependency
-* For Android, you must add the `fr.acinq.secp256k1:secp256k1-jni-android` dependency
+* **For desktop or server JVMs**, you must add the dependency:
+  * Either the `fr.acinq.secp256k1:secp256k1-jni-jvm` dependency which imports all supported platforms.
+  * Or the platform specific dependencies (note that you can add multiple as they do not conflict):
+    * `fr.acinq.secp256k1:secp256k1-jni-jvm-linux` for Linux
+    * `fr.acinq.secp256k1:secp256k1-jni-jvm-darwin` for Mac OS X
+    * `fr.acinq.secp256k1:secp256k1-jni-jvm-mingw` for Windows
+* **For Android**, you must add the `fr.acinq.secp256k1:secp256k1-jni-android` dependency
 
 If you are using the JVM on an OS for which we don't provide JNI bindings (32 bits OS for example), you can use your own library native library by
 adding the `fr.acinq.secp256k1:secp256k1-jni-jvm` dependency and specifying its path with `-Dfr.acinq.secp256k1.lib.path` and optionally its name with `-Dfr.acinq.secp256k1.lib.name`
 (if unspecified bitcoink use the standard name for your OS i.e. libsecp256k1.so on Linux, secp256k1.dll on Windows, ...).
+
+To compile your own JNI bindings, have a look add the `native/build.sh` and `jni/build.sh` scripts.
 
 You can also specify the temporary directory where the library will be extracted with `-Djava.io.tmpdir` or `-Dfr.acinq.secp256k1.tmpdir`
 (if you want to use a different directory from `-Djava.io.tmpdir`).

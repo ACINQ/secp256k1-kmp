@@ -19,10 +19,12 @@ on:
       - '!.github/workflows/test.yml'
 
 jobs:
-
-  linux:
-    name: JNI & Linux
-    runs-on: ubuntu-latest
+  check:
+    name: Check
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
       - name: Check out
         uses: actions/checkout@v2
@@ -34,53 +36,38 @@ jobs:
           path: ~/.konan
           key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-konan-
-      - name: Set up JDK 11
-        uses: actions/setup-java@v1
-        with:
-          java-version: 11
-      - name: Check JNI
-        uses: eskatos/gradle-command-action@v1
-        with:
-          wrapper-cache-enabled: false # https://github.com/eskatos/gradle-command-action/issues/24
-          dependencies-cache-enabled: false
-          arguments: jvmTest -PnoCrossCompile=true
-      - name: Check Linux
-        uses: eskatos/gradle-command-action@v1
-        with:
-          wrapper-cache-enabled: false # https://github.com/eskatos/gradle-command-action/issues/24
-          dependencies-cache-enabled: false
-          arguments: linuxTest -PnoCrossCompile=true
-
-  macos:
-    name: iOS & Android
-    runs-on: macos-latest
-    steps:
-      - name: Check out
-        uses: actions/checkout@v2
-        with:
-          submodules: 'true'
-      - name: Cached Konan
+      - name: Cached Gradle
         uses: actions/cache@v2
         with:
-          path: ~/.konan
-          key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: ${{ runner.os }}-konan-
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
       - name: Set up JDK 11
         uses: actions/setup-java@v1
         with:
           java-version: 11
       - name: Install Automake
+        if: matrix.os == 'macOS-latest'
         run: brew install automake
+      - name: Set up shell
+        if: matrix.os == 'windows-latest'
+        run: echo ::add-path::C:\msys64\usr\bin\
+      - name: Check JVM
+        shell: bash
+        run: ./gradlew jvmTest
+      - name: Check Linux
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: ./gradlew linuxTest
       - name: Check iOS
-        uses: eskatos/gradle-command-action@v1
-        with:
-          wrapper-cache-enabled: false  # https://github.com/eskatos/gradle-command-action/issues/24
-          dependencies-cache-enabled: false
-          arguments: iosX64Test -PnoCrossCompile=true
+        if: matrix.os == 'macOS-latest'
+        shell: bash
+        run: ./gradlew iosX64Test
       - name: Check Android
+        if: matrix.os == 'macOS-latest'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
           ndk: 21.3.6528147
           cmake: 3.10.2.4988404
-          script: ./gradlew connectedCheck  -PnoCrossCompile=true
+          script: ./gradlew connectedCheck
