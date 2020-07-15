@@ -16,15 +16,20 @@
 
 package fr.acinq.secp256k1
 
-import java.lang.IllegalStateException
+import java.util.*
 
 
-internal actual fun getSecpk256k1(): Secp256k1 {
+private fun tryLoad(platform: String): Secp256k1? {
     try {
-        val cls = Class.forName("fr.acinq.secp256k1.jni.NativeSecp256k1Loader")
+        val cls = Class.forName("fr.acinq.secp256k1.jni.NativeSecp256k1${platform.capitalize(Locale.ROOT)}Loader")
         val load = cls.getMethod("load")
         return load.invoke(null) as Secp256k1
     } catch (ex: ClassNotFoundException) {
-        throw IllegalStateException("Could not load native Secp256k1 JNI library. Have you added the JNI dependency?", ex)
+        return null
     }
 }
+
+internal actual fun getSecpk256k1(): Secp256k1 =
+    tryLoad("android")
+        ?: tryLoad("jvm")
+        ?: error("Could not load native Secp256k1 JNI library. Have you added the JNI dependency?")

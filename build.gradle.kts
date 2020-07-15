@@ -24,7 +24,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.2.1-1.4-M3"
+    version = "0.3.0-1.4-M3"
 
     repositories {
         jcenter()
