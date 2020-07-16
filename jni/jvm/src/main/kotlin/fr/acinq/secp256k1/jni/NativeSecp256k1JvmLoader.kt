@@ -14,7 +14,7 @@ import java.util.*
 *
 * @author leo
 */
-public object NativeSecp256k1Loader {
+public object NativeSecp256k1JvmLoader {
    private var extracted = false
 
    /**
@@ -106,7 +106,7 @@ public object NativeSecp256k1Loader {
        val extractedLckFile = File(targetDirectory, extractedLckFileName)
        return try {
            // Extract a native library file into the target directory
-           val reader = NativeSecp256k1Loader::class.java.getResourceAsStream(libPath)
+           val reader = NativeSecp256k1JvmLoader::class.java.getResourceAsStream(libPath)
            if (!extractedLckFile.exists()) {
                FileOutputStream(extractedLckFile).close()
            }
@@ -132,7 +132,7 @@ public object NativeSecp256k1Loader {
            extractedLibFile.setExecutable(true)
 
            // Check whether the contents are properly copied from the resource folder
-           NativeSecp256k1Loader::class.java.getResourceAsStream(libPath).use { nativeIn ->
+           NativeSecp256k1JvmLoader::class.java.getResourceAsStream(libPath).use { nativeIn ->
                FileInputStream(extractedLibFile).use { extractedLibIn ->
                    if (!nativeIn.contentsEquals(extractedLibIn)) {
                        throw RuntimeException(
@@ -196,9 +196,9 @@ public object NativeSecp256k1Loader {
        }
 
        // Load the os-dependent library from the jar file
-       val packagePath = NativeSecp256k1Loader::class.java.getPackage().name.replace("\\.".toRegex(), "/")
+       val packagePath = NativeSecp256k1JvmLoader::class.java.getPackage().name.replace("\\.".toRegex(), "/")
        val embeddedLibraryPath = "/$packagePath/native/${OSInfo.nativeSuffix}"
-       val hasNativeLib = NativeSecp256k1Loader::class.java.getResource("$embeddedLibraryPath/$libraryName") != null
+       val hasNativeLib = NativeSecp256k1JvmLoader::class.java.getResource("$embeddedLibraryPath/$libraryName") != null
        if (!hasNativeLib) {
            error("No native library found: at $embeddedLibraryPath/$libraryName")
        }
