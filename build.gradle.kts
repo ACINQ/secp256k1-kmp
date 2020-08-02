@@ -6,7 +6,7 @@ import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.auth.UsernamePasswordCredentials
 
 plugins {
-    kotlin("multiplatform") version "1.4-M3"
+    kotlin("multiplatform") version "1.4.0-rc"
     `maven-publish`
 }
 
@@ -24,7 +24,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.3.0-1.4-M3"
+    version = "0.3.0-1.4-rc"
 
     repositories {
         jcenter()
