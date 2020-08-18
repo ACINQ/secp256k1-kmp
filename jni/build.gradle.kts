@@ -14,7 +14,6 @@ kotlin {
 
 dependencies {
     api(rootProject)
-    implementation(kotlin("stdlib-jdk8"))
 }
 
 val generateHeaders by tasks.creating(JavaCompile::class) {

@@ -1,6 +1,8 @@
+import org.gradle.internal.os.OperatingSystem
+
 evaluationDependsOn(":jni:android")
 
-val currentOs = org.gradle.internal.os.OperatingSystem.current()
+val currentOs = OperatingSystem.current()
 val bash = if (currentOs.isWindows) "bash.exe" else "bash"
 
 val buildSecp256k1 by tasks.creating { group = "build" }
@@ -13,7 +15,7 @@ val buildSecp256k1Host by tasks.creating(Exec::class) {
         currentOs.isLinux -> "linux"
         currentOs.isMacOsX -> "darwin"
         currentOs.isWindows -> "mingw"
-        else -> error("UnsupportedmOS $currentOs")
+        else -> error("Unsupported OS $currentOs")
     }
 
     inputs.files(projectDir.resolve("build.sh"))

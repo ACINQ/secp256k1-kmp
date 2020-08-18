@@ -28,7 +28,6 @@ val buildNativeHost by tasks.creating(Exec::class) {
 
 dependencies {
     api(project(":jni"))
-    implementation(kotlin("stdlib-jdk8"))
 }
 
 publishing {
