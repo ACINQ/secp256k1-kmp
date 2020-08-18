@@ -4,6 +4,8 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.auth.UsernamePasswordCredentials
+import org.gradle.internal.os.OperatingSystem
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     kotlin("multiplatform") version "1.4.0"
@@ -13,47 +15,38 @@ plugins {
 buildscript {
     repositories {
         google()
-        maven("https://dl.bintray.com/kotlin/kotlin-eap")
         jcenter()
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:4.0.0")
+        classpath("com.android.tools.build:gradle:4.0.1")
     }
 }
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.3.0-1.4"
+    version = "0.3.0"
 
     repositories {
         jcenter()
         google()
-        maven(url = "https://dl.bintray.com/kotlin/kotlin-eap")
     }
 }
 
-val currentOs = org.gradle.internal.os.OperatingSystem.current()
+val currentOs = OperatingSystem.current()
 
 kotlin {
     explicitApi()
 
-    val commonMain by sourceSets.getting {
-        dependencies {
-            implementation(kotlin("stdlib-common"))
-        }
-    }
+    val commonMain by sourceSets.getting
 
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
         }
-        compilations["main"].dependencies {
-            implementation(kotlin("stdlib-jdk8"))
-        }
     }
 
-    fun org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget.secp256k1CInterop(target: String) {
+    fun KotlinNativeTarget.secp256k1CInterop(target: String) {
         compilations["main"].cinterops {
             val libsecp256k1 by creating {
                 includeDirs.headerFilterOnly(project.file("native/secp256k1/include/"))
@@ -66,16 +59,17 @@ kotlin {
 
     linuxX64("linux") {
         secp256k1CInterop("host")
+        compilations["main"].defaultSourceSet.dependsOn(nativeMain)
         // https://youtrack.jetbrains.com/issue/KT-39396
         compilations["main"].kotlinOptions.freeCompilerArgs += listOf("-include-binary", "$rootDir/native/build/linux/libsecp256k1.a")
-        compilations["main"].defaultSourceSet.dependsOn(nativeMain)
     }
 
     ios {
         secp256k1CInterop("ios")
         // https://youtrack.jetbrains.com/issue/KT-39396
-        compilations["main"].kotlinOptions.freeCompilerArgs += listOf("-include-binary", "$rootDir/native/build/ios/libsecp256k1.a")
         compilations["main"].defaultSourceSet.dependsOn(nativeMain)
+        // https://youtrack.jetbrains.com/issue/KT-39396
+        compilations["main"].kotlinOptions.freeCompilerArgs += listOf("-include-binary", "$rootDir/native/build/ios/libsecp256k1.a")
     }
 
     sourceSets.all {
@@ -88,13 +82,13 @@ kotlin {
 allprojects {
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
         afterEvaluate {
-            val currentOs = org.gradle.internal.os.OperatingSystem.current()
+            val currentOs = OperatingSystem.current()
             val targets = when {
                 currentOs.isLinux -> listOf()
                 currentOs.isMacOsX -> listOf("linux")
                 currentOs.isWindows -> listOf("linux")
                 else -> listOf("linux")
-            }.mapNotNull { kotlin.targets.findByName(it) as? org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget }
+            }.mapNotNull { kotlin.targets.findByName(it) as? KotlinNativeTarget }
 
             configure(targets) {
                 compilations.all {
@@ -189,12 +183,14 @@ if (hasBintray) {
     }
 }
 
-afterEvaluate {
-    tasks.withType<AbstractTestTask>() {
-        testLogging {
-            events("passed", "skipped", "failed", "standard_out", "standard_error")
-            showExceptions = true
-            showStackTraces = true
+allprojects {
+    afterEvaluate {
+        tasks.withType<AbstractTestTask>() {
+            testLogging {
+                events("passed", "skipped", "failed", "standard_out", "standard_error")
+                showExceptions = true
+                showStackTraces = true
+            }
         }
     }
 }

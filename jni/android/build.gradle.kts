@@ -10,7 +10,6 @@ kotlin {
 
 dependencies {
     api(project(":jni"))
-    implementation(kotlin("stdlib-jdk8"))
 }
 
 android {
@@ -48,18 +47,12 @@ afterEvaluate {
     }
 }
 
-android {
-    afterEvaluate {
-        publishing {
-            publications {
-                create<MavenPublication>("android") {
-                    artifactId = "secp256k1-jni-android"
-                    from(components["release"])
-                }
-//                create<MavenPublication>("androidDebug") {
-//                    artifactId = "secp256k1-jni-android-debug"
-//                    from(components["debug"])
-//                }
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("android") {
+                artifactId = "secp256k1-jni-android"
+                from(components["release"])
             }
         }
     }

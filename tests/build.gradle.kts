@@ -8,7 +8,6 @@ kotlin {
 
     val commonMain by sourceSets.getting {
         dependencies {
-            implementation(kotlin("stdlib-common"))
             implementation(rootProject)
         }
     }
@@ -23,7 +22,6 @@ kotlin {
             kotlinOptions.jvmTarget = "1.8"
         }
         compilations["main"].dependencies {
-            implementation(kotlin("stdlib-jdk8"))
             implementation(project(":jni:jvm:all"))
         }
         compilations["test"].dependencies {
@@ -36,7 +34,6 @@ kotlin {
             kotlinOptions.jvmTarget = "1.8"
         }
         sourceSets["androidMain"].dependencies {
-            implementation(kotlin("stdlib-jdk8"))
             implementation(project(":jni:android"))
         }
         sourceSets["androidTest"].dependencies {

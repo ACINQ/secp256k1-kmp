@@ -1,7 +1,6 @@
 plugins {
     `java-library`
-//    `maven-publish`
-    id("ru.vyarus.pom") version "2.1.0"
+    `maven-publish`
 }
 
 dependencies {
