@@ -34,7 +34,7 @@ val generateHeaders by tasks.creating(JavaCompile::class) {
 publishing {
     publications {
         create<MavenPublication>("jvm") {
-            artifactId = "secp256k1-jni-common"
+            artifactId = "secp256k1-kmp-jni-common"
             from(components["java"])
         }
     }
