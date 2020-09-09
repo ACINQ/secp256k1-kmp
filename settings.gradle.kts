@@ -5,7 +5,7 @@ pluginManagement {
         jcenter()
     }
 }
-rootProject.name = "secp256k1"
+rootProject.name = "secp256k1-kmp"
 
 include(
     ":native",

@@ -12,7 +12,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("jvm") {
-            artifactId = "secp256k1-jni-jvm"
+            artifactId = "secp256k1-kmp-jni-jvm"
             from(components["java"])
         }
     }

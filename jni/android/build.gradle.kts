@@ -51,7 +51,7 @@ afterEvaluate {
     publishing {
         publications {
             create<MavenPublication>("android") {
-                artifactId = "secp256k1-jni-android"
+                artifactId = "secp256k1-kmp-jni-android"
                 from(components["release"])
             }
         }

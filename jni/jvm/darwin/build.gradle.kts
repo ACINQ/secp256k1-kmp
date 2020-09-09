@@ -23,7 +23,7 @@ val copyJni by tasks.creating(Sync::class) {
 publishing {
     publications {
         val pub = create<MavenPublication>("jvm") {
-            artifactId = "secp256k1-jni-jvm-darwin"
+            artifactId = "secp256k1-kmp-jni-jvm-darwin"
             from(components["java"])
         }
         if (!org.gradle.internal.os.OperatingSystem.current().isMacOsX) {
