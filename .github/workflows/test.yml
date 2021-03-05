@@ -52,7 +52,7 @@ jobs:
       - name: Set up shell
         if: matrix.os == 'windows-latest'
         run: |
-          echo ::add-path::C:\msys64\usr\bin\
+          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           rm.exe "C:/WINDOWS/system32/bash.EXE"
       - name: Check JVM
         shell: bash
