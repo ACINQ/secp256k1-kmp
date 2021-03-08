@@ -8,24 +8,24 @@ import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
-    kotlin("multiplatform") version "1.4.0"
+    kotlin("multiplatform") version "1.4.31"
     `maven-publish`
 }
 
 buildscript {
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:4.0.1")
+        classpath("com.android.tools.build:gradle:4.0.2")
     }
 }
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.4.1"
+    version = "0.5.0"
 
     repositories {
         jcenter()
@@ -66,7 +66,6 @@ kotlin {
 
     ios {
         secp256k1CInterop("ios")
-        // https://youtrack.jetbrains.com/issue/KT-39396
         compilations["main"].defaultSourceSet.dependsOn(nativeMain)
         // https://youtrack.jetbrains.com/issue/KT-39396
         compilations["main"].kotlinOptions.freeCompilerArgs += listOf("-include-binary", "$rootDir/native/build/ios/libsecp256k1.a")

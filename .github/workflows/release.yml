@@ -28,6 +28,35 @@ jobs:
           path: ~/.gradle
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
+      - name: Android environment
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=21.3.6528147" >> $GITHUB_ENV
+      - name: Cached Android NDK
+        uses: actions/cache@v2
+        with:
+          path: ${{ format('{0}/ndk/{1}', env.ANDROID_HOME, env.ANDROID_NDK_VERSION) }}
+          key: ${{ runner.os }}-android-ndk-${{ env.ANDROID_NDK_VERSION }}
+      - name: Set up shell
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          rm.exe "C:/WINDOWS/system32/bash.EXE"
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Setup Android
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          $ANDROID_HOME/tools/bin/sdkmanager "ndk;$ANDROID_NDK_VERSION"
+      - name: Setup Android
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          $ANDROID_HOME\\tools\\bin\\sdkmanager.bat "ndk;$ANDROID_NDK_VERSION"
       - name: Set up JDK 11
         uses: actions/setup-java@v1
         with:
@@ -35,11 +64,6 @@ jobs:
       - name: Install Automake
         if: matrix.os == 'macOS-latest'
         run: brew install automake
-      - name: Set up shell
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo ::add-path::C:\msys64\usr\bin\
-          rm.exe "C:/WINDOWS/system32/bash.EXE"
       - name: Check JVM
         shell: bash
         run: ./gradlew jvmTest
@@ -56,7 +80,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          ndk: 21.3.6528147
+          ndk: ${{ env.ANDROID_NDK_VERSION }}
           cmake: 3.10.2.4988404
           script: ./gradlew connectedCheck
       - name: Publish Linux

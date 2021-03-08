@@ -38,8 +38,8 @@ kotlin {
         }
         sourceSets["androidTest"].dependencies {
             implementation(kotlin("test-junit"))
-            implementation("androidx.test.ext:junit:1.1.1")
-            implementation("androidx.test.espresso:espresso-core:3.2.0")
+            implementation("androidx.test.ext:junit:1.1.2")
+            implementation("androidx.test.espresso:espresso-core:3.3.0")
         }
     }
 
