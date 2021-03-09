@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     kotlin("multiplatform") version "1.4.31"
+    id("org.jetbrains.dokka") version "1.4.20"
     `maven-publish`
 }
 
@@ -107,6 +108,24 @@ allprojects {
     }
 }
 
+// Documentation generation
+val dokkaOutputDir = "$buildDir/dokka"
+
+tasks.dokkaHtml {
+    outputDirectory.set(file(dokkaOutputDir))
+}
+
+val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
+    delete(dokkaOutputDir)
+}
+
+val javadocJar = tasks.register<Jar>("javadocJar") {
+    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+    archiveClassifier.set("javadoc")
+    from(dokkaOutputDir)
+}
+
+// Publication
 val snapshotNumber: String? by project
 val gitRef: String? by project
 val eapBranch = gitRef?.split("/")?.last() ?: "dev"
@@ -136,12 +155,16 @@ allprojects {
 
             publications.withType<MavenPublication>().configureEach {
                 version = bintrayVersion
+                artifact(javadocJar)
                 pom {
+                    name.set("secp256k1 for Kotlin/Multiplatform")
                     description.set("Bitcoin's secp256k1 library ported to Kotlin/Multiplatform for JVM, Android, iOS & Linux")
                     url.set("https://github.com/ACINQ/secp256k1-kmp")
                     licenses {
-                        name.set("Apache License v2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                        license {
+                            name.set("Apache License v2.0")
+                            url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                        }
                     }
                     issueManagement {
                         system.set("Github")
@@ -149,6 +172,13 @@ allprojects {
                     }
                     scm {
                         connection.set("https://github.com/ACINQ/secp256k1-kmp.git")
+                        url.set("https://github.com/ACINQ/secp256k1-kmp")
+                    }
+                    developers {
+                        developer {
+                            name.set("ACINQ")
+                            email.set("hello@acinq.co")
+                        }
                     }
                 }
             }
