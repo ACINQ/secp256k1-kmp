@@ -29,7 +29,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.5.0"
+    version = "0.5.1-SNAPSHOT"
 
     repositories {
         jcenter()
