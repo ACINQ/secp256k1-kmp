@@ -113,17 +113,3 @@ jobs:
         with:
           name: maven-local
           path: maven-local
-
-  publish:
-    name: Publish
-    needs: build-upload
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v2
-      - name: Print m2 directory
-        run: |
-          ls maven-local
-          ls maven-local/repository
-      - name: Print secp256k1
-        run: ls maven-local/repository/fr/acinq/secp256k1

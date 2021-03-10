@@ -6,6 +6,7 @@ import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.dokka.Platform
 
 plugins {
     kotlin("multiplatform") version "1.4.31"
@@ -17,10 +18,12 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter()
     }
 
     dependencies {
         classpath("com.android.tools.build:gradle:4.0.2")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.4.20")
     }
 }
 
@@ -31,6 +34,7 @@ allprojects {
     repositories {
         jcenter()
         google()
+        mavenCentral()
     }
 }
 
@@ -108,23 +112,6 @@ allprojects {
     }
 }
 
-// Documentation generation
-val dokkaOutputDir = "$buildDir/dokka"
-
-tasks.dokkaHtml {
-    outputDirectory.set(file(dokkaOutputDir))
-}
-
-val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
-    delete(dokkaOutputDir)
-}
-
-val javadocJar = tasks.register<Jar>("javadocJar") {
-    dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
-    archiveClassifier.set("javadoc")
-    from(dokkaOutputDir)
-}
-
 // Publication
 val snapshotNumber: String? by project
 val gitRef: String? by project
@@ -138,6 +125,12 @@ val hasBintray = bintrayUsername != null && bintrayApiKey != null
 if (!hasBintray) logger.warn("Skipping bintray configuration as bintrayUsername or bintrayApiKey is not defined")
 
 allprojects {
+    val javadocJar = tasks.create<Jar>("javadocJar") {
+        archiveClassifier.set("javadoc")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+
+    // Publication
     plugins.withId("maven-publish") {
         publishing {
             if (hasBintray) {
@@ -182,6 +175,39 @@ allprojects {
                     }
                 }
             }
+        }
+    }
+
+    if (project.name !in listOf("native", "tests")) {
+        afterEvaluate {
+            val dokkaOutputDir = buildDir.resolve("dokka")
+
+            tasks.dokkaHtml {
+                outputDirectory.set(file(dokkaOutputDir))
+                dokkaSourceSets {
+                    configureEach {
+                        val platformName = when (platform.get()) {
+                            Platform.jvm -> "jvm"
+                            Platform.js -> "js"
+                            Platform.native -> "native"
+                            Platform.common -> "common"
+                        }
+                        displayName.set(platformName)
+
+                        perPackageOption {
+                            matchingRegex.set(".*\\.internal.*") // will match all .internal packages and sub-packages
+                            suppress.set(true)
+                        }
+                    }
+                }
+            }
+
+            val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
+                delete(dokkaOutputDir)
+            }
+
+            javadocJar.dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+            javadocJar.from(dokkaOutputDir)
         }
     }
 }

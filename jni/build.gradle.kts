@@ -1,5 +1,8 @@
+import org.jetbrains.dokka.Platform
+
 plugins {
     kotlin("jvm")
+    id("org.jetbrains.dokka")
     `maven-publish`
 }
 
@@ -36,6 +39,11 @@ publishing {
         create<MavenPublication>("jvm") {
             artifactId = "secp256k1-kmp-jni-common"
             from(components["java"])
+            val sourcesJar = task<Jar>("sourcesJar") {
+                archiveClassifier.set("sources")
+                from(sourceSets["main"].allSource)
+            }
+            artifact(sourcesJar)
         }
     }
 }
