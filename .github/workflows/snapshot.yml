@@ -117,13 +117,13 @@ jobs:
         run: ./gradlew publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Copy artifact files
         run: |
-          mkdir -p snapshot
-          cp -r ~/.m2/repository/* snapshot
+          mkdir -p maven-local/snapshot
+          cp -r ~/.m2/repository/* maven-local/snapshot
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: snapshot
-          path: snapshot
+          path: maven-local
 #      - name: Discard
 #        if: ${{ failure() || cancelled() }}
 #        env:
