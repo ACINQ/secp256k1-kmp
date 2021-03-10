@@ -90,7 +90,7 @@ jobs:
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
         run: |
-          ./gradlew publishLinuxPublicationToBintrayRepository :jni:jvm:linux:publishJvmPublicationToBintrayRepository
+#          ./gradlew publishLinuxPublicationToBintrayRepository :jni:jvm:linux:publishJvmPublicationToBintrayRepository
           ./gradlew publishLinuxPublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal
       - name: Publish Windows
         if: matrix.os == 'windows-latest'
@@ -99,7 +99,7 @@ jobs:
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
         run: |
-          ./gradlew :jni:jvm:mingw:publishJvmPublicationToBintrayRepository
+#          ./gradlew :jni:jvm:mingw:publishJvmPublicationToBintrayRepository
           ./gradlew :jni:jvm:mingw:publishToMavenLocal
       - name: Publish MacOS
         if: matrix.os == 'macOS-latest'
@@ -108,7 +108,7 @@ jobs:
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
         run: |
-          ./gradlew publish
+#          ./gradlew publish
           ./gradlew publishToMavenLocal
       - name: Copy artifact files
         run: |
