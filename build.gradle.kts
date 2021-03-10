@@ -29,7 +29,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.5.1-SNAPSHOT"
+    version = "0.5.1"
 
     repositories {
         jcenter()
@@ -116,7 +116,7 @@ allprojects {
 val snapshotNumber: String? by project
 val gitRef: String? by project
 val eapBranch = gitRef?.split("/")?.last() ?: "dev"
-val bintrayVersion = if (snapshotNumber != null) "${project.version}-$eapBranch-$snapshotNumber" else project.version.toString()
+val bintrayVersion = if (snapshotNumber != null) "${project.version}-$eapBranch-$snapshotNumber-SNAPSHOT" else project.version.toString()
 val bintrayRepo = if (snapshotNumber != null) "snapshots" else "libs"
 
 val bintrayUsername: String? = (properties["bintrayUsername"] as String?) ?: System.getenv("BINTRAY_USER")
