@@ -123,7 +123,9 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: snapshot
-          path: maven-local
+          path: |
+            maven-local
+            !maven-local/**/maven-metadata-local.xml
 #      - name: Discard
 #        if: ${{ failure() || cancelled() }}
 #        env:
