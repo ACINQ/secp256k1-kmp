@@ -97,27 +97,24 @@ jobs:
           BINTRAY_USER: ${{ secrets.bintray_user }}
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
-        run: |
 #          ./gradlew publishLinuxPublicationToBintrayRepository :jni:jvm:linux:publishJvmPublicationToBintrayRepository -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-          ./gradlew publishLinuxPublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+        run: ./gradlew publishLinuxPublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Publish Windows
         if: matrix.os == 'windows-latest'
         env:
           BINTRAY_USER: ${{ secrets.bintray_user }}
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
-        run: |
 #          ./gradlew :jni:jvm:mingw:publishJvmPublicationToBintrayRepository -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-          ./gradlew :jni:jvm:mingw:publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+        run: ./gradlew :jni:jvm:mingw:publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Publish MacOS
         if: matrix.os == 'macOS-latest'
         env:
           BINTRAY_USER: ${{ secrets.bintray_user }}
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
-        run: |
 #          ./gradlew publish -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-          ./gradlew publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+        run: ./gradlew publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Copy artifact files
         run: |
           mkdir -p snapshot
