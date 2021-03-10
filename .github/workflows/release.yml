@@ -89,21 +89,36 @@ jobs:
           BINTRAY_USER: ${{ secrets.bintray_user }}
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
-        run: ./gradlew publishLinuxPublicationToBintrayRepository :jni:jvm:linux:publishJvmPublicationToBintrayRepository
+        run: |
+          ./gradlew publishLinuxPublicationToBintrayRepository :jni:jvm:linux:publishJvmPublicationToBintrayRepository
+          ./gradlew publishLinuxPublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal
       - name: Publish Windows
         if: matrix.os == 'windows-latest'
         env:
           BINTRAY_USER: ${{ secrets.bintray_user }}
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
-        run: ./gradlew :jni:jvm:mingw:publishJvmPublicationToBintrayRepository
+        run: |
+          ./gradlew :jni:jvm:mingw:publishJvmPublicationToBintrayRepository
+          ./gradlew :jni:jvm:mingw:publishToMavenLocal
       - name: Publish MacOS
         if: matrix.os == 'macOS-latest'
         env:
           BINTRAY_USER: ${{ secrets.bintray_user }}
           BINTRAY_APIKEY: ${{ secrets.bintray_apikey }}
         shell: bash
-        run: ./gradlew publish
+        run: |
+          ./gradlew publish
+          ./gradlew publishToMavenLocal
+      - name: Copy artifact files
+        run: |
+          mkdir -p release
+          cp -r ~/.m2/repository/* release
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: release
       - name: Discard
         if: ${{ failure() || cancelled() }}
         env:
