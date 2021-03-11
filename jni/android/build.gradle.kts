@@ -1,6 +1,9 @@
+import org.jetbrains.dokka.Platform
+
 plugins {
     id("com.android.library")
     kotlin("android")
+    id("org.jetbrains.dokka")
     `maven-publish`
 }
 
@@ -53,6 +56,11 @@ afterEvaluate {
             create<MavenPublication>("android") {
                 artifactId = "secp256k1-kmp-jni-android"
                 from(components["release"])
+                val sourcesJar = task<Jar>("sourcesJar") {
+                    archiveClassifier.set("sources")
+                    from(android.sourceSets["main"].java.srcDirs)
+                }
+                artifact(sourcesJar)
             }
         }
     }

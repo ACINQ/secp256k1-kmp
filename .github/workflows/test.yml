@@ -10,7 +10,7 @@ on:
       - '!.github/workflows/test.yml'
   push:
     branches:
-      - 'master'
+      - '!master'
     paths-ignore:
       - '**.md'
       - '**.adoc'

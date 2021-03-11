@@ -6,9 +6,11 @@ import org.apache.http.impl.auth.BasicScheme
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.dokka.Platform
 
 plugins {
     kotlin("multiplatform") version "1.4.31"
+    id("org.jetbrains.dokka") version "1.4.20"
     `maven-publish`
 }
 
@@ -16,20 +18,23 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter()
     }
 
     dependencies {
         classpath("com.android.tools.build:gradle:4.0.2")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.4.20")
     }
 }
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.5.0"
+    version = "0.5.1-SNAPSHOT"
 
     repositories {
         jcenter()
         google()
+        mavenCentral()
     }
 }
 
@@ -107,22 +112,30 @@ allprojects {
     }
 }
 
-val snapshotNumber: String? by project
-val gitRef: String? by project
-val eapBranch = gitRef?.split("/")?.last() ?: "dev"
-val bintrayVersion = if (snapshotNumber != null) "${project.version}-$eapBranch-$snapshotNumber" else project.version.toString()
-val bintrayRepo = if (snapshotNumber != null) "snapshots" else "libs"
+// Publication
+val bintrayRepo = if (project.version.toString().contains("SNAPSHOT")) "snapshots" else "libs"
 
 val bintrayUsername: String? = (properties["bintrayUsername"] as String?) ?: System.getenv("BINTRAY_USER")
 val bintrayApiKey: String? = (properties["bintrayApiKey"] as String?) ?: System.getenv("BINTRAY_APIKEY")
 val hasBintray = bintrayUsername != null && bintrayApiKey != null
 if (!hasBintray) logger.warn("Skipping bintray configuration as bintrayUsername or bintrayApiKey is not defined")
 
+val sonatypeUsername: String? = (properties["sonatypeUsername"] as String?) ?: System.getenv("SONATYPE_USERNAME")
+val sonatypePassword: String? = (properties["sonatypePassword"] as String?) ?: System.getenv("SONATYPE_PASSWORD")
+val hasSonatype = sonatypeUsername != null && sonatypePassword != null
+if (!hasSonatype) logger.warn("Skipping sonatype snapshot configuration as sonatypeUsername or sonatypePassword is not defined")
+
 allprojects {
+    val javadocJar = tasks.create<Jar>("javadocJar") {
+        archiveClassifier.set("javadoc")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+
+    // Publication
     plugins.withId("maven-publish") {
         publishing {
-            if (hasBintray) {
-                repositories {
+            repositories {
+                if (hasBintray) {
                     maven {
                         name = "bintray"
                         setUrl("https://api.bintray.com/maven/acinq/$bintrayRepo/${rootProject.name}/;publish=0")
@@ -132,16 +145,31 @@ allprojects {
                         }
                     }
                 }
+
+                if (hasSonatype) {
+                    maven {
+                        name = "snapshot"
+                        setUrl("https://oss.sonatype.org/content/repositories/snapshots")
+                        credentials {
+                            username = sonatypeUsername
+                            password = sonatypePassword
+                        }
+                    }
+                }
             }
 
             publications.withType<MavenPublication>().configureEach {
-                version = bintrayVersion
+                version = project.version.toString()
+                artifact(javadocJar)
                 pom {
+                    name.set("secp256k1 for Kotlin/Multiplatform")
                     description.set("Bitcoin's secp256k1 library ported to Kotlin/Multiplatform for JVM, Android, iOS & Linux")
                     url.set("https://github.com/ACINQ/secp256k1-kmp")
                     licenses {
-                        name.set("Apache License v2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                        license {
+                            name.set("Apache License v2.0")
+                            url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                        }
                     }
                     issueManagement {
                         system.set("Github")
@@ -149,9 +177,49 @@ allprojects {
                     }
                     scm {
                         connection.set("https://github.com/ACINQ/secp256k1-kmp.git")
+                        url.set("https://github.com/ACINQ/secp256k1-kmp")
+                    }
+                    developers {
+                        developer {
+                            name.set("ACINQ")
+                            email.set("hello@acinq.co")
+                        }
                     }
                 }
             }
+        }
+    }
+
+    if (project.name !in listOf("native", "tests")) {
+        afterEvaluate {
+            val dokkaOutputDir = buildDir.resolve("dokka")
+
+            tasks.dokkaHtml {
+                outputDirectory.set(file(dokkaOutputDir))
+                dokkaSourceSets {
+                    configureEach {
+                        val platformName = when (platform.get()) {
+                            Platform.jvm -> "jvm"
+                            Platform.js -> "js"
+                            Platform.native -> "native"
+                            Platform.common -> "common"
+                        }
+                        displayName.set(platformName)
+
+                        perPackageOption {
+                            matchingRegex.set(".*\\.internal.*") // will match all .internal packages and sub-packages
+                            suppress.set(true)
+                        }
+                    }
+                }
+            }
+
+            val deleteDokkaOutputDir by tasks.register<Delete>("deleteDokkaOutputDirectory") {
+                delete(dokkaOutputDir)
+            }
+
+            javadocJar.dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+            javadocJar.from(dokkaOutputDir)
         }
     }
 }
@@ -160,7 +228,7 @@ if (hasBintray) {
     val postBintrayPublish by tasks.creating {
         doLast {
             HttpClients.createDefault().use { client ->
-                val post = HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish").apply {
+                val post = HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/${project.version.toString()}/publish").apply {
                     entity = StringEntity("{}", ContentType.APPLICATION_JSON)
                     addHeader(BasicScheme().authenticate(UsernamePasswordCredentials(bintrayUsername, bintrayApiKey), this, null))
                 }
@@ -172,7 +240,7 @@ if (hasBintray) {
     val postBintrayDiscard by tasks.creating {
         doLast {
             HttpClients.createDefault().use { client ->
-                val post = HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/$bintrayVersion/publish").apply {
+                val post = HttpPost("https://api.bintray.com/content/acinq/$bintrayRepo/${rootProject.name}/${project.version.toString()}/publish").apply {
                     entity = StringEntity("{ \"discard\": true }", ContentType.APPLICATION_JSON)
                     addHeader(BasicScheme().authenticate(UsernamePasswordCredentials(bintrayUsername, bintrayApiKey), this, null))
                 }

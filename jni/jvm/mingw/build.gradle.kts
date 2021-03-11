@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    id("org.jetbrains.dokka")
     `maven-publish`
 }
 
@@ -25,6 +26,10 @@ publishing {
         val pub = create<MavenPublication>("jvm") {
             artifactId = "secp256k1-kmp-jni-jvm-mingw"
             from(components["java"])
+            val sourcesJar = task<Jar>("sourcesJar") {
+                archiveClassifier.set("sources")
+            }
+            artifact(sourcesJar)
         }
         if (!org.gradle.internal.os.OperatingSystem.current().isWindows) {
             tasks.withType<AbstractPublishToMaven>().all { onlyIf { publication != pub } }
