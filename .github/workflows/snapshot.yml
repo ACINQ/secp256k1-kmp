@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'snapshot/*'
     paths-ignore:
       - '**.md'
       - '**.adoc'
