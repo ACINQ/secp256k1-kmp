@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'snapshot/*'
     paths-ignore:
       - '**.md'
       - '**.adoc'
@@ -116,7 +117,6 @@ jobs:
 #          ./gradlew publish -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
         run: ./gradlew publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Copy artifact files
-        shell: bash
         run: |
           mkdir -p maven-local/snapshot
           cp -r ~/.m2/repository/* maven-local/snapshot
