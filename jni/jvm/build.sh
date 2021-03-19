@@ -14,11 +14,9 @@ JNI_HEADERS=$TARGET
 
 if [ "$TARGET" == "linux" ]; then
   OUTFILE=libsecp256k1-jni.so
-  ADD_LIB=-lgmp
   CC_OPTS="-fPIC"
 elif [ "$TARGET" == "darwin" ]; then
   OUTFILE=libsecp256k1-jni.dylib
-  ADD_LIB=-lgmp
 elif [ "$TARGET" == "mingw" ]; then
   OUTFILE=secp256k1-jni.dll
   CC=x86_64-w64-mingw32-gcc
