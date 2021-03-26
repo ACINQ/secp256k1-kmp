@@ -1,19 +1,15 @@
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.4.31-blue.svg?style=flat&logo=kotlin)](http://kotlinlang.org)
+[![Maven Central](https://img.shields.io/maven-central/v/fr.acinq.secp256k1/secp256k1-kmp)](https://search.maven.org/search?q=g:fr.acinq.secp256k1%20a:secp256k1-kmp*)
+![Github Actions](https://github.com/ACINQ/secp256k1-kmp/actions/workflows/test.yml/badge.svg)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/ACINQ/secp256k1-kmp/blob/master/LICENSE)
+
 # Secp256k1 for Kotlin/Multiplatform
 
 Kotlin/Multiplatform wrapper for Bitcoin Core's secp256k1 library. Targets: JVM, Android, iOS & Linux.
 
 ## Installation
 
-[ ![Download](https://api.bintray.com/packages/acinq/libs/secp256k1/images/download.svg) ](https://bintray.com/acinq/libs/secp256k1-kmp/)
-
-First, you need to add the ACINQ libraries repository:
-
-```kotlin
-// build.gradle.kts
-repositories {
-    maven(url = "https://dl.bintray.com/acinq/libs")
-}
-```
+secp256k1-kmp is available on [maven central](https://search.maven.org/search?q=g:fr.acinq.secp256k1%20a:secp256k1-kmp*)
 
 Then, the actual dependency depends on your targeted platform(s):
 
