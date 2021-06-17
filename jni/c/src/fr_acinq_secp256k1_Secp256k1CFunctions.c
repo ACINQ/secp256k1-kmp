@@ -133,11 +133,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
     seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
-    jpubkey = (*penv)->NewByteArray(penv, 65);
-    pubkey = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
     result = secp256k1_ec_pubkey_create(ctx, &pub, (unsigned char*)seckey);
     (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
-    (*penv)->ReleaseByteArrayElements(penv, jpubkey, pubkey, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_create failed");
     jpubkey = (*penv)->NewByteArray(penv, 65);
     pubkey = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
