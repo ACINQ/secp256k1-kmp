@@ -80,6 +80,8 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
+          emulator-build: 7425822  # workaround to emulator bug: https://github.com/ReactiveCircus/android-emulator-runner/issues/160
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           ndk: ${{ env.ANDROID_NDK_VERSION }}
           cmake: 3.10.2.4988404
           script: ./gradlew connectedCheck
