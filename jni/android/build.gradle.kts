@@ -35,7 +35,7 @@ android {
             setPath("src/main/CMakeLists.txt")
         }
     }
-    ndkVersion = "21.3.6528147"
+    ndkVersion = "21.4.7075529"
 
     afterEvaluate {
         tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
