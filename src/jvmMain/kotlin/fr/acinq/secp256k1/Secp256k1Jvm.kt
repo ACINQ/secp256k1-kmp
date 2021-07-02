@@ -20,12 +20,12 @@ import java.util.*
 
 
 private fun tryLoad(platform: String): Secp256k1? {
-    try {
-        val cls = Class.forName("fr.acinq.secp256k1.jni.NativeSecp256k1${platform.capitalize(Locale.ROOT)}Loader")
+    return try {
+        val cls = Class.forName("fr.acinq.secp256k1.jni.NativeSecp256k1${platform.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }}Loader")
         val load = cls.getMethod("load")
-        return load.invoke(null) as Secp256k1
+        load.invoke(null) as Secp256k1
     } catch (ex: ClassNotFoundException) {
-        return null
+        null
     }
 }
 
