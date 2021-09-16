@@ -12,7 +12,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        jcenter()
     }
 
     dependencies {
@@ -26,7 +25,6 @@ allprojects {
     version = "0.6.0-SNAPSHOT"
 
     repositories {
-        jcenter()
         google()
         mavenCentral()
     }
