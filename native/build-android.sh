@@ -35,7 +35,7 @@ export STRIP=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/$TOOLTARGET-st
 cd secp256k1
 
 ./autogen.sh
-./configure CFLAGS=-fpic --host=$TARGET --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
+./configure CFLAGS=-fpic --host=$TARGET --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-module-schnorrsig --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
 make clean
 make
 

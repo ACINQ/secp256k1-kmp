@@ -4,6 +4,7 @@
 #include "include/secp256k1.h"
 #include "include/secp256k1_ecdh.h"
 #include "include/secp256k1_recovery.h"
+#include "include/secp256k1_schnorrsig.h"
 #include "fr_acinq_secp256k1_Secp256k1CFunctions.h"
 
 #define SIG_FORMAT_UNKNOWN 0
@@ -709,4 +710,87 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     memcpy(sig, der, size);
     (*penv)->ReleaseByteArrayElements(penv, jsig, sig, 0);
     return jsig;
+}
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_schnorrsig_sign
+ * Signature: (J[B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1schnorrsig_1sign
+  (JNIEnv *penv, jclass clazz, jlong jctx, jbyteArray jmsg, jbyteArray jseckey, jbyteArray jauxrand32)
+{
+    secp256k1_context* ctx = (secp256k1_context *)jctx;
+    jbyte *seckey, *msg, *sig, *auxrand32 = NULL;
+    secp256k1_keypair keypair;
+    unsigned char signature[64];
+    int result = 0;
+    jbyteArray jsig;
+
+    if (jctx == 0) return NULL;
+    if (jmsg == NULL) return NULL;
+    if (jseckey == NULL) return NULL;
+
+    CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
+    CHECKRESULT((*penv)->GetArrayLength(penv, jmsg) != 32, "message key must be 32 bytes");
+    if (jauxrand32 != 0) {
+        CHECKRESULT((*penv)->GetArrayLength(penv, jauxrand32) != 32, "auxiliary random data must be 32 bytes");
+    }
+    seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
+    result = secp256k1_keypair_create(ctx, &keypair, seckey);
+    (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
+    CHECKRESULT(!result, "secp256k1_keypair_create failed");
+
+    msg = (*penv)->GetByteArrayElements(penv, jmsg, 0);
+    if (jauxrand32 != 0) {
+        auxrand32 = (*penv)->GetByteArrayElements(penv, jauxrand32, 0);
+    }
+
+    result = secp256k1_schnorrsig_sign(ctx, signature, (unsigned char*)msg, &keypair, auxrand32);
+    (*penv)->ReleaseByteArrayElements(penv, jmsg, msg, 0);
+    if (auxrand32 != 0) {
+        (*penv)->ReleaseByteArrayElements(penv, jauxrand32, auxrand32, 0);
+    }
+    CHECKRESULT(!result, "secp256k1_schnorrsig_sign failed");
+
+    jsig = (*penv)->NewByteArray(penv, 64);
+    sig = (*penv)->GetByteArrayElements(penv, jsig, 0);
+    memcpy(sig, signature, 64);
+    (*penv)->ReleaseByteArrayElements(penv, jsig, sig, 0);
+    return jsig;
+}
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_schnorrsig_verify
+ * Signature: (J[B[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1schnorrsig_1verify
+  (JNIEnv *penv, jclass clazz, jlong jctx, jbyteArray jsig, jbyteArray jmsg, jbyteArray jpubkey)
+{
+    secp256k1_context* ctx = (secp256k1_context *)jctx;
+    jbyte *pub, *msg, *sig;
+    secp256k1_xonly_pubkey pubkey;
+    int result = 0;
+
+    if (jctx == 0) return 0;
+    if (jsig == NULL) return 0;
+    if (jmsg == NULL) return 0;
+    if (jpubkey == NULL) return 0;
+
+    CHECKRESULT((*penv)->GetArrayLength(penv, jsig) != 64, "signature must be 64 bytes");
+    CHECKRESULT((*penv)->GetArrayLength(penv, jpubkey) != 32, "public key must be 32 bytes");
+    CHECKRESULT((*penv)->GetArrayLength(penv, jmsg) != 32, "message must be 32 bytes");
+
+    pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
+    result = secp256k1_xonly_pubkey_parse(ctx, &pubkey, (unsigned char*)pub);
+    (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
+    CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
+
+    sig = (*penv)->GetByteArrayElements(penv, jsig, 0);
+    msg = (*penv)->GetByteArrayElements(penv, jmsg, 0);
+    result = secp256k1_schnorrsig_verify(ctx, (unsigned char*)sig, (unsigned char*)msg, 32, &pubkey);
+    (*penv)->ReleaseByteArrayElements(penv, jsig, sig, 0);
+    (*penv)->ReleaseByteArrayElements(penv, jmsg, msg, 0);
+    return result;
 }

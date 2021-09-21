@@ -87,4 +87,12 @@ public object NativeSecp256k1 : Secp256k1 {
     override fun compact2der(sig: ByteArray): ByteArray {
         return Secp256k1CFunctions.secp256k1_compact_to_der(Secp256k1Context.getContext(), sig)
     }
+
+    override fun verifySchnorr(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean {
+        return Secp256k1CFunctions.secp256k1_schnorrsig_verify(Secp256k1Context.getContext(), signature, data, pub) == 1
+    }
+
+    override fun signSchnorr(data: ByteArray, sec: ByteArray, auxrand32: ByteArray?): ByteArray {
+        return Secp256k1CFunctions.secp256k1_schnorrsig_sign(Secp256k1Context.getContext(), data, sec, auxrand32)
+    }
 }

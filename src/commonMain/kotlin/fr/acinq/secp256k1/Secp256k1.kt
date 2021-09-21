@@ -24,6 +24,10 @@ public interface Secp256k1 {
 
     public fun sign(data: ByteArray, sec: ByteArray): ByteArray
 
+    public fun verifySchnorr(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean
+
+    public fun signSchnorr(data: ByteArray, sec: ByteArray, auxrand32: ByteArray?): ByteArray
+
     public fun signatureNormalize(sig: ByteArray): Pair<ByteArray, Boolean>
 
     public fun secKeyVerify(seckey: ByteArray): Boolean
