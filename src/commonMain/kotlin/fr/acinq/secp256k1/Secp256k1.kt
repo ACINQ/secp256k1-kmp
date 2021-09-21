@@ -38,6 +38,23 @@ public interface Secp256k1 {
     public fun sign(message: ByteArray, privkey: ByteArray): ByteArray
 
     /**
+     * Verify a Schnorr signature.
+     *
+     * @param signature 64 bytes signature.
+     * @param message message signed.
+     * @param pubkey signer's public key.
+     */
+    public fun verifySchnorr(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean
+
+    /**
+     * Create a Schnorr signature.
+     *
+     * @param message message to sign.
+     * @param privkey signer's private key.
+     */
+    public fun signSchnorr(data: ByteArray, sec: ByteArray, auxrand32: ByteArray?): ByteArray
+
+   /**
      * Convert an ECDSA signature to a normalized lower-S form (bitcoin standardness rule).
      * Returns the normalized signature and a boolean set to true if the input signature was not normalized.
      *

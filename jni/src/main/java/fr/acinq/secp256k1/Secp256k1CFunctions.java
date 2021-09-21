@@ -64,4 +64,8 @@ public class Secp256k1CFunctions {
     public static native byte[] secp256k1_ecdsa_recover(long ctx, byte[] sig, byte[] msg32, int recid);
 
     public static native byte[] secp256k1_compact_to_der(long ctx, byte[] sig);
+
+    public static native byte[] secp256k1_schnorrsig_sign(long ctx, byte[] msg, byte[] seckey, byte[] aux_rand32);
+
+    public static native int secp256k1_schnorrsig_verify(long ctx, byte[] sig, byte[] msg, byte[] pubkey);
 }
