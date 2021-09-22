@@ -1,16 +1,10 @@
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.entity.ContentType
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.auth.BasicScheme
-import org.apache.http.auth.UsernamePasswordCredentials
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.dokka.Platform
 
 plugins {
-    kotlin("multiplatform") version "1.4.32"
-    id("org.jetbrains.dokka") version "1.4.30"
+    kotlin("multiplatform") version "1.5.31"
+    id("org.jetbrains.dokka") version "1.5.30"
     `maven-publish`
 }
 
@@ -18,21 +12,19 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        jcenter()
     }
 
     dependencies {
         classpath("com.android.tools.build:gradle:4.0.2")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.4.30")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.5.30")
     }
 }
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.5.3-SNAPSHOT"
+    version = "0.6.0-SNAPSHOT"
 
     repositories {
-        jcenter()
         google()
         mavenCentral()
     }
@@ -79,7 +71,6 @@ kotlin {
     sourceSets.all {
         languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
     }
-
 }
 
 // Disable cross compilation

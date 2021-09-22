@@ -154,7 +154,7 @@ internal object OSInfo {
                if (systemOsArch.startsWith("arm")) {
                    resolveArmArchType()
                } else {
-                   val lc = systemOsArch.toLowerCase(Locale.US)
+                   val lc = systemOsArch.lowercase(Locale.US)
                    if (archMapping.containsKey(lc)) return archMapping[lc]
                    systemOsArch
                }
