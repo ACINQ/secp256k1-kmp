@@ -4,7 +4,7 @@ import org.jetbrains.dokka.Platform
 
 plugins {
     kotlin("multiplatform") version "1.5.31"
-    id("org.jetbrains.dokka") version "1.4.32"
+    id("org.jetbrains.dokka") version "1.5.30"
     `maven-publish`
 }
 
@@ -16,7 +16,7 @@ buildscript {
 
     dependencies {
         classpath("com.android.tools.build:gradle:4.0.2")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.4.32")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.5.30")
     }
 }
 
