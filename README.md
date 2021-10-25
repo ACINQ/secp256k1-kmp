@@ -84,3 +84,38 @@ You can also specify the temporary directory where the library will be extracted
 ## Usage
 
 Please have a look at unit tests, more samples will be added soon.
+
+## Building
+
+-**secp256k1-kmp** is a [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) wrapper for Bitcoin Core's [secp256k1 library](https://github.com/bitcoin-core/secp256k1).
+-
+To build the library you need the following:
+- Window 64 bits, Linux 64 bits, or MacOs 64 Bits
+- OpenJDK11 (we recommend using packages provided by https://adoptopenjdk.net/ but there are other options)
+- (optional) Android SDK
+
+It may work with other Operating Systems and JDKs, but then you're on your own (in particular we don't plan to support 32 bits Operating Systems).
+To build the library and publish compiled artefacts locally (so they can be used by other projects):
+
+```sh
+./gradlew :build
+./gradlew :publishToMavenLocal
+```
+
+To run all tests on all platforms:
+
+```sh
+./gradlew allTests
+```
+
+To run tests on a single platform, for example the JVM:
+
+```sh
+./gradlew jvmTest
+```
+
+If you want to skip building Android artefacts create a `1ocal.properties` file in the project's root directory and add the following line:
+
+```
+skip.android=true
+```
