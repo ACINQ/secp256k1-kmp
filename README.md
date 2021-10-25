@@ -114,7 +114,7 @@ To run tests on a single platform, for example the JVM:
 ./gradlew jvmTest
 ```
 
-If you want to skip building Android artefacts create a `1ocal.properties` file in the project's root directory and add the following line:
+If you want to skip building Android artefacts create a `local.properties` file in the project's root directory and add the following line:
 
 ```
 skip.android=true
