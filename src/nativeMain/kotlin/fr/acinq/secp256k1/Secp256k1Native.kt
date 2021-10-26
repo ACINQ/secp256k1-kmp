@@ -174,12 +174,12 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    public override fun pubKeyCombine(vararg pubkeys: ByteArray): ByteArray {
+    public override fun pubKeyCombine(pubkeys: Array<ByteArray>): ByteArray {
         pubkeys.forEach { require(it.size == 33 || it.size == 65) }
         memScoped {
-            val nPubkeys = pubkeys.map { allocPublicKey(it) }
+            val nPubkeys = pubkeys.map { allocPublicKey(it).ptr }
             val combined = alloc<secp256k1_pubkey>()
-            secp256k1_ec_pubkey_combine(ctx, combined.ptr, cValuesOf(*nPubkeys.map { it.ptr }.toTypedArray()), pubkeys.size.convert()).requireSuccess("secp256k1_ec_pubkey_combine() failed")
+            secp256k1_ec_pubkey_combine(ctx, combined.ptr, nPubkeys.toCValues(), pubkeys.size.convert()).requireSuccess("secp256k1_ec_pubkey_combine() failed")
             return serializePubkey(combined)
         }
     }

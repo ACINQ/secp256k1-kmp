@@ -68,7 +68,7 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_ec_pubkey_tweak_mul(Secp256k1Context.getContext(), pubkey, tweak)
     }
 
-    override fun pubKeyCombine(vararg pubkeys: ByteArray): ByteArray {
+    override fun pubKeyCombine(pubkeys: Array<ByteArray>): ByteArray {
         return Secp256k1CFunctions.secp256k1_ec_pubkey_combine(Secp256k1Context.getContext(), pubkeys)
     }
 

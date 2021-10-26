@@ -93,7 +93,7 @@ public interface Secp256k1 {
     /**
      * Add a number of public keys together.
      */
-    public fun pubKeyCombine(vararg pubkeys: ByteArray): ByteArray
+    public fun pubKeyCombine(pubkeys: Array<ByteArray>): ByteArray
 
     /**
      * Compute an elliptic curve Diffie-Hellman secret.
