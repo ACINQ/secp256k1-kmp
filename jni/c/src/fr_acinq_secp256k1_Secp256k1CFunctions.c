@@ -493,51 +493,6 @@ void free_pubkeys(secp256k1_pubkey **pubkeys, size_t count)
 
 /*
  * Class:     fr_acinq_bitcoin_Secp256k1Bindings
- * Method:    secp256k1_ec_pubkey_add
- * Signature: (J[B[B)[B
- */
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1pubkey_1add
-  (JNIEnv *penv, jclass clazz, jlong jctx, jbyteArray jpubkey1, jbyteArray jpubkey2)
-{
-    secp256k1_context* ctx = (secp256k1_context *)jctx;
-    jbyte *pub1, *pub2;
-    secp256k1_pubkey pubkey1, pubkey2, combined;
-    secp256k1_pubkey const *pubkeys[2] = { &pubkey1, &pubkey2 };
-    size_t size = 0;
-    int result = 0;
-
-    if (jctx == 0) return NULL;
-    if (jpubkey1 == NULL) return NULL;
-    if (jpubkey2 == NULL) return NULL;
-
-    size = (*penv)->GetArrayLength(penv, jpubkey1);
-    CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
-    pub1 = (*penv)->GetByteArrayElements(penv, jpubkey1, 0);
-    result = secp256k1_ec_pubkey_parse(ctx, &pubkey1, (unsigned char*)pub1, size);
-    (*penv)->ReleaseByteArrayElements(penv, jpubkey1, pub1, 0);
-    CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
-
-    size = (*penv)->GetArrayLength(penv, jpubkey2);
-    CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
-    pub2 = (*penv)->GetByteArrayElements(penv, jpubkey2, 0);
-    result = secp256k1_ec_pubkey_parse(ctx, &pubkey2, (unsigned char*)pub2, size);
-    (*penv)->ReleaseByteArrayElements(penv, jpubkey2, pub2, 0);
-    CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
-
-    result = secp256k1_ec_pubkey_combine(ctx, &combined, pubkeys, 2);
-    CHECKRESULT(!result, "secp256k1_ec_pubkey_combine failed");
-
-    size = 65;
-    jpubkey1 = (*penv)->NewByteArray(penv, 65);
-    pub1 = (*penv)->GetByteArrayElements(penv, jpubkey1, 0);
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub1, &size, &combined, SECP256K1_EC_UNCOMPRESSED);
-    (*penv)->ReleaseByteArrayElements(penv, jpubkey1, pub1, 0);
-    CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
-    return jpubkey1;
-}
-
-/*
- * Class:     fr_acinq_bitcoin_Secp256k1Bindings
  * Method:    secp256k1_ec_pubkey_combine
  * Signature: (J[[B)[B
  */

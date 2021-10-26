@@ -57,8 +57,6 @@ public class Secp256k1CFunctions {
 
     public static native byte[] secp256k1_ec_pubkey_tweak_mul(long ctx, byte[] pubkey, byte[] tweak);
 
-    public static native byte[] secp256k1_ec_pubkey_add(long ctx, byte[] pubkey1, byte[] pubkey2);
-
     public static native byte[] secp256k1_ec_pubkey_combine(long ctx, byte[][] pubkeys);
 
     public static native byte[] secp256k1_ecdh(long ctx, byte[] seckey, byte[] pubkey);

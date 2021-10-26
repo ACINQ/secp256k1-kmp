@@ -9,7 +9,7 @@ public object Secp256k1Native : Secp256k1 {
 
     private val ctx: CPointer<secp256k1_context> by lazy {
         secp256k1_context_create((SECP256K1_FLAGS_TYPE_CONTEXT or SECP256K1_FLAGS_BIT_CONTEXT_SIGN or SECP256K1_FLAGS_BIT_CONTEXT_VERIFY).toUInt())
-            ?: error("Could not create segp256k1 context")
+            ?: error("Could not create secp256k1 context")
     }
 
     private fun Int.requireSuccess(message: String): Int = if (this != 1) throw Secp256k1Exception(message) else this
@@ -55,25 +55,25 @@ public object Secp256k1Native : Secp256k1 {
         return pinned.addressOf(0)
     }
 
-    public override fun verify(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean {
-        require(data.size == 32)
-        require(pub.size == 33 || pub.size == 65)
+    public override fun verify(signature: ByteArray, message: ByteArray, pubkey: ByteArray): Boolean {
+        require(message.size == 32)
+        require(pubkey.size == 33 || pubkey.size == 65)
         memScoped {
-            val nPubkey = allocPublicKey(pub)
-            val nData = toNat(data)
+            val nPubkey = allocPublicKey(pubkey)
+            val nMessage = toNat(message)
             val nSig = allocSignature(signature)
-            return secp256k1_ecdsa_verify(ctx, nSig.ptr, nData, nPubkey.ptr) == 1
+            return secp256k1_ecdsa_verify(ctx, nSig.ptr, nMessage, nPubkey.ptr) == 1
         }
     }
 
-    public override fun sign(data: ByteArray, sec: ByteArray): ByteArray {
-        require(sec.size == 32)
-        require(data.size == 32)
+    public override fun sign(message: ByteArray, privkey: ByteArray): ByteArray {
+        require(privkey.size == 32)
+        require(message.size == 32)
         memScoped {
-            val nSec = toNat(sec)
-            val nData = toNat(data)
+            val nPrivkey = toNat(privkey)
+            val nMessage = toNat(message)
             val nSig = alloc<secp256k1_ecdsa_signature>()
-            secp256k1_ecdsa_sign(ctx, nSig.ptr, nData, nSec, null, null).requireSuccess("secp256k1_ecdsa_sign() failed")
+            secp256k1_ecdsa_sign(ctx, nSig.ptr, nMessage, nPrivkey, null, null).requireSuccess("secp256k1_ecdsa_sign() failed")
             return serializeSignature(nSig)
         }
     }
@@ -87,20 +87,20 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    public override fun secKeyVerify(seckey: ByteArray): Boolean {
-        require(seckey.size == 32)
+    public override fun secKeyVerify(privkey: ByteArray): Boolean {
+        require(privkey.size == 32)
         memScoped {
-            val nSec = toNat(seckey)
-            return secp256k1_ec_seckey_verify(ctx, nSec) == 1
+            val nPrivkey = toNat(privkey)
+            return secp256k1_ec_seckey_verify(ctx, nPrivkey) == 1
         }
     }
 
-    public override fun pubkeyCreate(seckey: ByteArray): ByteArray {
-        require(seckey.size == 32)
+    public override fun pubkeyCreate(privkey: ByteArray): ByteArray {
+        require(privkey.size == 32)
         memScoped {
-            val nSec = toNat(seckey)
+            val nPrivkey = toNat(privkey)
             val nPubkey = alloc<secp256k1_pubkey>()
-            secp256k1_ec_pubkey_create(ctx, nPubkey.ptr, nSec).requireSuccess("secp256k1_ec_pubkey_create() failed")
+            secp256k1_ec_pubkey_create(ctx, nPubkey.ptr, nPrivkey).requireSuccess("secp256k1_ec_pubkey_create() failed")
             return serializePubkey(nPubkey)
         }
     }
@@ -113,10 +113,6 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    public override fun cleanup() {
-        secp256k1_context_destroy(ctx)
-    }
-
     public override fun privKeyNegate(privkey: ByteArray): ByteArray {
         require(privkey.size == 32)
         memScoped {
@@ -124,17 +120,6 @@ public object Secp256k1Native : Secp256k1 {
             val negPriv = toNat(negated)
             secp256k1_ec_privkey_negate(ctx, negPriv).requireSuccess("secp256k1_ec_privkey_negate() failed")
             return negated
-        }
-    }
-
-    public override fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray {
-        require(privkey.size == 32)
-        memScoped {
-            val multiplied = privkey.copyOf()
-            val natMul = toNat(multiplied)
-            val natTweak = toNat(tweak)
-            secp256k1_ec_privkey_tweak_mul(ctx, natMul, natTweak).requireSuccess("secp256k1_ec_privkey_tweak_mul() failed")
-            return multiplied
         }
     }
 
@@ -146,6 +131,17 @@ public object Secp256k1Native : Secp256k1 {
             val natTweak = toNat(tweak)
             secp256k1_ec_privkey_tweak_add(ctx, natAdd, natTweak).requireSuccess("secp256k1_ec_privkey_tweak_add() failed")
             return added
+        }
+    }
+
+    public override fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray {
+        require(privkey.size == 32)
+        memScoped {
+            val multiplied = privkey.copyOf()
+            val natMul = toNat(multiplied)
+            val natTweak = toNat(tweak)
+            secp256k1_ec_privkey_tweak_mul(ctx, natMul, natTweak).requireSuccess("secp256k1_ec_privkey_tweak_mul() failed")
+            return multiplied
         }
     }
 
@@ -178,26 +174,24 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    public override fun pubKeyAdd(pubkey1: ByteArray, pubkey2: ByteArray): ByteArray {
-        require(pubkey1.size == 33 || pubkey1.size == 65)
-        require(pubkey2.size == 33 || pubkey2.size == 65)
+    public override fun pubKeyCombine(pubkeys: Array<ByteArray>): ByteArray {
+        pubkeys.forEach { require(it.size == 33 || it.size == 65) }
         memScoped {
-            val nPubkey1 = allocPublicKey(pubkey1)
-            val nPubkey2 = allocPublicKey(pubkey2)
+            val nPubkeys = pubkeys.map { allocPublicKey(it).ptr }
             val combined = alloc<secp256k1_pubkey>()
-            secp256k1_ec_pubkey_combine(ctx, combined.ptr, cValuesOf(nPubkey1.ptr, nPubkey2.ptr), 2.convert()).requireSuccess("secp256k1_ec_pubkey_combine() failed")
+            secp256k1_ec_pubkey_combine(ctx, combined.ptr, nPubkeys.toCValues(), pubkeys.size.convert()).requireSuccess("secp256k1_ec_pubkey_combine() failed")
             return serializePubkey(combined)
         }
     }
 
-    public override fun ecdh(seckey: ByteArray, pubkey: ByteArray): ByteArray {
-        require(seckey.size == 32)
+    public override fun ecdh(privkey: ByteArray, pubkey: ByteArray): ByteArray {
+        require(privkey.size == 32)
         require(pubkey.size == 33 || pubkey.size == 65)
         memScoped {
             val nPubkey = allocPublicKey(pubkey)
-            val nSeckey = toNat(seckey)
+            val nPrivkey = toNat(privkey)
             val output = allocArray<UByteVar>(32)
-            secp256k1_ecdh(ctx, output, nPubkey.ptr, nSeckey, null, null).requireSuccess("secp256k1_ecdh() failed")
+            secp256k1_ecdh(ctx, output, nPubkey.ptr, nPrivkey, null, null).requireSuccess("secp256k1_ecdh() failed")
             return output.readBytes(32)
         }
     }
@@ -226,6 +220,10 @@ public object Secp256k1Native : Secp256k1 {
             secp256k1_ecdsa_signature_serialize_der(ctx, natOutput, len.ptr, nSig.ptr).requireSuccess("secp256k1_ecdsa_signature_serialize_der() failed")
             return natOutput.readBytes(len.value.toInt())
         }
+    }
+
+    public override fun cleanup() {
+        secp256k1_context_destroy(ctx)
     }
 }
 
