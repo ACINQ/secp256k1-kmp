@@ -70,6 +70,14 @@ class Secp256k1Test {
     }
 
     @Test
+    fun `parse invalid public key`() {
+        val pub = Hex.decode("02FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".lowercase())
+        assertFailsWith<Secp256k1Exception> {
+            Secp256k1.pubkeyParse(pub)
+        }
+    }
+
+    @Test
     fun `combine public keys`() {
         val pub1 = Hex.decode("041b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1".lowercase())
         val pub2 = Hex.decode("044d4b6cd1361032ca9bd2aeb9d900aa4d45d9ead80ac9423374c451a7254d07662a3eada2d0fe208b6d257ceb0f064284662e857f57b66b54c198bd310ded36d0".lowercase())
