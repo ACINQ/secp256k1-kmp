@@ -179,7 +179,7 @@ public object Secp256k1Native : Secp256k1 {
         memScoped {
             val nPubkeys = pubkeys.map { allocPublicKey(it) }
             val combined = alloc<secp256k1_pubkey>()
-            secp256k1_ec_pubkey_combine(ctx, combined.ptr, cValuesOf(*(nPubkeys.map { it.ptr })), pubkeys.size.convert()).requireSuccess("secp256k1_ec_pubkey_combine() failed")
+            secp256k1_ec_pubkey_combine(ctx, combined.ptr, cValuesOf(*nPubkeys.map { it.ptr }.toTypedArray()), pubkeys.size.convert()).requireSuccess("secp256k1_ec_pubkey_combine() failed")
             return serializePubkey(combined)
         }
     }
