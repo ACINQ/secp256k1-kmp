@@ -87,8 +87,8 @@ Please have a look at unit tests, more samples will be added soon.
 
 ## Building
 
--**secp256k1-kmp** is a [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) wrapper for Bitcoin Core's [secp256k1 library](https://github.com/bitcoin-core/secp256k1).
--
+**secp256k1-kmp** is a [Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html) wrapper for Bitcoin Core's [secp256k1 library](https://github.com/bitcoin-core/secp256k1).
+
 To build the library you need the following:
 - Window 64 bits, Linux 64 bits, or MacOs 64 Bits
 - OpenJDK11 (we recommend using packages provided by https://adoptopenjdk.net/ but there are other options)
@@ -119,3 +119,23 @@ If you want to skip building Android artefacts create a `local.properties` file 
 ```
 skip.android=true
 ```
+
+## Contributing to and extending the library
+
+secp256k1-kmp follows 2 simples rules:
+- copy as literally as possible what the original [secp256k1 library](https://github.com/bitcoin-core/secp256k1) does: use the same function names, parameters, options, ... 
+- follow JNI best practices (memory allocation, error handling, ...)
+ 
+"Porting" C/C++ code that uses [secp256k1](https://github.com/bitcoin-core/secp256k1) should be a no-brainer and we should not have to document secp256k1-kmp
+
+
+To extend this library and support methods that have been added to specific versions of [secp256k1](https://github.com/bitcoin-core/secp256k1) you have to:
+- add new methods to the Secp256k1 interface src/commonMain/kotlin/fr/acinq/secp256k1/Secp256k1.kt (please follow rule #1 above and try and match secp256k1's interface as much as possible)
+- implement these new methods in jni/src/main/kotlin/fr/acinq/secp256k1/NativeSecp256k1.kt (JNI implementation) and src/nativeMain/kotlin/fr/acinq/secp256k1/Secp256k1Native.kt (native linux/ios/... implementation)
+- update the JNI interface src/main/java/fr/acinq/secp256k1/Secp256k1CFunctions.java (NativeSecp256k1 calls Secp256k1CFunctions)
+- generate a new JNI header file jni/c/headers/java/fr_acinq_secp256k1_Secp256k1CFunctions.h with `javac -h jni/c/headers/java jni/src/main/java/fr/acinq/secp256k1/Secp256k1CFunctions.java`
+- implement the new methods in jni/c/src/fr_acinq_secp256k1_Secp256k1CFunctions.c
+
+You may also need to modify build files if you need to compile [secp256k1](https://github.com/bitcoin-core/secp256k1) with custom options
+
+We use [secp256k1](https://github.com/bitcoin-core/secp256k1) through git submodules so you may also need to change what they point to
