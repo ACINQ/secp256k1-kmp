@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package fr.acinq.secp256k1
 
 public object NativeSecp256k1 : Secp256k1 {
-    override fun verify(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean {
-        return Secp256k1CFunctions.secp256k1_ecdsa_verify(Secp256k1Context.getContext(), signature, data, pub) == 1
+    override fun verify(signature: ByteArray, message: ByteArray, pubkey: ByteArray): Boolean {
+        return Secp256k1CFunctions.secp256k1_ecdsa_verify(Secp256k1Context.getContext(), signature, message, pubkey) == 1
     }
 
-    override fun sign(data: ByteArray, sec: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ecdsa_sign(Secp256k1Context.getContext(), data, sec)
+    override fun sign(message: ByteArray, privkey: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_ecdsa_sign(Secp256k1Context.getContext(), message, privkey)
     }
 
     override fun signatureNormalize(sig: ByteArray): Pair<ByteArray, Boolean> {
@@ -31,33 +32,28 @@ public object NativeSecp256k1 : Secp256k1 {
         return Pair(sigout, result == 1)
     }
 
-    override fun secKeyVerify(seckey: ByteArray): Boolean {
-        val result = Secp256k1CFunctions.secp256k1_ec_seckey_verify(Secp256k1Context.getContext(), seckey);
-        return result == 1;
+    override fun secKeyVerify(privkey: ByteArray): Boolean {
+        return Secp256k1CFunctions.secp256k1_ec_seckey_verify(Secp256k1Context.getContext(), privkey) == 1
     }
 
-    override fun pubkeyCreate(seckey: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ec_pubkey_create(Secp256k1Context.getContext(), seckey)
+    override fun pubkeyCreate(privkey: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_ec_pubkey_create(Secp256k1Context.getContext(), privkey)
     }
 
     override fun pubkeyParse(pubkey: ByteArray): ByteArray {
         return Secp256k1CFunctions.secp256k1_ec_pubkey_parse(Secp256k1Context.getContext(), pubkey)
     }
 
-    override fun cleanup() {
-        return Secp256k1CFunctions.secp256k1_context_destroy(Secp256k1Context.getContext())
-    }
-
     override fun privKeyNegate(privkey: ByteArray): ByteArray {
         return Secp256k1CFunctions.secp256k1_ec_privkey_negate(Secp256k1Context.getContext(), privkey)
     }
 
-    override fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ec_privkey_tweak_mul(Secp256k1Context.getContext(), privkey, tweak)
-    }
-
     override fun privKeyTweakAdd(privkey: ByteArray, tweak: ByteArray): ByteArray {
         return Secp256k1CFunctions.secp256k1_ec_privkey_tweak_add(Secp256k1Context.getContext(), privkey, tweak)
+    }
+
+    override fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_ec_privkey_tweak_mul(Secp256k1Context.getContext(), privkey, tweak)
     }
 
     override fun pubKeyNegate(pubkey: ByteArray): ByteArray {
@@ -72,12 +68,12 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_ec_pubkey_tweak_mul(Secp256k1Context.getContext(), pubkey, tweak)
     }
 
-    override fun pubKeyAdd(pubkey1: ByteArray, pubkey2: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ec_pubkey_add(Secp256k1Context.getContext(), pubkey1, pubkey2)
+    override fun pubKeyCombine(vararg pubkeys: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_ec_pubkey_combine(Secp256k1Context.getContext(), pubkeys)
     }
 
-    override fun ecdh(seckey: ByteArray, pubkey: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ecdh(Secp256k1Context.getContext(), seckey, pubkey)
+    override fun ecdh(privkey: ByteArray, pubkey: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_ecdh(Secp256k1Context.getContext(), privkey, pubkey)
     }
 
     override fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray {
@@ -86,5 +82,9 @@ public object NativeSecp256k1 : Secp256k1 {
 
     override fun compact2der(sig: ByteArray): ByteArray {
         return Secp256k1CFunctions.secp256k1_compact_to_der(Secp256k1Context.getContext(), sig)
+    }
+
+    override fun cleanup() {
+        return Secp256k1CFunctions.secp256k1_context_destroy(Secp256k1Context.getContext())
     }
 }

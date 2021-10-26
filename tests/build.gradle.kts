@@ -18,6 +18,7 @@ kotlin {
     }
     val commonTest by sourceSets.getting {
         dependencies {
+            implementation(kotlin("test-common"))
             implementation(kotlin("test-annotations-common"))
         }
     }
