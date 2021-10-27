@@ -36,12 +36,21 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_ec_seckey_verify(Secp256k1Context.getContext(), privkey) == 1
     }
 
+    override fun pubKeyVerify(pubkey: ByteArray): Boolean {
+        val pubkeyOut = ByteArray(33)
+        val result = Secp256k1CFunctions.secp256k1_ec_pubkey_parse(Secp256k1Context.getContext(), pubkey, pubkeyOut)
+        return result == 1
+    }
+
     override fun pubkeyCreate(privkey: ByteArray): ByteArray {
         return Secp256k1CFunctions.secp256k1_ec_pubkey_create(Secp256k1Context.getContext(), privkey)
     }
 
     override fun pubkeyParse(pubkey: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ec_pubkey_parse(Secp256k1Context.getContext(), pubkey)
+        val pubkeyOut = ByteArray(33)
+        val result = Secp256k1CFunctions.secp256k1_ec_pubkey_parse(Secp256k1Context.getContext(), pubkey, pubkeyOut)
+        if (result != 1) throw Secp256k1Exception("invalid public key")
+        return pubkeyOut
     }
 
     override fun privKeyNegate(privkey: ByteArray): ByteArray {

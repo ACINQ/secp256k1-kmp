@@ -51,6 +51,11 @@ public interface Secp256k1 {
     public fun secKeyVerify(privkey: ByteArray): Boolean
 
     /**
+     * Verify the validity of a public key.
+     */
+    public fun pubKeyVerify(pubkey: ByteArray): Boolean
+
+    /**
      * Get the public key corresponding to the given private key.
      */
     public fun pubkeyCreate(privkey: ByteArray): ByteArray

@@ -34,10 +34,10 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
  * Method:    secp256k1_ec_pubkey_parse
- * Signature: (J[B)[B
+ * Signature: (J[B[B)I
  */
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1pubkey_1parse
-  (JNIEnv *, jclass, jlong, jbyteArray);
+JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1pubkey_1parse
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray);
 
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions

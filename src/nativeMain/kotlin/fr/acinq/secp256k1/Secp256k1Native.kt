@@ -41,10 +41,10 @@ public object Secp256k1Native : Secp256k1 {
     }
 
     private fun MemScope.serializePubkey(pubkey: secp256k1_pubkey): ByteArray {
-        val serialized = allocArray<UByteVar>(65)
+        val serialized = allocArray<UByteVar>(33)
         val outputLen = alloc<size_tVar>()
-        outputLen.value = 65.convert()
-        secp256k1_ec_pubkey_serialize(ctx, serialized, outputLen.ptr, pubkey.ptr, SECP256K1_EC_UNCOMPRESSED.convert()).requireSuccess("secp256k1_ec_pubkey_serialize() failed")
+        outputLen.value = 33.convert()
+        secp256k1_ec_pubkey_serialize(ctx, serialized, outputLen.ptr, pubkey.ptr, SECP256K1_EC_COMPRESSED.convert()).requireSuccess("secp256k1_ec_pubkey_serialize() failed")
         return serialized.readBytes(outputLen.value.convert())
     }
 
@@ -88,10 +88,17 @@ public object Secp256k1Native : Secp256k1 {
     }
 
     public override fun secKeyVerify(privkey: ByteArray): Boolean {
-        require(privkey.size == 32)
         memScoped {
             val nPrivkey = toNat(privkey)
             return secp256k1_ec_seckey_verify(ctx, nPrivkey) == 1
+        }
+    }
+
+    public override fun pubKeyVerify(pubkey: ByteArray): Boolean {
+        memScoped {
+            val natPub = toNat(pubkey)
+            val pub = alloc<secp256k1_pubkey>()
+            return secp256k1_ec_pubkey_parse(ctx, pub.ptr, natPub, pubkey.size.convert()) == 1
         }
     }
 

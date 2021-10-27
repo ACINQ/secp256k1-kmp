@@ -82,35 +82,36 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
 /*
  * Class:     fr_acinq_bitcoin_Secp256k1Bindings
  * Method:    secp256k1_ec_pubkey_parse
- * Signature: (J[B)[B
+ * Signature: (J[B[B)I
  */
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1pubkey_1parse
-  (JNIEnv *penv, jclass clazz, jlong jctx, jbyteArray jpubkey)
+JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1pubkey_1parse
+  (JNIEnv *penv, jclass clazz, jlong jctx, jbyteArray jpubkeyin, jbyteArray jpubkeyout)
 {
     secp256k1_context* ctx = (secp256k1_context *)jctx;
     jbyte *pubkeyBytes;
     secp256k1_pubkey pubkey;
-    size_t size;
+    size_t size_in, size_out;
     int result = 0;
 
     if (jctx == 0) return 0;
-    if (jpubkey == NULL) return 0;
+    if (jpubkeyin == NULL) return 0;
+    if (jpubkeyout == NULL) return 0;
 
-    size = (*penv)->GetArrayLength(penv, jpubkey);
-    CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
+    size_in = (*penv)->GetArrayLength(penv, jpubkeyin);
+    CHECKRESULT((size_in != 33) && (size_in != 65), "invalid input public key size");
+    size_out = (*penv)->GetArrayLength(penv, jpubkeyout);
+    CHECKRESULT(size_out != 33, "invalid output public key size");
 
-    pubkeyBytes = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (unsigned char*) pubkeyBytes, size);
-    (*penv)->ReleaseByteArrayElements(penv, jpubkey, pubkeyBytes, 0);
-    CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
+    pubkeyBytes = (*penv)->GetByteArrayElements(penv, jpubkeyin, 0);
+    result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (unsigned char*) pubkeyBytes, size_in);
+    (*penv)->ReleaseByteArrayElements(penv, jpubkeyin, pubkeyBytes, 0);
+    if (result == 0) return 0;
 
-    size = 65;
-    jpubkey = (*penv)->NewByteArray(penv, 65);
-    pubkeyBytes = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*) pubkeyBytes, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
-    (*penv)->ReleaseByteArrayElements(penv, jpubkey, pubkeyBytes, 0);
+    pubkeyBytes = (*penv)->GetByteArrayElements(penv, jpubkeyout, 0);
+    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*) pubkeyBytes, &size_out, &pubkey, SECP256K1_EC_COMPRESSED);
+    (*penv)->ReleaseByteArrayElements(penv, jpubkeyout, pubkeyBytes, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
-    return jpubkey;
+    return result;
 }
 
 /*
@@ -125,7 +126,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     jbyte *seckey, *pubkey;
     secp256k1_pubkey pub;
     int result = 0;
-    size_t len;
+    size_t size;
     jbyteArray jpubkey = 0;
 
     if (jseckey == NULL) return NULL;
@@ -136,10 +137,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     result = secp256k1_ec_pubkey_create(ctx, &pub, (unsigned char*)seckey);
     (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_create failed");
-    jpubkey = (*penv)->NewByteArray(penv, 65);
+    size = 33;
+    jpubkey = (*penv)->NewByteArray(penv, 33);
     pubkey = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    len = 65;
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pubkey, &len, &pub, SECP256K1_EC_UNCOMPRESSED);
+    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pubkey, &size, &pub, SECP256K1_EC_COMPRESSED);
     (*penv)->ReleaseByteArrayElements(penv, jpubkey, pubkey, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
     return jpubkey;
@@ -338,10 +339,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     result = secp256k1_ec_pubkey_negate(ctx, &pubkey);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_negate failed");
 
-    size = 65;
-    jpubkey = (*penv)->NewByteArray(penv, 65);
+    size = 33;
+    jpubkey = (*penv)->NewByteArray(penv, 33);
     pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_COMPRESSED);
     (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
     return jpubkey;
@@ -406,10 +407,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     (*penv)->ReleaseByteArrayElements(penv, jtweak, tweak, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_tweak_add failed");
 
-    size = 65;
-    jpubkey = (*penv)->NewByteArray(penv, 65);
+    size = 33;
+    jpubkey = (*penv)->NewByteArray(penv, 33);
     pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_COMPRESSED);
     (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
     return jpubkey;
@@ -473,10 +474,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     (*penv)->ReleaseByteArrayElements(penv, jtweak, tweak, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_tweak_mul failed");
 
-    size = 65;
-    jpubkey = (*penv)->NewByteArray(penv, 65);
+    size = 33;
+    jpubkey = (*penv)->NewByteArray(penv, 33);
     pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_COMPRESSED);
     (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
     return jpubkey;
@@ -528,10 +529,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     free_pubkeys(pubkeys, count);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_combine failed");
 
-    size = 65;
-    jpubkey = (*penv)->NewByteArray(penv, 65);
+    size = 33;
+    jpubkey = (*penv)->NewByteArray(penv, 33);
     pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &combined, SECP256K1_EC_UNCOMPRESSED);
+    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &combined, SECP256K1_EC_COMPRESSED);
     (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
     return jpubkey;
@@ -622,10 +623,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     (*penv)->ReleaseByteArrayElements(penv, jmsg, msg, 0);
     CHECKRESULT(!result, "secp256k1_ecdsa_recover failed");
 
-    size = 65;
-    jpubkey = (*penv)->NewByteArray(penv, 65);
+    size = 33;
+    jpubkey = (*penv)->NewByteArray(penv, 33);
     pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+    result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_COMPRESSED);
     (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
     return jpubkey;

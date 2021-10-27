@@ -35,7 +35,7 @@ public class Secp256k1CFunctions {
 
     public static native int secp256k1_ec_seckey_verify(long ctx, byte[] seckey);
     
-    public static native byte[] secp256k1_ec_pubkey_parse(long ctx, byte[] pubkey);
+    public static native int secp256k1_ec_pubkey_parse(long ctx, byte[] pubkeyin, byte[] pubkeyout);
 
     public static native byte[] secp256k1_ec_pubkey_create(long ctx, byte[] seckey);
 
