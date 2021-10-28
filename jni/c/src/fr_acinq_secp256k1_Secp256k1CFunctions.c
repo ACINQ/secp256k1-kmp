@@ -72,7 +72,8 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
 
     if (jctx == 0) return 0;
     if (jseckey == NULL) return 0;
-    CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
+    if ((*penv)->GetArrayLength(penv, jseckey) != 32) return 0;
+
     seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
     result = secp256k1_ec_seckey_verify(ctx, (unsigned char*)seckey);
     (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);

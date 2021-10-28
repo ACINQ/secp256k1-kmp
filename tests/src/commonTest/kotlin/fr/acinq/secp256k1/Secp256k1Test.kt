@@ -13,7 +13,9 @@ class Secp256k1Test {
 
     @Test
     fun verifyInvalidPrivateKey() {
-        val greaterThanCurveOrder = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".lowercase())
+        val invalidSize = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A106353001")
+        assertFalse(Secp256k1.secKeyVerify(invalidSize))
+        val greaterThanCurveOrder = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase())
         assertFalse(Secp256k1.secKeyVerify(greaterThanCurveOrder))
         val zero = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000".lowercase())
         assertFalse(Secp256k1.secKeyVerify(zero))
