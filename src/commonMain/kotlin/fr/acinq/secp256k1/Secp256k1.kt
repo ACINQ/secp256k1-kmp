@@ -52,11 +52,13 @@ public interface Secp256k1 {
 
     /**
      * Get the public key corresponding to the given private key.
+     * Returns the uncompressed public key (65 bytes).
      */
     public fun pubkeyCreate(privkey: ByteArray): ByteArray
 
     /**
      * Parse a serialized public key.
+     * Returns the uncompressed public key (65 bytes).
      */
     public fun pubkeyParse(pubkey: ByteArray): ByteArray
 
@@ -77,21 +79,25 @@ public interface Secp256k1 {
 
     /**
      * Negate the given public key.
+     * Returns the uncompressed public key (65 bytes).
      */
     public fun pubKeyNegate(pubkey: ByteArray): ByteArray
 
     /**
      * Tweak a public key by adding tweak times the generator to it.
+     * Returns the uncompressed public key (65 bytes).
      */
     public fun pubKeyTweakAdd(pubkey: ByteArray, tweak: ByteArray): ByteArray
 
     /**
      * Tweak a public key by multiplying it by a tweak value.
+     * Returns the uncompressed public key (65 bytes).
      */
     public fun pubKeyTweakMul(pubkey: ByteArray, tweak: ByteArray): ByteArray
 
     /**
      * Add a number of public keys together.
+     * Returns the uncompressed public key (65 bytes).
      */
     public fun pubKeyCombine(pubkeys: Array<ByteArray>): ByteArray
 
@@ -121,9 +127,9 @@ public interface Secp256k1 {
         return when {
             pubkey.size == 33 && (pubkey[0] == 2.toByte() || pubkey[0] == 3.toByte()) -> pubkey
             pubkey.size == 65 && pubkey[0] == 4.toByte() -> {
-                val pub1 = pubkey.copyOf(33)
-                pub1[0] = if (pubkey.last() % 2 == 0) 2.toByte() else 3.toByte()
-                pub1
+                val compressed = pubkey.copyOf(33)
+                compressed[0] = if (pubkey.last() % 2 == 0) 2.toByte() else 3.toByte()
+                compressed
             }
             else -> throw Secp256k1Exception("invalid public key")
         }

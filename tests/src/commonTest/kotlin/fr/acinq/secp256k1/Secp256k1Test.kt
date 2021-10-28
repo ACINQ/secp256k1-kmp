@@ -15,8 +15,8 @@ class Secp256k1Test {
     fun verifyInvalidPrivateKey() {
         val invalidSize = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A106353001")
         assertFalse(Secp256k1.secKeyVerify(invalidSize))
-        val greaterThanCurveOrder = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase())
-        assertFalse(Secp256k1.secKeyVerify(greaterThanCurveOrder))
+        val curveOrder = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase())
+        assertFalse(Secp256k1.secKeyVerify(curveOrder))
         val zero = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000".lowercase())
         assertFalse(Secp256k1.secKeyVerify(zero))
     }
@@ -33,10 +33,9 @@ class Secp256k1Test {
 
     @Test
     fun createInvalidPublicKey() {
-        val priv = Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".lowercase())
-        assertFailsWith<Secp256k1Exception> {
-            Secp256k1.pubkeyCreate(priv)
-        }
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyCreate(Hex.decode("0000000000000000000000000000000000000000000000000000000000000000".lowercase())) }
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyCreate(Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141".lowercase())) }
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyCreate(Hex.decode("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".lowercase())) }
     }
 
     @Test
@@ -54,39 +53,57 @@ class Secp256k1Test {
             "04C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D2103ED494718C697AC9AEBCFD19612E224DB46661011863ED2FC54E71861E2A6",
             Hex.encode(pub).uppercase(),
         )
+        assertEquals(
+            "02C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D",
+            Hex.encode(Secp256k1.pubKeyCompress(pub)).uppercase()
+        )
         val npub = Secp256k1.pubKeyNegate(pub)
         assertEquals(
             "04C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2DDEFC12B6B8E73968536514302E69ED1DDB24B999EFEE79C12D03AB17E79E1989",
             Hex.encode(npub).uppercase(),
         )
+        assertEquals(
+            "03C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D",
+            Hex.encode(Secp256k1.pubKeyCompress(npub)).uppercase()
+        )
+        val nnpub = Secp256k1.pubKeyNegate(npub)
+        assertContentEquals(pub, nnpub)
     }
 
     @Test
     fun parsePublicKey() {
         val pub = Hex.decode("02C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D".lowercase())
-        val parsed = Secp256k1.pubkeyParse(pub)
+        val parsed1 = Secp256k1.pubkeyParse(pub)
         assertEquals(
             "04C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D2103ED494718C697AC9AEBCFD19612E224DB46661011863ED2FC54E71861E2A6",
-            Hex.encode(parsed).uppercase(),
+            Hex.encode(parsed1).uppercase(),
         )
+        val parsed2 = Secp256k1.pubkeyParse(parsed1)
+        assertContentEquals(parsed1, parsed2)
     }
 
     @Test
     fun parseInvalidPublicKey() {
-        val pub = Hex.decode("02FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".lowercase())
-        assertFailsWith<Secp256k1Exception> {
-            Secp256k1.pubkeyParse(pub)
-        }
+        // Not a valid curve point.
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyParse(Hex.decode("02FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF".lowercase())) }
+        // Invalid first byte.
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyParse(Hex.decode("02C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D2103ED494718C697AC9AEBCFD19612E224DB46661011863ED2FC54E71861E2A6".lowercase())) }
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyParse(Hex.decode("03C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D2103ED494718C697AC9AEBCFD19612E224DB46661011863ED2FC54E71861E2A6".lowercase())) }
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyParse(Hex.decode("05C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D2103ED494718C697AC9AEBCFD19612E224DB46661011863ED2FC54E71861E2A6".lowercase())) }
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyParse(Hex.decode("01C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D".lowercase())) }
+        assertFailsWith<Secp256k1Exception> { Secp256k1.pubkeyParse(Hex.decode("04C591A8FF19AC9C4E4E5793673B83123437E975285E7B442F4EE2654DFFCA5E2D".lowercase())) }
     }
 
     @Test
     fun combinePublicKeys() {
-        val pub1 = Hex.decode("041b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1".lowercase())
-        val pub2 = Hex.decode("044d4b6cd1361032ca9bd2aeb9d900aa4d45d9ead80ac9423374c451a7254d07662a3eada2d0fe208b6d257ceb0f064284662e857f57b66b54c198bd310ded36d0".lowercase())
-        val pub3 = Secp256k1.pubKeyCombine(arrayOf(pub1, pub2))
+        // Mixture of compressed and uncompressed public keys.
+        val pub1 = Hex.decode("041b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1")
+        val pub2 = Hex.decode("044d4b6cd1361032ca9bd2aeb9d900aa4d45d9ead80ac9423374c451a7254d07662a3eada2d0fe208b6d257ceb0f064284662e857f57b66b54c198bd310ded36d0")
+        val pub3 = Hex.decode("02eec7245d6b7d2ccb30380bfbe2a3648cd7a942653f5aa340edcea1f283686619")
+        val pub4 = Secp256k1.pubKeyCombine(arrayOf(pub1, pub2, pub3))
         assertEquals(
-            "04531FE6068134503D2723133227C867AC8FA6C83C537E9A44C3C5BDBDCB1FE3379E92C265E71E481BA82A84675A47AC705A200FCD524E92D93B0E7386F26A5458",
-            Hex.encode(pub3).uppercase(),
+            "042C0B7CF95324A07D05398B240174DC0C2BE444D96B159AA6C7F7B1E668680991AE31A9C671A36543F46CEA8FCE6984608AA316AA0472A7EED08847440218CB2F",
+            Hex.encode(pub4).uppercase(),
         )
     }
 
@@ -103,12 +120,33 @@ class Secp256k1Test {
 
     @Test
     fun normalizeEcdsaSignature() {
-        val sig = Hex.decode("30440220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A202201C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9".lowercase())
-        val (normalized, wasNotNormalized) = Secp256k1.signatureNormalize(sig)
-        assertFalse(wasNotNormalized)
+        val normalizedDerSig = Hex.decode("30440220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A202201C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9".lowercase())
+        val (normalizedCompactSig1, wasNotNormalized1) = Secp256k1.signatureNormalize(normalizedDerSig)
+        assertFalse(wasNotNormalized1)
         assertEquals(
             "182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
-            Hex.encode(normalized).uppercase(),
+            Hex.encode(normalizedCompactSig1).uppercase(),
+        )
+        val notNormalizedDerSig = Hex.decode("30450220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A2022100E3990C925DEE3F780C50774AF120B062E0080D86D8C721C6E32F10DBACA57A58".lowercase())
+        val (normalizedCompactSig2, wasNotNormalized2) = Secp256k1.signatureNormalize(notNormalizedDerSig)
+        assertTrue(wasNotNormalized2)
+        assertEquals(
+            "182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
+            Hex.encode(normalizedCompactSig2).uppercase(),
+        )
+        val normalizedCompactSig = Hex.decode("182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9".lowercase())
+        val (normalizedCompactSig3, wasNotNormalized3) = Secp256k1.signatureNormalize(normalizedCompactSig)
+        assertFalse(wasNotNormalized3)
+        assertEquals(
+            "182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
+            Hex.encode(normalizedCompactSig3).uppercase(),
+        )
+        val notNormalizedCompactSig = Hex.decode("182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A2E3990C925DEE3F780C50774AF120B062E0080D86D8C721C6E32F10DBACA57A58".lowercase())
+        val (normalizedCompactSig4, wasNotNormalized4) = Secp256k1.signatureNormalize(notNormalizedCompactSig)
+        assertTrue(wasNotNormalized4)
+        assertEquals(
+            "182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
+            Hex.encode(normalizedCompactSig4).uppercase(),
         )
     }
 
