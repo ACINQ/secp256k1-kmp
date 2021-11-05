@@ -88,7 +88,7 @@ public object Secp256k1Native : Secp256k1 {
     }
 
     public override fun secKeyVerify(privkey: ByteArray): Boolean {
-        require(privkey.size == 32)
+        if (privkey.size != 32) return false
         memScoped {
             val nPrivkey = toNat(privkey)
             return secp256k1_ec_seckey_verify(ctx, nPrivkey) == 1
