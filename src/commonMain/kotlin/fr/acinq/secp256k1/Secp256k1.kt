@@ -42,7 +42,7 @@ public interface Secp256k1 {
      *
      * @param signature 64 bytes signature.
      * @param message message signed.
-     * @param pubkey signer's public key.
+     * @param pubkey signer's x-only public key (32 bytes).
      */
     public fun verifySchnorr(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean
 
