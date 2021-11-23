@@ -51,6 +51,7 @@ public interface Secp256k1 {
      *
      * @param message message to sign.
      * @param privkey signer's private key.
+     * @param auxrand32 32 bytes of fresh randomness (optional).
      */
     public fun signSchnorr(data: ByteArray, sec: ByteArray, auxrand32: ByteArray?): ByteArray
 
