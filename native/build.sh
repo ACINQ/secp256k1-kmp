@@ -23,7 +23,7 @@ else
 fi
 
 ./autogen.sh
-./configure $CONF_OPTS --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
+./configure $CONF_OPTS --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-module-schnorrsig --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
 make clean
 make
 
