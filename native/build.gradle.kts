@@ -7,7 +7,7 @@ if (includeAndroid) {
 }
 
 val currentOs = OperatingSystem.current()
-val bash = if (currentOs.isWindows) "bash.exe" else "bash"
+val bash = "bash"
 
 val buildSecp256k1 by tasks.creating { group = "build" }
 
@@ -27,7 +27,7 @@ val buildSecp256k1Host by tasks.creating(Exec::class) {
 
     workingDir = projectDir
     environment("TARGET", target)
-    commandLine(bash, "build.sh")
+    commandLine(bash, "-l", "build.sh")
 }
 
 val buildSecp256k1Ios by tasks.creating(Exec::class) {
