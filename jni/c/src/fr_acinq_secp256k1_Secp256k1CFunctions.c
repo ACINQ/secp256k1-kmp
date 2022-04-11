@@ -307,9 +307,9 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     if (jseckey == NULL) return 0;
     CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
     seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
-    result = secp256k1_ec_privkey_negate(ctx, (unsigned char*)seckey);
+    result = secp256k1_ec_seckey_negate(ctx, (unsigned char*)seckey);
     (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
-    CHECKRESULT(!result, "secp256k1_ec_privkey_negate failed");
+    CHECKRESULT(!result, "secp256k1_ec_seckey_negate failed");
     return jseckey;
 }
 
@@ -369,10 +369,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT((*penv)->GetArrayLength(penv, jtweak) != 32, "tweak must be 32 bytes");
     seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
     tweak = (*penv)->GetByteArrayElements(penv, jtweak, 0);
-    result = secp256k1_ec_privkey_tweak_add(ctx, (unsigned char*)seckey, (unsigned char*)tweak);
+    result = secp256k1_ec_seckey_tweak_add(ctx, (unsigned char*)seckey, (unsigned char*)tweak);
     (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
     (*penv)->ReleaseByteArrayElements(penv, jtweak, tweak, 0);
-    CHECKRESULT(!result, "secp256k1_ec_privkey_tweak_add failed");
+    CHECKRESULT(!result, "secp256k1_ec_seckey_tweak_add failed");
     return jseckey;
 }
 
@@ -437,8 +437,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT((*penv)->GetArrayLength(penv, jtweak) != 32, "tweak must be 32 bytes");
     seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
     tweak = (*penv)->GetByteArrayElements(penv, jtweak, 0);
-    result = secp256k1_ec_privkey_tweak_mul(ctx, (unsigned char*)seckey, (unsigned char*)tweak);
-    CHECKRESULT(!result, "secp256k1_ec_privkey_tweak_mul failed");
+    result = secp256k1_ec_seckey_tweak_mul(ctx, (unsigned char*)seckey, (unsigned char*)tweak);
+    CHECKRESULT(!result, "secp256k1_ec_seckey_tweak_mul failed");
     (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
     (*penv)->ReleaseByteArrayElements(penv, jtweak, tweak, 0);
     return jseckey;
@@ -702,7 +702,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
         auxrand32 = (*penv)->GetByteArrayElements(penv, jauxrand32, 0);
     }
 
-    result = secp256k1_schnorrsig_sign(ctx, signature, (unsigned char*)msg, &keypair, auxrand32);
+    result = secp256k1_schnorrsig_sign32(ctx, signature, (unsigned char*)msg, &keypair, auxrand32);
     (*penv)->ReleaseByteArrayElements(penv, jmsg, msg, 0);
     if (auxrand32 != 0) {
         (*penv)->ReleaseByteArrayElements(penv, jauxrand32, auxrand32, 0);

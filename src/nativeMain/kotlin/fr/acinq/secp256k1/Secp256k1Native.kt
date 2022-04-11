@@ -118,7 +118,7 @@ public object Secp256k1Native : Secp256k1 {
         memScoped {
             val negated = privkey.copyOf()
             val negPriv = toNat(negated)
-            secp256k1_ec_privkey_negate(ctx, negPriv).requireSuccess("secp256k1_ec_privkey_negate() failed")
+            secp256k1_ec_seckey_negate(ctx, negPriv).requireSuccess("secp256k1_ec_seckey_negate() failed")
             return negated
         }
     }
@@ -129,7 +129,7 @@ public object Secp256k1Native : Secp256k1 {
             val added = privkey.copyOf()
             val natAdd = toNat(added)
             val natTweak = toNat(tweak)
-            secp256k1_ec_privkey_tweak_add(ctx, natAdd, natTweak).requireSuccess("secp256k1_ec_privkey_tweak_add() failed")
+            secp256k1_ec_seckey_tweak_add(ctx, natAdd, natTweak).requireSuccess("secp256k1_ec_seckey_tweak_add() failed")
             return added
         }
     }
@@ -247,7 +247,7 @@ public object Secp256k1Native : Secp256k1 {
             val nSig = allocArray<UByteVar>(64)
             val keypair = alloc<secp256k1_keypair>()
             secp256k1_keypair_create(ctx, keypair.ptr, nSec).requireSuccess("secp256k1_keypair_create() failed")
-            secp256k1_schnorrsig_sign(ctx, nSig, nData, keypair.ptr, nAuxrand32).requireSuccess("secp256k1_ecdsa_sign() failed")
+            secp256k1_schnorrsig_sign32(ctx, nSig, nData, keypair.ptr, nAuxrand32).requireSuccess("secp256k1_ecdsa_sign() failed")
             return nSig.readBytes(64)
         }
     }
