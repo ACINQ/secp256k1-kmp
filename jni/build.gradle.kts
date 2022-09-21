@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.Platform
-
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka")
@@ -22,7 +20,7 @@ dependencies {
 val generateHeaders by tasks.creating(JavaCompile::class) {
     group = "build"
     classpath = sourceSets["main"].compileClasspath
-    destinationDir = file("${buildDir}/generated/jni")
+    destinationDirectory.set(file("${buildDir}/generated/jni"))
     source = sourceSets["main"].java
     options.compilerArgs = listOf(
         "-h", file("${buildDir}/generated/jni").absolutePath,

@@ -2,7 +2,6 @@ pluginManagement {
     repositories {
         google()
         gradlePluginPortal()
-        jcenter()
     }
 }
 rootProject.name = "secp256k1-kmp"
