@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.Platform
-
 plugins {
     id("com.android.library")
     kotlin("android")

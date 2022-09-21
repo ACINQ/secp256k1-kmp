@@ -41,16 +41,16 @@ public interface Secp256k1 {
      * Verify a Schnorr signature.
      *
      * @param signature 64 bytes signature.
-     * @param message message signed.
-     * @param pubkey signer's x-only public key (32 bytes).
+     * @param data message signed.
+     * @param pub signer's x-only public key (32 bytes).
      */
     public fun verifySchnorr(signature: ByteArray, data: ByteArray, pub: ByteArray): Boolean
 
     /**
      * Create a Schnorr signature.
      *
-     * @param message message to sign.
-     * @param privkey signer's private key.
+     * @param data message to sign.
+     * @param sec signer's private key.
      * @param auxrand32 32 bytes of fresh randomness (optional).
      */
     public fun signSchnorr(data: ByteArray, sec: ByteArray, auxrand32: ByteArray?): ByteArray
