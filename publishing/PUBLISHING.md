@@ -27,16 +27,62 @@ You must edit `secp256k1-kmp-staging-upload.sh` and add your sonatype credential
 ## Adding custom JNI bindings
 
 Github CI currently generates JNI bindings for Windows x64, Linux x64 and iOS x64. But it is possible to add custom bindings to JNI packages before 
-they are published to maven central. This is how we add linux arm64 bindings:
-- compile JNI bindings for Linux Arm64 (on a Linux Arm64 machine, cross-compilation is not supported)
-  - git clone --recursive https://github.com/ACINQ/secp256k1-kmp.git
-  - cd secp256k1-kmp 
-  - TARGET=linux ./native/build.sh 
-  - mkdir -p jni/jvm/build/linux 
-  - TARGET=linux ./jni/jvm/build.sh 
-  - JNI library is: jni/jvm/build/linux/libsecp256k1-jni.so
-- copy libsecp256k1-jni.so to fr/acinq/secp256k1/jni/native/linux-aarch64/libsecp256k1-jni.so
-- run `secp256k1-kmp-add-linuxarm64.sh` and specify either `release` or `snapshot` and the `VERSION` environment variable, for example:
-  - VERSION=0.6.4-SNAPSHOT ./secp256k1-kmp-add-linuxarm64.sh snapshot
-  - VERSION=0.6.3 ./secp256k1-kmp-add-linuxarm64.sh release
+they are published to maven central.
 
+This is how we add Linux arm64 bindings:
+- compile JNI bindings for Linux Arm64 (on a Linux Arm64 machine, cross-compilation is not supported)
+  ```bash 
+  git clone --recursive https://github.com/ACINQ/secp256k1-kmp.git
+  
+  cd secp256k1-kmp 
+  
+  TARGET=linux ./native/build.sh 
+  
+  mkdir -p jni/jvm/build/linux 
+  
+  TARGET=linux ./jni/jvm/build.sh
+  ```
+- JNI library is: jni/jvm/build/linux/libsecp256k1-jni.so
+- copy libsecp256k1-jni.so to fr/acinq/secp256k1/jni/native/linux-aarch64/libsecp256k1-jni.so
+  ```bash
+  cd publishing
+  
+  mkdir -p fr/acinq/secp256k1/jni/native/linux-aarch64
+  
+  cp ../jni/jvm/build/linux/libsecp256k1-jni.so fr/acinq/secp256k1/jni/native/linux-aarch64
+  ```
+- run `secp256k1-kmp-add-linuxarm64.sh` and specify either `release` or `snapshot` and the `VERSION` environment variable, for example:
+  ```bash
+  VERSION=0.6.4-SNAPSHOT ./secp256k1-kmp-add-linuxarm64.sh snapshot
+  
+  VERSION=0.6.3 ./secp256k1-kmp-add-linuxarm64.sh release
+  ```
+
+This is how we add Mac OS X arm64 bindings:
+- compile JNI bindings for Mac OS X arm64 (on a Mac OS X arm64 machine, cross-compilation is not supported)
+  ```bash 
+  git clone --recursive https://github.com/ACINQ/secp256k1-kmp.git
+  
+  cd secp256k1-kmp 
+  
+  TARGET=darwin ./native/build.sh 
+  
+  mkdir -p jni/jvm/build/darwin 
+  
+  TARGET=darwin ./jni/jvm/build.sh
+  ```
+- JNI library is: jni/jvm/build/darwin/libsecp256k1-jni.dylib
+- copy libsecp256k1-jni.dylib to fr/acinq/secp256k1/jni/native/darwin-aarch64/libsecp256k1-jni.dylib
+  ```bash
+  cd publishing
+  
+  mkdir -p fr/acinq/secp256k1/jni/native/darwin-aarch64
+  
+  cp ../jni/jvm/build/darwin/libsecp256k1-jni.dylib fr/acinq/secp256k1/jni/native/darwin-aarch64
+  ```
+- run `secp256k1-kmp-add-darwinarm64.sh` and specify either `release` or `snapshot` and the `VERSION` environment variable, for example:
+  ```bash
+  VERSION=0.6.4-SNAPSHOT ./secp256k1-kmp-add-darwinarm64.sh snapshot
+  
+  VERSION=0.6.3 ./secp256k1-kmp-add-darwinarm64.sh release
+  ```
