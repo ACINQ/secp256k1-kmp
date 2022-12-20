@@ -82,7 +82,22 @@ This is how we add Mac OS X arm64 bindings:
   ```
 - run `secp256k1-kmp-add-darwinarm64.sh` and specify either `release` or `snapshot` and the `VERSION` environment variable, for example:
   ```bash
-  VERSION=0.6.4-SNAPSHOT ./secp256k1-kmp-add-darwinarm64.sh snapshot
+  VERSION=0.7.1-SNAPSHOT ./secp256k1-kmp-add-darwinarm64.sh snapshot
   
-  VERSION=0.6.3 ./secp256k1-kmp-add-darwinarm64.sh release
+  VERSION=0.7.0 ./secp256k1-kmp-add-darwinarm64.sh release
   ```
+
+This is how to install the updated JAR-file to your local maven repository:
+
+```bash
+export TARGET=darwin
+
+export VERSION=0.7.0
+
+mvn install:install-file \
+    -Dfile=secp256k1-kmp-jni-jvm-$TARGET-$VERSION.jar \
+    -DgroupId=fr.acinq.secp256k1 \
+    -DartifactId=secp256k1-kmp-jni-jvm-$TARGET \
+    -Dversion=$VERSION \
+    -Dpackaging=jar
+```
