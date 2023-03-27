@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
 
+project(secp256k1jni)
+
 add_library( secp256k1-jni SHARED
     ${CMAKE_CURRENT_LIST_DIR}/../../../c/src/fr_acinq_secp256k1_Secp256k1CFunctions.c
 )
