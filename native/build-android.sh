@@ -19,18 +19,16 @@ else
 fi
 
 TARGET=$SYS-linux-android
-TOOLTARGET=$TARGET
 if [ "$SYS" == "armv7a" ]; then
   TARGET=armv7a-linux-androideabi
-  TOOLTARGET=arm-linux-androideabi
 fi
 
 export CC=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/${TARGET}21-clang
-export LD=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/$TOOLTARGET-ld
-export AR=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/$TOOLTARGET-ar
-export AS=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/$TOOLTARGET-as
-export RANLIB=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/$TOOLTARGET-ranlib
-export STRIP=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/$TOOLTARGET-strip
+export LD=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/ld
+export AR=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/llvm-ar
+export AS=$CC
+export RANLIB=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/llvm-ranlib
+export STRIP=$ANDROID_NDK/toolchains/llvm/prebuilt/$TOOLCHAIN/bin/llvm-strip
 
 cd secp256k1
 

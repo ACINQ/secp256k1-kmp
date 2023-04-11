@@ -15,14 +15,14 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:4.2.2")
+        classpath("com.android.tools.build:gradle:7.3.1")
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.6.21")
     }
 }
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.8.0"
+    version = "0.9.0-SNAPSHOT"
 
     repositories {
         google()

@@ -15,12 +15,9 @@ dependencies {
 
 android {
     defaultConfig {
-        compileSdkVersion(30)
-        minSdkVersion(21)
+        compileSdk = 33
+        minSdk = 21
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        externalNativeBuild {
-            cmake {}
-        }
     }
 
     compileOptions {
@@ -33,7 +30,8 @@ android {
             path("src/main/CMakeLists.txt")
         }
     }
-    ndkVersion = "21.4.7075529"
+
+    ndkVersion = "25.2.9519653"
 
     afterEvaluate {
         tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
@@ -43,8 +41,8 @@ android {
 }
 
 afterEvaluate {
-    configure(listOf("Debug", "Release").map { tasks["externalNativeBuild$it"] }) {
-        dependsOn(":native:buildSecp256k1Android")
+    tasks.filter { it.name.startsWith("configureCMake") }.forEach {
+        it.dependsOn(":native:buildSecp256k1Android")
     }
 }
 
