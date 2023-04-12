@@ -16,7 +16,7 @@ if [ "$TARGET" == "mingw" ]; then
 elif [ "$TARGET" == "linux" ]; then
   CONF_OPTS="CFLAGS=-fPIC"
 elif [ "$TARGET" == "darwin" ]; then
-  CONF_OPTS="--host=x86_64-w64-darwin"
+  CONF_OPTS=""
 else
   echo "Unknown TARGET=$TARGET"
   exit 1
