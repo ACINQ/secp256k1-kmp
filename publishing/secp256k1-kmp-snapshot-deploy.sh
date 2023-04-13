@@ -2,7 +2,7 @@
 
 GROUP_ID=fr.acinq.secp256k1
 ARTIFACT_ID_BASE=secp256k1-kmp
-VERSION=0.6.3-SNAPSHOT
+VERSION=0.9.0-SNAPSHOT
 
 cd snapshot
 pushd .
