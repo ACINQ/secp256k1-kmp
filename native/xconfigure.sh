@@ -46,6 +46,7 @@ cd - &> /dev/null
 PREFIX="${ScriptDir}"/_build
 PLATFORMS="${PREFIX}"/platforms
 UNIVERSAL="${PREFIX}"/universal
+INCLUDE="${PREFIX}"/include
 
 # Compiler options
 OPT_FLAGS="-O3 -g3 -fembed-bitcode"
@@ -59,19 +60,31 @@ PLATFORM_ARM=${PLATFORM}
 ARCH_FLAGS="-arch arm64 -arch arm64e"  # -arch armv7 -arch armv7s
 HOST_FLAGS="${ARCH_FLAGS} -miphoneos-version-min=${MIN_IOS_VERSION} -isysroot $(xcrun --sdk ${SDK} --show-sdk-path)"
 CHOST="arm-apple-darwin"
+LIB_NAME_SUFFIX="arm"
 Build "$@"
 
 SDK="iphonesimulator"
-PLATFORM="x86_64-sim"
-PLATFORM_ISIM=${PLATFORM}
-ARCH_FLAGS="-arch x86_64"
+PLATFORM="sim"
+PLATFORM_SIM=${PLATFORM}
+ARCH_FLAGS="-arch arm64"
 HOST_FLAGS="${ARCH_FLAGS} -mios-simulator-version-min=${MIN_IOS_VERSION} -isysroot $(xcrun --sdk ${SDK} --show-sdk-path)"
-CHOST="x86_64-apple-darwin"
+CHOST="arm-apple-darwin"
+LIB_NAME_SUFFIX="sim"
 Build "$@"
 
 # Create universal binary
 cd "${PLATFORMS}/${PLATFORM_ARM}/lib"
 LIB_NAME=`find . -iname *.a`
 cd -
+
 mkdir -p "${UNIVERSAL}" &> /dev/null
-lipo -create -output "${UNIVERSAL}/${LIB_NAME}" "${PLATFORMS}/${PLATFORM_ARM}/lib/${LIB_NAME}" "${PLATFORMS}/${PLATFORM_ISIM}/lib/${LIB_NAME}"
+LIB_NAME_ARM="${PLATFORMS}/${PLATFORM_ARM}/lib/${LIB_NAME}"
+LIB_NAME_SIM="${PLATFORMS}/${PLATFORM_SIM}/lib/${LIB_NAME}"
+LIB_NAME_UNIVERSAL="${UNIVERSAL}/${LIB_NAME}"
+
+xcodebuild -create-xcframework \
+    -library "${LIB_NAME_ARM}" \
+    -headers "${INCLUDE}" \
+    -library "${LIB_NAME_SIM}" \
+    -headers "${INCLUDE}" \
+    -output "${UNIVERSAL}/${LIB_NAME%.a}.xcframework"

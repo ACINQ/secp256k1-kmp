@@ -43,6 +43,19 @@ val buildSecp256k1Ios by tasks.creating(Exec::class) {
     commandLine(bash, "build-ios.sh")
 }
 
+val buildSecp256k1IosSimulatorArm64 by tasks.creating(Exec::class) {
+    group = "build"
+    buildSecp256k1.dependsOn(this)
+
+    onlyIf { currentOs.isMacOsX }
+
+    inputs.files(projectDir.resolve("build-ios-simulator-arm64.sh"))
+    outputs.dir(projectDir.resolve("build/iosSimulatorArm64"))
+
+    workingDir = projectDir
+    commandLine(bash, "build-ios-simulator-arm64.sh")
+}
+
 if (includeAndroid) {
 
     val buildSecp256k1Android by tasks.creating {

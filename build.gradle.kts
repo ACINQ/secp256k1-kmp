@@ -67,6 +67,12 @@ kotlin {
         // https://youtrack.jetbrains.com/issue/KT-39396
         compilations["main"].kotlinOptions.freeCompilerArgs += listOf("-include-binary", "$rootDir/native/build/ios/libsecp256k1.a")
     }
+    iosSimulatorArm64 {
+        secp256k1CInterop("iosSimulatorArm64")
+        compilations["main"].defaultSourceSet.dependsOn(nativeMain)
+        // https://youtrack.jetbrains.com/issue/KT-39396
+        compilations["main"].kotlinOptions.freeCompilerArgs += listOf("-include-binary", "$rootDir/native/build/iosSimulatorArm64/libsecp256k1.a")
+    }
 
     sourceSets.all {
         languageSettings.optIn("kotlin.RequiresOptIn")
