@@ -1,4 +1,4 @@
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.6.21-blue.svg?style=flat&logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.8.21-blue.svg?style=flat&logo=kotlin)](http://kotlinlang.org)
 [![Maven Central](https://img.shields.io/maven-central/v/fr.acinq.secp256k1/secp256k1-kmp)](https://search.maven.org/search?q=g:fr.acinq.secp256k1%20a:secp256k1-kmp*)
 ![Github Actions](https://github.com/ACINQ/secp256k1-kmp/actions/workflows/test.yml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/ACINQ/secp256k1-kmp/blob/master/LICENSE)
@@ -58,9 +58,9 @@ Native targets include libsecp256k1, called through KMP's c-interop, simply add 
 The JVM library uses JNI bindings for libsecp256k1, which is much faster than BouncyCastle. It will extract and load native bindings for your operating system in a temporary directory.
 
 JNI libraries are included for:
-- Linux 64 bits
-- Windows 64 bits
-- Macos 64 bits
+- Linux 64 bits (x86_64 and arm64)
+- Windows 64 bits (x86_64)
+- Macos 64 bits (x86_64 and arm64)
 
 Along this library, you **must** specify which JNI native library to use in your dependency manager:
 
