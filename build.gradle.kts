@@ -3,8 +3,8 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.dokka.Platform
 
 plugins {
-    kotlin("multiplatform") version "1.6.21"
-    id("org.jetbrains.dokka") version "1.6.21"
+    kotlin("multiplatform") version "1.8.21"
+    id("org.jetbrains.dokka") version "1.8.10"
     `maven-publish`
 }
 
@@ -16,13 +16,13 @@ buildscript {
 
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.1")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.6.21")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.8.10")
     }
 }
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.9.0"
+    version = "0.10.0"
 
     repositories {
         google()
@@ -163,6 +163,7 @@ allprojects {
                             Platform.js -> "js"
                             Platform.native -> "native"
                             Platform.common -> "common"
+                            Platform.wasm -> "wasm"
                         }
                         displayName.set(platformName)
 
