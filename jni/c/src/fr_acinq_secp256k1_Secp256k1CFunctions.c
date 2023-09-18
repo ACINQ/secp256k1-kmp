@@ -1,6 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef WIN32
+#define SECP256K1_STATIC // needed on windows when linking to a static version of secp256k1
+#endif
 #include "include/secp256k1.h"
 #include "include/secp256k1_ecdh.h"
 #include "include/secp256k1_recovery.h"
