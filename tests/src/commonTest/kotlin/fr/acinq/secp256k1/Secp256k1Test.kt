@@ -275,6 +275,10 @@ class Secp256k1Test {
         val pub0 = Secp256k1.ecdsaRecover(sig, message, 0)
         val pub1 = Secp256k1.ecdsaRecover(sig, message, 1)
         assertTrue(pub.contentEquals(pub0) || pub.contentEquals(pub1))
+
+        assertFails {
+            Secp256k1.ecdsaRecover(sig, message, 4)
+        }
     }
 
     @Test

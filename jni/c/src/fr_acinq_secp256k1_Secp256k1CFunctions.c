@@ -637,7 +637,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return NULL;
   if (jmsg == NULL)
     return NULL;
-
+  CHECKRESULT(recid < 0 || recid > 3, "recid must be 0, 1, 2 or 3")
   sigSize = (*penv)->GetArrayLength(penv, jsig);
   int sigFormat = GetSignatureFormat(sigSize);
   CHECKRESULT(sigFormat == SIG_FORMAT_UNKNOWN, "invalid signature size");

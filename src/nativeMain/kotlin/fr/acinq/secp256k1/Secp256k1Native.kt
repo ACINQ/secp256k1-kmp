@@ -199,6 +199,7 @@ public object Secp256k1Native : Secp256k1 {
     public override fun ecdsaRecover(sig: ByteArray, message: ByteArray, recid: Int): ByteArray {
         require(sig.size == 64)
         require(message.size == 32)
+        require(recid in 0..3)
         memScoped {
             val nSig = toNat(sig)
             val rSig = alloc<secp256k1_ecdsa_recoverable_signature>()
