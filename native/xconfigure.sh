@@ -69,9 +69,22 @@ HOST_FLAGS="${ARCH_FLAGS} -mios-simulator-version-min=${MIN_IOS_VERSION} -isysro
 CHOST="x86_64-apple-darwin"
 Build "$@"
 
+## Build for iphone M1/M2/Mx simulators
+SDK="iphonesimulator"
+PLATFORM="arm64-sim"
+PLATFORM_SIM_ARM=${PLATFORM}
+ARCH_FLAGS="-arch arm64"
+HOST_FLAGS="${ARCH_FLAGS} -mios-simulator-version-min=${MIN_IOS_VERSION} -isysroot $(xcrun --sdk ${SDK} --show-sdk-path)"
+CHOST="arm-apple-darwin"
+Build "$@"
+
 # Create universal binary
 cd "${PLATFORMS}/${PLATFORM_ARM}/lib"
 LIB_NAME=`find . -iname *.a`
 cd -
-mkdir -p "${UNIVERSAL}" &> /dev/null
-lipo -create -output "${UNIVERSAL}/${LIB_NAME}" "${PLATFORMS}/${PLATFORM_ARM}/lib/${LIB_NAME}" "${PLATFORMS}/${PLATFORM_ISIM}/lib/${LIB_NAME}"
+mkdir -p "${UNIVERSAL}/ios" &> /dev/null
+mkdir -p "${UNIVERSAL}/iosSimulatorArm64" &> /dev/null
+lipo -create -output "${UNIVERSAL}/ios/${LIB_NAME}" "${PLATFORMS}/${PLATFORM_ARM}/lib/${LIB_NAME}" "${PLATFORMS}/${PLATFORM_ISIM}/lib/${LIB_NAME}"
+
+# create a specific library for arm64 simulator: it cannot be included in the lib above which already contains an arm64 lib
+lipo -create -output "${UNIVERSAL}/iosSimulatorArm64/${LIB_NAME}" "${PLATFORMS}/${PLATFORM_SIM_ARM}/lib/${LIB_NAME}"

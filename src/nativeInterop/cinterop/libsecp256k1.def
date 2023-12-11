@@ -3,8 +3,12 @@ package = secp256k1
 headers = secp256k1.h secp256k1_ecdh.h secp256k1_recovery.h secp256k1_extrakeys.h secp256k1_schnorrsig.h
 headerFilter = secp256k1/** secp256k1_ecdh.h secp256k1_recovery.h secp256k1_extrakeys.h secp256k1_schnorrsig.h secp256k1.h
 
-libraryPaths.linux = c/secp256k1/build/linux/
+staticLibraries.linux = libsecp256k1.a
+libraryPaths.linux = c/secp256k1/build/linux/ native/build/linux/ native/build/darwin/
 linkerOpts.linux = -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/lib
 
-libraryPaths.ios = c/secp256k1/build/ios/ /usr/local/lib
+staticLibraries.ios = libsecp256k1.a
+libraryPaths.ios_x64 = c/secp256k1/build/ios/ /usr/local/lib native/build/ios/
+libraryPaths.ios_arm64 = c/secp256k1/build/ios/ /usr/local/lib native/build/ios/
+libraryPaths.ios_simulator_arm64 = c/secp256k1/build/ios/ /usr/local/lib native/build/iosSimulatorArm64/
 linkerOpts.ios = -framework Security -framework Foundation

@@ -21,9 +21,9 @@ mvn deploy:deploy-file -DrepositoryId=ossrh -Durl=https://oss.sonatype.org/conte
   -Djavadoc=$ARTIFACT_ID_BASE-$VERSION-javadoc.jar
 popd
 pushd .
-for i in iosarm64 iosx64 jni-android jni-common jni-jvm-darwin jni-jvm-extract jni-jvm-linux jni-jvm-mingw jni-jvm jvm linux; do
+for i in iosarm64 iossimulatorarm64 iosx64 jni-android jni-common jni-jvm-darwin jni-jvm-extract jni-jvm-linux jni-jvm-mingw jni-jvm jvm linuxx64; do
   cd fr/acinq/secp256k1/secp256k1-kmp-$i/$VERSION
-  if [ $i == iosarm64 ] || [ $i == iosx64 ]; then
+  if [ $i == iosarm64 ] || [ $i == iossimulatorarm64 ] || [ $i == iosx64 ]; then
     mvn deploy:deploy-file -DrepositoryId=ossrh -Durl=https://oss.sonatype.org/content/repositories/snapshots/ \
       -DpomFile=$ARTIFACT_ID_BASE-$i-$VERSION.pom \
       -Dfile=$ARTIFACT_ID_BASE-$i-$VERSION.klib \
@@ -32,7 +32,7 @@ for i in iosarm64 iosx64 jni-android jni-common jni-jvm-darwin jni-jvm-extract j
       -Dclassifiers=metadata,,cinterop-libsecp256k1 \
       -Dsources=$ARTIFACT_ID_BASE-$i-$VERSION-sources.jar \
       -Djavadoc=$ARTIFACT_ID_BASE-$i-$VERSION-javadoc.jar
-  elif [ $i == linux ]; then
+  elif [ $i == linuxx64 ]; then
     mvn deploy:deploy-file -DrepositoryId=ossrh -Durl=https://oss.sonatype.org/content/repositories/snapshots/ \
       -DpomFile=$ARTIFACT_ID_BASE-$i-$VERSION.pom \
       -Dfile=$ARTIFACT_ID_BASE-$i-$VERSION.klib \

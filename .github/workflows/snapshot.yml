@@ -95,7 +95,7 @@ jobs:
       - name: Check Linux
         if: matrix.os == 'ubuntu-latest'
         shell: bash
-        run: ./gradlew linuxTest
+        run: ./gradlew linuxX64Test
       - name: Check iOS
         if: matrix.os == 'macOS-latest'
         shell: bash
@@ -112,7 +112,7 @@ jobs:
       - name: Publish Linux
         if: matrix.os == 'ubuntu-latest'
         shell: bash
-        run: ./gradlew publishLinuxPublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+        run: ./gradlew publishLinuxX64PublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Publish Windows
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
