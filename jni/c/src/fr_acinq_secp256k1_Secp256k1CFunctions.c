@@ -23,6 +23,18 @@ void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
     (*penv)->DeleteLocalRef(penv, cls);
   }
 }
+/**
+ * secp256k1 uses callbacks for errors that are either hw pbs or bugs in the calling library, for example
+ * passing parameters with values that are explicitly defined as illegal in the API, and should never be called for normal operations
+ * But if they are, default behaviour is to print an error to stderr and abort which is not what we want especially in mobile apps
+ * => we set up string pointers in every method, and custom callback that will set them to the message passed in by sec256k1's callbacks, which
+ * we turn into specific Sec256k1 exceptions
+*/
+#define SETUP_ERROR_CALLBACKS                                                               \
+  char *error_callback_message = NULL;                                                      \
+  char *illegal_callback_message = NULL;                                                    \
+  secp256k1_context_set_error_callback(ctx, my_error_callback_fn, &error_callback_message); \
+  secp256k1_context_set_illegal_callback(ctx, my_illegal_callback_fn, &illegal_callback_message);
 
 #define CHECKRESULT(errorcheck, message)                                       \
   {                                                                            \
@@ -33,15 +45,61 @@ void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
     }                                                                          \
   }
 
-#define CHECKRESULT1(errorcheck, message, dosomething)                         \
-  {                                                                            \
-    if (errorcheck)                                                            \
-    {                                                                          \
-      dosomething;                                                             \
-      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1Exception", message); \
-      return 0;                                                                \
-    }                                                                          \
+#define CHECKRESULT(errorcheck, message)                                                                       \
+  {                                                                                                            \
+    if (error_callback_message)                                                                                \
+    {                                                                                                          \
+      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1ErrorCallbackException", error_callback_message);     \
+      return 0;                                                                                                \
+    }                                                                                                          \
+    if (illegal_callback_message)                                                                              \
+    {                                                                                                          \
+      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1IllegalCallbackException", illegal_callback_message); \
+      return 0;                                                                                                \
+    }                                                                                                          \
+    if (errorcheck)                                                                                            \
+    {                                                                                                          \
+      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1Exception", message);                                 \
+      return 0;                                                                                                \
+    }                                                                                                          \
   }
+
+#define CHECKRESULT1(errorcheck, message, dosomething)                                                         \
+  {                                                                                                            \
+    if (error_callback_message)                                                                                \
+    {                                                                                                          \
+      dosomething;                                                                                             \
+      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1ErrorCallbackException", error_callback_message);     \
+      return 0;                                                                                                \
+    }                                                                                                          \
+    if (illegal_callback_message)                                                                              \
+    {                                                                                                          \
+      dosomething;                                                                                             \
+      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1IllegalCallbackException", illegal_callback_message); \
+      return 0;                                                                                                \
+    }                                                                                                          \
+    if (errorcheck)                                                                                            \
+    {                                                                                                          \
+      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1Exception", message);                                 \
+      return 0;                                                                                                \
+    }                                                                                                          \
+  }
+
+void my_illegal_callback_fn(const char *str, void *data)
+{
+  if (data != NULL)
+  {
+    *(char **)data = str;
+  }
+}
+
+void my_error_callback_fn(const char *str, void *data)
+{
+  if (data != NULL)
+  {
+    *(char **)data = str;
+  }
+}
 
 /*
  * Class:     fr_acinq_bitcoin_Secp256k1Bindings
@@ -84,6 +142,8 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
   if ((*penv)->GetArrayLength(penv, jseckey) != 32)
     return 0;
 
+  SETUP_ERROR_CALLBACKS
+
   seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
   result = secp256k1_ec_seckey_verify(ctx, (unsigned char *)seckey);
   (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
@@ -107,6 +167,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return 0;
   if (jpubkey == NULL)
     return 0;
+
+  SETUP_ERROR_CALLBACKS
 
   size = (*penv)->GetArrayLength(penv, jpubkey);
   CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
@@ -144,6 +206,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jctx == 0)
     return NULL;
 
+  SETUP_ERROR_CALLBACKS
+
   CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
   seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
   result = secp256k1_ec_pubkey_create(ctx, &pub, (unsigned char *)seckey);
@@ -177,6 +241,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return NULL;
   if (jseckey == NULL)
     return NULL;
+
+  SETUP_ERROR_CALLBACKS
 
   CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
   CHECKRESULT((*penv)->GetArrayLength(penv, jmsg) != 32, "message key must be 32 bytes");
@@ -227,6 +293,8 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
     return 0;
   if (jpubkey == NULL)
     return 0;
+
+  SETUP_ERROR_CALLBACKS
 
   sigSize = (*penv)->GetArrayLength(penv, jsig);
   int sigFormat = GetSignatureFormat(sigSize);
@@ -285,6 +353,8 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
   if (jsigout == NULL)
     return 0;
 
+  SETUP_ERROR_CALLBACKS
+
   size = (*penv)->GetArrayLength(penv, jsigin);
   sigFormat = GetSignatureFormat(size);
   CHECKRESULT(sigFormat == SIG_FORMAT_UNKNOWN, "invalid signature size");
@@ -328,6 +398,9 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return 0;
   if (jseckey == NULL)
     return 0;
+
+  SETUP_ERROR_CALLBACKS
+
   CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
   seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
   result = secp256k1_ec_seckey_negate(ctx, (unsigned char *)seckey);
@@ -353,6 +426,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return 0;
   if (jpubkey == NULL)
     return 0;
+
+  SETUP_ERROR_CALLBACKS
 
   size = (*penv)->GetArrayLength(penv, jpubkey);
   CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
@@ -391,6 +466,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jtweak == NULL)
     return NULL;
 
+  SETUP_ERROR_CALLBACKS
+
   CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
   CHECKRESULT((*penv)->GetArrayLength(penv, jtweak) != 32, "tweak must be 32 bytes");
   seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
@@ -421,6 +498,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return NULL;
   if (jtweak == NULL)
     return NULL;
+
+  SETUP_ERROR_CALLBACKS
 
   size = (*penv)->GetArrayLength(penv, jpubkey);
   CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
@@ -463,6 +542,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jtweak == NULL)
     return NULL;
 
+  SETUP_ERROR_CALLBACKS
+
   CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
   CHECKRESULT((*penv)->GetArrayLength(penv, jtweak) != 32, "tweak must be 32 bytes");
   seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
@@ -493,6 +574,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return NULL;
   if (jtweak == NULL)
     return NULL;
+
+  SETUP_ERROR_CALLBACKS
 
   size = (*penv)->GetArrayLength(penv, jpubkey);
   CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
@@ -548,6 +631,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jpubkeys == NULL)
     return NULL;
 
+  SETUP_ERROR_CALLBACKS
+
   count = (*penv)->GetArrayLength(penv, jpubkeys);
   pubkeys = calloc(count, sizeof(secp256k1_pubkey *));
 
@@ -596,6 +681,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jpubkey == NULL)
     return NULL;
 
+  SETUP_ERROR_CALLBACKS
+
   CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "invalid private key size");
 
   size = (*penv)->GetArrayLength(penv, jpubkey);
@@ -637,7 +724,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return NULL;
   if (jmsg == NULL)
     return NULL;
-  CHECKRESULT(recid < 0 || recid > 3, "recid must be 0, 1, 2 or 3")
+
+  SETUP_ERROR_CALLBACKS
+
+  // CHECKRESULT(recid < 0 || recid > 3, "recid must be 0, 1, 2 or 3")
   sigSize = (*penv)->GetArrayLength(penv, jsig);
   int sigFormat = GetSignatureFormat(sigSize);
   CHECKRESULT(sigFormat == SIG_FORMAT_UNKNOWN, "invalid signature size");
@@ -693,6 +783,9 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return 0;
   if (jsig == NULL)
     return 0;
+
+  SETUP_ERROR_CALLBACKS
+
   CHECKRESULT((*penv)->GetArrayLength(penv, jsig) != 64, "invalid signature size");
 
   size = (*penv)->GetArrayLength(penv, jsig);
@@ -731,6 +824,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return NULL;
   if (jseckey == NULL)
     return NULL;
+
+  SETUP_ERROR_CALLBACKS
 
   CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
   CHECKRESULT((*penv)->GetArrayLength(penv, jmsg) != 32, "message must be 32 bytes");
@@ -784,6 +879,8 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1sc
     return 0;
   if (jpubkey == NULL)
     return 0;
+
+  SETUP_ERROR_CALLBACKS
 
   CHECKRESULT((*penv)->GetArrayLength(penv, jsig) != 64, "signature must be 64 bytes");
   CHECKRESULT((*penv)->GetArrayLength(penv, jpubkey) != 32, "public key must be 32 bytes");

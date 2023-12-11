@@ -166,7 +166,17 @@ public interface Secp256k1 {
 
 internal expect fun getSecpk256k1(): Secp256k1
 
-public class Secp256k1Exception : RuntimeException {
+public open class Secp256k1Exception : RuntimeException {
+    public constructor() : super()
+    public constructor(message: String?) : super(message)
+}
+
+public class Secp256k1ErrorCallbackException : Secp256k1Exception {
+    public constructor() : super()
+    public constructor(message: String?) : super(message)
+}
+
+public class Secp256k1IllegalCallbackException : Secp256k1Exception {
     public constructor() : super()
     public constructor(message: String?) : super(message)
 }

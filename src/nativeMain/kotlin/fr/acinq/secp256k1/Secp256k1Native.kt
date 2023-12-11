@@ -4,15 +4,64 @@ import kotlinx.cinterop.*
 import platform.posix.size_tVar
 import secp256k1.*
 
+private typealias MyHandler = (String) -> Unit
+
+private object CallbackHandler {
+    var illegalCallBackMessage: String? = null
+    val illegalHandler: MyHandler = { x: String -> illegalCallBackMessage = x }
+    val illegalCallbackRef = StableRef.create(illegalHandler)
+    var errorCallBackMessage: String? = null
+    val errorHandler: MyHandler = { x: String -> errorCallBackMessage = x }
+    val errorCallbackRef = StableRef.create(errorHandler)
+
+    fun checkForErrors() {
+        if (errorCallBackMessage != null) {
+            val message = errorCallBackMessage
+            errorCallBackMessage = null
+            throw Secp256k1ErrorCallbackException(message)
+        }
+        if (illegalCallBackMessage != null) {
+            val message = illegalCallBackMessage
+            illegalCallBackMessage = null
+            throw Secp256k1IllegalCallbackException(message)
+        }
+    }
+}
+
 @OptIn(ExperimentalUnsignedTypes::class)
 public object Secp256k1Native : Secp256k1 {
 
     private val ctx: CPointer<secp256k1_context> by lazy {
-        secp256k1_context_create((SECP256K1_FLAGS_TYPE_CONTEXT or SECP256K1_FLAGS_BIT_CONTEXT_SIGN or SECP256K1_FLAGS_BIT_CONTEXT_VERIFY).toUInt())
+
+        val ctx = secp256k1_context_create((SECP256K1_FLAGS_TYPE_CONTEXT or SECP256K1_FLAGS_BIT_CONTEXT_SIGN or SECP256K1_FLAGS_BIT_CONTEXT_VERIFY).toUInt())
             ?: error("Could not create secp256k1 context")
+
+        secp256k1_context_set_error_callback(
+            ctx, staticCFunction { buffer: CPointer<ByteVar>?, data: COpaquePointer? ->
+                if (data != null) {
+                    val callback = data.asStableRef<MyHandler>().get()
+                    callback(buffer?.toKString() ?: "error callback triggered")
+                }
+            },
+            CallbackHandler.errorCallbackRef.asCPointer()
+        )
+        secp256k1_context_set_illegal_callback(
+            ctx, staticCFunction { buffer: CPointer<ByteVar>?, data: COpaquePointer? ->
+                if (data != null) {
+                    val callback = data.asStableRef<MyHandler>().get()
+                    callback(buffer?.toKString() ?: "illegal callback triggered")
+                }
+            },
+            CallbackHandler.illegalCallbackRef.asCPointer()
+        )
+
+        ctx
     }
 
-    private fun Int.requireSuccess(message: String): Int = if (this != 1) throw Secp256k1Exception(message) else this
+    private fun Int.requireSuccess(message: String): Int {
+        CallbackHandler.checkForErrors()
+        return if (this != 1) throw Secp256k1Exception(message) else this
+    }
 
     private fun MemScope.allocSignature(input: ByteArray): secp256k1_ecdsa_signature {
         val sig = alloc<secp256k1_ecdsa_signature>()
