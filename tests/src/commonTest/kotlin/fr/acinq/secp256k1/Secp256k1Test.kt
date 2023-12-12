@@ -276,7 +276,8 @@ class Secp256k1Test {
         val pub1 = Secp256k1.ecdsaRecover(sig, message, 1)
         assertTrue(pub.contentEquals(pub0) || pub.contentEquals(pub1))
 
-        assertFails {
+        // this is a special case, ecdsaRecover explicitly does not check that recid is valid, which triggers our illegal callback handler
+        assertFailsWith(Secp256k1IllegalCallbackException::class) {
             Secp256k1.ecdsaRecover(sig, message, 4)
         }
     }

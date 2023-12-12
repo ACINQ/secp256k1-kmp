@@ -36,15 +36,6 @@ void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
   secp256k1_context_set_error_callback(ctx, my_error_callback_fn, &error_callback_message); \
   secp256k1_context_set_illegal_callback(ctx, my_illegal_callback_fn, &illegal_callback_message);
 
-#define CHECKRESULT(errorcheck, message)                                       \
-  {                                                                            \
-    if (errorcheck)                                                            \
-    {                                                                          \
-      JNI_ThrowByName(penv, "fr/acinq/secp256k1/Secp256k1Exception", message); \
-      return 0;                                                                \
-    }                                                                          \
-  }
-
 #define CHECKRESULT(errorcheck, message)                                                                       \
   {                                                                                                            \
     if (error_callback_message)                                                                                \
@@ -727,7 +718,9 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
   SETUP_ERROR_CALLBACKS
 
+  // we do not check that recid is valid, which should trigger our illegal callback handler to throw a Secp256k1IllegalCallbackException
   // CHECKRESULT(recid < 0 || recid > 3, "recid must be 0, 1, 2 or 3")
+
   sigSize = (*penv)->GetArrayLength(penv, jsig);
   int sigFormat = GetSignatureFormat(sigSize);
   CHECKRESULT(sigFormat == SIG_FORMAT_UNKNOWN, "invalid signature size");
@@ -774,7 +767,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   secp256k1_context *ctx = (secp256k1_context *)jctx;
   jbyte *sig;
   secp256k1_ecdsa_signature signature;
-  ;
   unsigned char der[73];
   size_t size;
   int result = 0;
