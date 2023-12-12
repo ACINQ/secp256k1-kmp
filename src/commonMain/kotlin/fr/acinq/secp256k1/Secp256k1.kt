@@ -153,6 +153,25 @@ public interface Secp256k1 {
         }
     }
 
+    public fun musigNonceGen(session_id32: ByteArray, seckey: ByteArray?, pubkey: ByteArray, msg32: ByteArray?, keyagg_cache: ByteArray?, extra_input32: ByteArray?): ByteArray
+
+    public fun musigNonceAgg(pubnonces: Array<ByteArray>): ByteArray
+
+    public fun musigPubkeyAdd(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray
+
+    public fun musigPubkeyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray
+
+    public fun musigPubkeyXonlyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray
+
+    public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray, adaptor: ByteArray?): ByteArray
+
+    public fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): ByteArray
+
+    public fun musigPartialSigVerify(psig: ByteArray, pubnonce: ByteArray, pubkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): Int
+
+    public fun musigPartialSigAgg(session: ByteArray, psigs: Array<ByteArray>): ByteArray
+
+
     /**
      * Delete the secp256k1 context from dynamic memory.
      */
@@ -161,6 +180,13 @@ public interface Secp256k1 {
     public companion object : Secp256k1 by getSecpk256k1() {
         @JvmStatic
         public fun get(): Secp256k1 = this
+
+        // @formatter:off
+        public const val MUSIG2_SECRET_NONCE_SIZE: Int = 132
+        public const val MUSIG2_PUBLIC_NONCE_SIZE: Int = 66
+        public const val MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE: Int = 197
+        public const val MUSIG2_PUBLIC_SESSION_SIZE: Int = 133
+        // @formatter:on
     }
 }
 
