@@ -517,6 +517,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     if (jpubkeys == NULL) return NULL;
 
     count = (*penv)->GetArrayLength(penv, jpubkeys);
+    CHECKRESULT(count < 1, "pubkey array cannot be empty")
     pubkeys = calloc(count, sizeof(secp256k1_pubkey*));
 
     for(i = 0; i < count; i++) {
@@ -600,6 +601,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     if (jctx == 0) return NULL;
     if (jsig == NULL) return NULL;
     if (jmsg == NULL) return NULL;
+    CHECKRESULT(recid < 0 || recid > 3, "invalid recovery id");
 
     sigSize = (*penv)->GetArrayLength(penv, jsig);
     int sigFormat = GetSignatureFormat(sigSize);

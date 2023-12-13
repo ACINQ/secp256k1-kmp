@@ -353,6 +353,38 @@ class Secp256k1Test {
     }
 
     @Test
+    fun testInvalidArguments() {
+        assertFails {
+            Secp256k1.pubkeyCreate(ByteArray(32))
+        }
+        assertFails {
+            Secp256k1.pubkeyCreate(Hex.decode("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"))
+        }
+        assertFails {
+            Secp256k1.pubkeyParse(ByteArray(33))
+        }
+        assertFails {
+            Secp256k1.pubkeyParse(Hex.decode("03ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"))
+        }
+        assertFails {
+            Secp256k1.pubKeyCombine(arrayOf())
+        }
+        assertFails {
+            Secp256k1.pubKeyCombine(arrayOf(ByteArray(0)))
+        }
+        assertFails {
+            Secp256k1.signSchnorr(ByteArray(0), Hex.decode("0101010101010101010101010101010101010101010101010101010101010101"), null)
+        }
+        assertFails {
+            Secp256k1.ecdsaRecover(
+                Hex.decode("01010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101"),
+                Hex.decode("0202020202020202020202020202020202020202020202020202020202020202"),
+                -1
+            )
+        }
+    }
+
+    @Test
     fun fuzzEcdsaSignVerify() {
         val random = Random.Default
 
