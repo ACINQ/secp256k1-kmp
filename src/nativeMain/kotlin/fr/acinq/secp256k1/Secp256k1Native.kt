@@ -125,6 +125,7 @@ public object Secp256k1Native : Secp256k1 {
 
     public override fun privKeyTweakAdd(privkey: ByteArray, tweak: ByteArray): ByteArray {
         require(privkey.size == 32)
+        require(tweak.size == 32)
         memScoped {
             val added = privkey.copyOf()
             val natAdd = toNat(added)
@@ -136,6 +137,7 @@ public object Secp256k1Native : Secp256k1 {
 
     public override fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray {
         require(privkey.size == 32)
+        require(tweak.size == 32)
         memScoped {
             val multiplied = privkey.copyOf()
             val natMul = toNat(multiplied)
@@ -156,6 +158,7 @@ public object Secp256k1Native : Secp256k1 {
 
     public override fun pubKeyTweakAdd(pubkey: ByteArray, tweak: ByteArray): ByteArray {
         require(pubkey.size == 33 || pubkey.size == 65)
+        require(tweak.size == 32)
         memScoped {
             val nPubkey = allocPublicKey(pubkey)
             val nTweak = toNat(tweak)
@@ -166,6 +169,7 @@ public object Secp256k1Native : Secp256k1 {
 
     public override fun pubKeyTweakMul(pubkey: ByteArray, tweak: ByteArray): ByteArray {
         require(pubkey.size == 33 || pubkey.size == 65)
+        require(tweak.size == 32)
         memScoped {
             val nPubkey = allocPublicKey(pubkey)
             val nTweak = toNat(tweak)
