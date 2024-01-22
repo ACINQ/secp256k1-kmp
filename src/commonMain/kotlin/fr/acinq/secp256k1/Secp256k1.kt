@@ -157,13 +157,13 @@ public interface Secp256k1 {
 
     public fun musigNonceAgg(pubnonces: Array<ByteArray>): ByteArray
 
-    public fun musigPubkeyAdd(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray
+    public fun musigPubkeyAgg(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray
 
     public fun musigPubkeyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray
 
     public fun musigPubkeyXonlyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray
 
-    public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray, adaptor: ByteArray?): ByteArray
+    public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray): ByteArray
 
     public fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): ByteArray
 

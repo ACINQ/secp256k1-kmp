@@ -87,7 +87,7 @@ public class Secp256k1CFunctions {
 
     public static native byte[] secp256k1_musig_pubkey_xonly_tweak_add(long ctx, byte[] keyagg_cache, byte[] tweak32);
 
-    public static native byte[] secp256k1_musig_nonce_process(long ctx, byte[] aggnonce, byte[] msg32, byte[] keyagg_cache, byte[] adaptor);
+    public static native byte[] secp256k1_musig_nonce_process(long ctx, byte[] aggnonce, byte[] msg32, byte[] keyagg_cache);
 
     public static native byte[] secp256k1_musig_partial_sign(long ctx, byte[] secnonce, byte[] privkey, byte[] keyagg_cache, byte[] session);
 

@@ -100,7 +100,7 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_musig_nonce_agg(Secp256k1Context.getContext(), pubnonces)
     }
 
-    override fun musigPubkeyAdd(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray {
+    override fun musigPubkeyAgg(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray {
         return Secp256k1CFunctions.secp256k1_musig_pubkey_agg(Secp256k1Context.getContext(), pubkeys, keyagg_cache)
     }
 
@@ -112,8 +112,8 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_musig_pubkey_xonly_tweak_add(Secp256k1Context.getContext(), keyagg_cache, tweak32)
     }
 
-    override fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray, adaptor: ByteArray?): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_nonce_process(Secp256k1Context.getContext(), aggnonce, msg32, keyagg_cache, adaptor)
+    override fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray,): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_nonce_process(Secp256k1Context.getContext(), aggnonce, msg32, keyagg_cache)
     }
 
     override fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): ByteArray {
