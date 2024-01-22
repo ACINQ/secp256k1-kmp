@@ -687,7 +687,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   secp256k1_context *ctx = (secp256k1_context *)jctx;
   jbyte *sig;
   secp256k1_ecdsa_signature signature;
-  ;
   unsigned char der[73];
   size_t size;
   int result = 0;
@@ -858,7 +857,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jseckey != NULL)
   {
     size = (*penv)->GetArrayLength(penv, jseckey);
-    CHECKRESULT(size != 32, "invalid session_id size");
+    CHECKRESULT(size != 32, "invalid private key size");
     copy_bytes_from_java(penv, jseckey, size, seckey);
   }
 
@@ -1016,7 +1015,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   free_pubkeys(pubkeys, count);
   CHECKRESULT(!result, "secp256k1_musig_pubkey_agg failed");
 
-  size = 32;
   jpubkey = (*penv)->NewByteArray(penv, 32);
   pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
   result = secp256k1_xonly_pubkey_serialize(ctx, (unsigned char *)pub, &combined);
@@ -1149,7 +1147,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   CHECKRESULT((*penv)->GetArrayLength(penv, jmsg32) != 32, "invalid message size");
   if (jkeyaggcache == NULL)
     return NULL;
-  CHECKRESULT((*penv)->GetArrayLength(penv, jkeyaggcache) != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, "invalid nonce size");
+  CHECKRESULT((*penv)->GetArrayLength(penv, jkeyaggcache) != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, "invalid keyagg cache size");
 
   ptr = (*penv)->GetByteArrayElements(penv, jaggnonce, 0);
   result = secp256k1_musig_aggnonce_parse(ctx, &aggnonce, ptr);

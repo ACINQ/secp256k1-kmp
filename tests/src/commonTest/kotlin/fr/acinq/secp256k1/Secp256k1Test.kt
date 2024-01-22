@@ -354,11 +354,14 @@ class Secp256k1Test {
 
     @Test
     fun testMusig2GenerateNonce() {
+        val privkey = Hex.decode("0000000000000000000000000000000000000000000000000000000000000003")
         val pubkey = Hex.decode("02F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9")
         val sessionId = Hex.decode("0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F")
         val nonce = Secp256k1.musigNonceGen(sessionId, null, pubkey, null, null, null)
         val pubnonce = Hex.encode(nonce.copyOfRange(132, 132 + 66)).uppercase()
         assertEquals("02C96E7CB1E8AA5DAC64D872947914198F607D90ECDE5200DE52978AD5DED63C000299EC5117C2D29EDEE8A2092587C3909BE694D5CFF0667D6C02EA4059F7CD9786", pubnonce)
+        assertNotEquals(nonce, Secp256k1.musigNonceGen(sessionId, privkey, pubkey, null, null, null))
+        assertNotEquals(nonce, Secp256k1.musigNonceGen(sessionId, null, pubkey, sessionId, null, null))
     }
 
     @Test
@@ -368,6 +371,7 @@ class Secp256k1Test {
             "03FF406FFD8ADB9CD29877E4985014F66A59F6CD01C0E88CAA8E5F3166B1F676A60248C264CDD57D3C24D79990B0F865674EB62A0F9018277A95011B41BFC193B833",
             "020151C80F435648DF67A22B749CD798CE54E0321D034B92B709B567D60A42E6660279BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
             "03FF406FFD8ADB9CD29877E4985014F66A59F6CD01C0E88CAA8E5F3166B1F676A60379BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
+            // The following nonces are invalid.
             "04FF406FFD8ADB9CD29877E4985014F66A59F6CD01C0E88CAA8E5F3166B1F676A60248C264CDD57D3C24D79990B0F865674EB62A0F9018277A95011B41BFC193B833",
             "03FF406FFD8ADB9CD29877E4985014F66A59F6CD01C0E88CAA8E5F3166B1F676A60248C264CDD57D3C24D79990B0F865674EB62A0F9018277A95011B41BFC193B831",
             "03FF406FFD8ADB9CD29877E4985014F66A59F6CD01C0E88CAA8E5F3166B1F676A602FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC30"
@@ -399,23 +403,37 @@ class Secp256k1Test {
             "02FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC30",
             "04F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9",
             "03935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9"
-
         ).map { Hex.decode(it) }
 
         val agg1 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[1], pubkeys[2]), null)
         assertEquals("90539EEDE565F5D054F32CC0C220126889ED1E5D193BAF15AEF344FE59D4610C", Hex.encode(agg1).uppercase())
-        val cache = ByteArray(197)
-        val agg2 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[1], pubkeys[2]), cache)
+
+        // We provide an empty cache, which will be filled when aggregating public keys.
+        val keyaggCache = ByteArray(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
+        val agg2 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[1], pubkeys[2]), keyaggCache)
         assertEquals("90539EEDE565F5D054F32CC0C220126889ED1E5D193BAF15AEF344FE59D4610C", Hex.encode(agg2).uppercase())
+        assertTrue(keyaggCache.count { it.toInt() != 0 } > 100) // the cache has been filled with key aggregation data
 
-        val agg3 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[2], pubkeys[1], pubkeys[0]), null)
-        assertEquals("6204DE8B083426DC6EAF9502D27024D53FC826BF7D2012148A0575435DF54B2B", Hex.encode(agg3).uppercase())
+        // We can reuse the key aggregation cache to speed up computation.
+        val agg3 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[1], pubkeys[2]), keyaggCache)
+        assertEquals("90539EEDE565F5D054F32CC0C220126889ED1E5D193BAF15AEF344FE59D4610C", Hex.encode(agg3).uppercase())
 
-        val agg4 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[0], pubkeys[0]), null)
-        assertEquals("B436E3BAD62B8CD409969A224731C193D051162D8C5AE8B109306127DA3AA935", Hex.encode(agg4).uppercase())
+        val agg4 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[2], pubkeys[1], pubkeys[0]), null)
+        assertEquals("6204DE8B083426DC6EAF9502D27024D53FC826BF7D2012148A0575435DF54B2B", Hex.encode(agg4).uppercase())
 
-        val agg5 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[0], pubkeys[1], pubkeys[1]), null)
-        assertEquals("69BC22BFA5D106306E48A20679DE1D7389386124D07571D0D872686028C26A3E", Hex.encode(agg5).uppercase())
+        val agg5 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[0], pubkeys[0]), null)
+        assertEquals("B436E3BAD62B8CD409969A224731C193D051162D8C5AE8B109306127DA3AA935", Hex.encode(agg5).uppercase())
+
+        val agg6 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[0], pubkeys[1], pubkeys[1]), null)
+        assertEquals("69BC22BFA5D106306E48A20679DE1D7389386124D07571D0D872686028C26A3E", Hex.encode(agg6).uppercase())
+
+        // If we provide the key aggregation cache for a different session, it is ignored and overwritten.
+        val agg7 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[0], pubkeys[1], pubkeys[1]), keyaggCache)
+        assertEquals("69BC22BFA5D106306E48A20679DE1D7389386124D07571D0D872686028C26A3E", Hex.encode(agg7).uppercase())
+
+        // If we provide random data in the key aggregation cache, it is ignored and overwritten.
+        val agg8 = Secp256k1.musigPubkeyAgg(arrayOf(pubkeys[0], pubkeys[0], pubkeys[1], pubkeys[1]), Random.nextBytes(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE))
+        assertEquals("69BC22BFA5D106306E48A20679DE1D7389386124D07571D0D872686028C26A3E", Hex.encode(agg8).uppercase())
     }
 
     @Test
@@ -425,7 +443,7 @@ class Secp256k1Test {
             "024d4b6cd1361032ca9bd2aeb9d900aa4d45d9ead80ac9423374c451a7254d0766",
             "02531fe6068134503d2723133227c867ac8fa6c83c537e9a44c3c5bdbdcb1fe337"
         ).map { Hex.decode(it) }.toTypedArray()
-        val cache = ByteArray(197)
+        val cache = ByteArray(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         val agg1 = Secp256k1.musigPubkeyAgg(pubkeys, cache)
         assertEquals("b6d830642403fc82511aca5ff98a5e76fcef0f89bffc1aadbe78ee74cd5a5716", Hex.encode(agg1))
         val agg2 = Secp256k1.musigPubkeyTweakAdd(cache, Hex.decode("7468697320636f756c64206265206120424950333220747765616b2e2e2e2e00"))
@@ -448,21 +466,28 @@ class Secp256k1Test {
         val pubnonces = nonces.map { it.copyOfRange(132, 132 + 66) }
         val aggnonce = Secp256k1.musigNonceAgg(pubnonces.toTypedArray())
 
-        val caches = (0 until 2).map { ByteArray(197) }
-        val aggpubkey = Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), caches[0])
-        Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), caches[1])
+        val keyaggCaches = (0 until 2).map { ByteArray(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
+        val aggpubkey = Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[0])
+        assertContentEquals(aggpubkey, Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[1]))
+        assertContentEquals(keyaggCaches[0], keyaggCaches[1])
 
         val msg32 = Hex.decode("0303030303030303030303030303030303030303030303030303030303030303")
-        val sessions = (0 until 2).map {  Secp256k1.musigNonceProcess(aggnonce, msg32, caches[it]) }
+        val sessions = (0 until 2).map { Secp256k1.musigNonceProcess(aggnonce, msg32, keyaggCaches[it]) }
         val psigs = (0 until 2).map {
-            val psig = Secp256k1.musigPartialSign(secnonces[it], privkeys[it], caches[it], sessions[it])
-            val check = Secp256k1.musigPartialSigVerify(psig, pubnonces[it], pubkeys[it], caches[it], sessions[it])
-            assertEquals(1, check)
+            val psig = Secp256k1.musigPartialSign(secnonces[it], privkeys[it], keyaggCaches[it], sessions[it])
+            assertEquals(1, Secp256k1.musigPartialSigVerify(psig, pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]))
+            assertEquals(0, Secp256k1.musigPartialSigVerify(Random.nextBytes(32), pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]))
             psig
         }
+
         val sig = Secp256k1.musigPartialSigAgg(sessions[0], psigs.toTypedArray())
-        val check = Secp256k1.verifySchnorr(sig, msg32, aggpubkey)
-        assertTrue(check)
+        assertContentEquals(sig, Secp256k1.musigPartialSigAgg(sessions[1], psigs.toTypedArray()))
+        assertTrue(Secp256k1.verifySchnorr(sig, msg32, aggpubkey))
+
+        val invalidSig1 = Secp256k1.musigPartialSigAgg(sessions[0], arrayOf(psigs[0], psigs[0]))
+        assertFalse(Secp256k1.verifySchnorr(invalidSig1, msg32, aggpubkey))
+        val invalidSig2 = Secp256k1.musigPartialSigAgg(sessions[0], arrayOf(Random.nextBytes(32), Random.nextBytes(32)))
+        assertFalse(Secp256k1.verifySchnorr(invalidSig2, msg32, aggpubkey))
     }
 
     @Test
