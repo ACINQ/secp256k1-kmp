@@ -326,7 +326,7 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    override fun musigPubkeyAdd(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray {
+    override fun musigPubkeyAgg(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray {
         require(pubkeys.isNotEmpty())
         pubkeys.forEach { require(it.size == 33 || it.size == 65) }
         keyagg_cache?.let { require(it.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
@@ -371,7 +371,7 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    override fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray, adaptor: ByteArray?): ByteArray {
+    override fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray): ByteArray {
         require(aggnonce.size == Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
         require(keyagg_cache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(msg32.size == 32)

@@ -238,10 +238,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
  * Method:    secp256k1_musig_nonce_process
- * Signature: (J[B[B[B[B)[B
+ * Signature: (J[B[B[B)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1nonce_1process
-  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray, jbyteArray);
 
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
