@@ -55,7 +55,7 @@ public interface Secp256k1 {
      */
     public fun signSchnorr(data: ByteArray, sec: ByteArray, auxrand32: ByteArray?): ByteArray
 
-   /**
+    /**
      * Convert an ECDSA signature to a normalized lower-S form (bitcoin standardness rule).
      * Returns the normalized signature and a boolean set to true if the input signature was not normalized.
      *
@@ -149,28 +149,107 @@ public interface Secp256k1 {
                 compressed[0] = if (pubkey.last() % 2 == 0) 2.toByte() else 3.toByte()
                 compressed
             }
+
             else -> throw Secp256k1Exception("invalid public key")
         }
     }
 
-    public fun musigNonceGen(session_id32: ByteArray, seckey: ByteArray?, pubkey: ByteArray, msg32: ByteArray?, keyagg_cache: ByteArray?, extra_input32: ByteArray?): ByteArray
+    /**
+     * Generate a secret nonce to be used in a musig2 signing session.
+     * This nonce must never be persisted or reused across signing sessions.
+     * All optional arguments exist to enrich the quality of the randomness used, which is critical for security.
+     *
+     * @param sessionId32 unique 32-byte session ID.
+     * @param privkey (optional) signer's private key.
+     * @param aggpubkey aggregated public key of all participants in the signing session.
+     * @param msg32 (optional) 32-byte message that will be signed, if already known.
+     * @param keyaggCache (optional) key aggregation cache data from the signing session.
+     * @param extraInput32 (optional) additional 32-byte random data.
+     * @return serialized version of the secret nonce and the corresponding public nonce.
+     */
+    public fun musigNonceGen(sessionId32: ByteArray, privkey: ByteArray?, aggpubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray
 
+    /**
+     * Aggregate public nonces from all participants of a signing session.
+     *
+     * @param pubnonces public nonces (one per participant).
+     * @return 66-byte aggregate public nonce (two public keys) or throws an exception is a nonce is invalid.
+     */
     public fun musigNonceAgg(pubnonces: Array<ByteArray>): ByteArray
 
-    public fun musigPubkeyAgg(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray
+    /**
+     * Aggregate public keys from all participants of a signing session.
+     *
+     * @param pubkeys public keys of all participants in the signing session.
+     * @param keyaggCache (optional) key aggregation cache data from the signing session. If an empty byte array is
+     * provided, it will be filled with key aggregation data that can be used for the next steps of the signing process.
+     * @return 32-byte x-only public key.
+     */
+    public fun musigPubkeyAgg(pubkeys: Array<ByteArray>, keyaggCache: ByteArray?): ByteArray
 
-    public fun musigPubkeyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray
+    /**
+     * Tweak the aggregated public key of a signing session.
+     *
+     * @param keyaggCache key aggregation cache filled by [musigPubkeyAgg].
+     * @param tweak32 private key tweak to apply.
+     * @return P + tweak32 * G (where P is the aggregated public key from [keyaggCache]). The key aggregation cache will
+     * be updated with the tweaked public key.
+     */
+    public fun musigPubkeyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray
 
-    public fun musigPubkeyXonlyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray
+    /**
+     * Tweak the aggregated public key of a signing session, treating it as an x-only public key (e.g. when using taproot).
+     *
+     * @param keyaggCache key aggregation cache filled by [musigPubkeyAgg].
+     * @param tweak32 private key tweak to apply.
+     * @return with_even_y(P) + tweak32 * G (where P is the aggregated public key from [keyaggCache]). The key aggregation
+     * cache will be updated with the tweaked public key.
+     */
+    public fun musigPubkeyXonlyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray
 
-    public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray): ByteArray
+    /**
+     * Create a signing session context based on the public information from all participants.
+     *
+     * @param aggnonce aggregated public nonce (see [musigNonceAgg]).
+     * @param msg32 32-byte message that will be signed.
+     * @param keyaggCache aggregated public key cache filled by calling [musigPubkeyAgg] with the public keys of all participants.
+     * @return signing session context that can be used to create partial signatures and aggregate them.
+     */
+    public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyaggCache: ByteArray): ByteArray
 
-    public fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): ByteArray
+    /**
+     * Create a partial signature.
+     *
+     * @param secnonce signer's secret nonce (see [musigNonceGen]).
+     * @param privkey signer's private key.
+     * @param keyaggCache aggregated public key cache filled by calling [musigPubkeyAgg] with the public keys of all participants.
+     * @param session signing session context (see [musigNonceProcess]).
+     * @return 32-byte partial signature.
+     */
+    public fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyaggCache: ByteArray, session: ByteArray): ByteArray
 
-    public fun musigPartialSigVerify(psig: ByteArray, pubnonce: ByteArray, pubkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): Int
+    /**
+     * Verify the partial signature from one of the signing session's participants.
+     *
+     * @param psig 32-byte partial signature.
+     * @param pubnonce individual public nonce of the signing participant.
+     * @param pubkey individual public key of the signing participant.
+     * @param keyaggCache aggregated public key cache filled by calling [musigPubkeyAgg] with the public keys of all participants.
+     * @param session signing session context (see [musigNonceProcess]).
+     * @return result code (1 if the partial signature is valid, 0 otherwise).
+     */
+    public fun musigPartialSigVerify(psig: ByteArray, pubnonce: ByteArray, pubkey: ByteArray, keyaggCache: ByteArray, session: ByteArray): Int
 
+    /**
+     * Aggregate partial signatures from all participants into a single schnorr signature. If some of the partial
+     * signatures are invalid, this function will return an invalid aggregated signature without raising an error.
+     * It is recommended to use [musigPartialSigVerify] to verify partial signatures first.
+     *
+     * @param session signing session context (see [musigNonceProcess]).
+     * @param psigs list of 32-byte partial signatures.
+     * @return 64-byte aggregated schnorr signature.
+     */
     public fun musigPartialSigAgg(session: ByteArray, psigs: Array<ByteArray>): ByteArray
-
 
     /**
      * Delete the secp256k1 context from dynamic memory.

@@ -92,36 +92,36 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_schnorrsig_sign(Secp256k1Context.getContext(), data, sec, auxrand32)
     }
 
-    override fun musigNonceGen(session_id32: ByteArray, seckey: ByteArray?, pubkey: ByteArray, msg32: ByteArray?, keyagg_cache: ByteArray?, extra_input32: ByteArray?): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_nonce_gen(Secp256k1Context.getContext(), session_id32, seckey, pubkey, msg32, keyagg_cache, extra_input32)
+    override fun musigNonceGen(sessionId32: ByteArray, privkey: ByteArray?, aggpubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_nonce_gen(Secp256k1Context.getContext(), sessionId32, privkey, aggpubkey, msg32, keyaggCache, extraInput32)
     }
 
     override fun musigNonceAgg(pubnonces: Array<ByteArray>): ByteArray {
         return Secp256k1CFunctions.secp256k1_musig_nonce_agg(Secp256k1Context.getContext(), pubnonces)
     }
 
-    override fun musigPubkeyAgg(pubkeys: Array<ByteArray>, keyagg_cache: ByteArray?): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_pubkey_agg(Secp256k1Context.getContext(), pubkeys, keyagg_cache)
+    override fun musigPubkeyAgg(pubkeys: Array<ByteArray>, keyaggCache: ByteArray?): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_pubkey_agg(Secp256k1Context.getContext(), pubkeys, keyaggCache)
     }
 
-    override fun musigPubkeyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_pubkey_ec_tweak_add(Secp256k1Context.getContext(), keyagg_cache, tweak32)
+    override fun musigPubkeyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_pubkey_ec_tweak_add(Secp256k1Context.getContext(), keyaggCache, tweak32)
     }
 
-    override fun musigPubkeyXonlyTweakAdd(keyagg_cache: ByteArray, tweak32: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_pubkey_xonly_tweak_add(Secp256k1Context.getContext(), keyagg_cache, tweak32)
+    override fun musigPubkeyXonlyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_pubkey_xonly_tweak_add(Secp256k1Context.getContext(), keyaggCache, tweak32)
     }
 
-    override fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyagg_cache: ByteArray,): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_nonce_process(Secp256k1Context.getContext(), aggnonce, msg32, keyagg_cache)
+    override fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyaggCache: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_nonce_process(Secp256k1Context.getContext(), aggnonce, msg32, keyaggCache)
     }
 
-    override fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_partial_sign(Secp256k1Context.getContext(), secnonce, privkey, keyagg_cache, session)
+    override fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyaggCache: ByteArray, session: ByteArray): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_partial_sign(Secp256k1Context.getContext(), secnonce, privkey, keyaggCache, session)
     }
 
-    override fun musigPartialSigVerify(psig: ByteArray, pubnonce: ByteArray, pubkey: ByteArray, keyagg_cache: ByteArray, session: ByteArray): Int {
-        return Secp256k1CFunctions.secp256k1_musig_partial_sig_verify(Secp256k1Context.getContext(), psig, pubnonce, pubkey, keyagg_cache, session)
+    override fun musigPartialSigVerify(psig: ByteArray, pubnonce: ByteArray, pubkey: ByteArray, keyaggCache: ByteArray, session: ByteArray): Int {
+        return Secp256k1CFunctions.secp256k1_musig_partial_sig_verify(Secp256k1Context.getContext(), psig, pubnonce, pubkey, keyaggCache, session)
     }
 
     override fun musigPartialSigAgg(session: ByteArray, psigs: Array<ByteArray>): ByteArray {
