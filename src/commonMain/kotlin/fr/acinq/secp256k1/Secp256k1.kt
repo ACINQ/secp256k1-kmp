@@ -149,6 +149,7 @@ public interface Secp256k1 {
                 compressed[0] = if (pubkey.last() % 2 == 0) 2.toByte() else 3.toByte()
                 compressed
             }
+
             else -> throw Secp256k1Exception("invalid public key")
         }
     }
@@ -191,7 +192,8 @@ public interface Secp256k1 {
      *
      * @param keyaggCache key aggregation cache filled by [musigPubkeyAgg].
      * @param tweak32 private key tweak to apply.
-     * @return P + tweak32 * G (where P is the aggregated public key from [keyaggCache]).
+     * @return P + tweak32 * G (where P is the aggregated public key from [keyaggCache]). The key aggregation cache will
+     * be updated with the tweaked public key.
      */
     public fun musigPubkeyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray
 
@@ -200,7 +202,8 @@ public interface Secp256k1 {
      *
      * @param keyaggCache key aggregation cache filled by [musigPubkeyAgg].
      * @param tweak32 private key tweak to apply.
-     * @return with_even_y(P) + tweak32 * G (where P is the aggregated public key from [keyaggCache]).
+     * @return with_even_y(P) + tweak32 * G (where P is the aggregated public key from [keyaggCache]). The key aggregation
+     * cache will be updated with the tweaked public key.
      */
     public fun musigPubkeyXonlyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray
 
