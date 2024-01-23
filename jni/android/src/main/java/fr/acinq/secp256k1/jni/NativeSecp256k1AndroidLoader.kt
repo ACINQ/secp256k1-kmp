@@ -6,11 +6,10 @@ import fr.acinq.secp256k1.NativeSecp256k1
 import java.util.*
 
 public object NativeSecp256k1AndroidLoader {
-
     @JvmStatic
     @Synchronized
     @Throws(Exception::class)
-    fun load(): Secp256k1 {
+    public fun load(): Secp256k1 {
         try {
             System.loadLibrary("secp256k1-jni")
             return NativeSecp256k1
@@ -27,5 +26,4 @@ public object NativeSecp256k1AndroidLoader {
 
         }
     }
-
 }

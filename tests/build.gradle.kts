@@ -1,4 +1,3 @@
-
 plugins {
     kotlin("multiplatform")
     if (System.getProperty("includeAndroid")?.toBoolean() == true) {
@@ -36,14 +35,14 @@ kotlin {
     }
 
     if (includeAndroid) {
-        android {
+        androidTarget {
             compilations.all {
                 kotlinOptions.jvmTarget = "1.8"
             }
             sourceSets["androidMain"].dependencies {
                 implementation(project(":jni:android"))
             }
-            sourceSets["androidTest"].dependencies {
+            sourceSets["androidUnitTest"].dependencies {
                 implementation(kotlin("test-junit"))
                 implementation("androidx.test.ext:junit:1.1.2")
                 implementation("androidx.test.espresso:espresso-core:3.3.0")
@@ -51,17 +50,18 @@ kotlin {
         }
     }
 
-    linuxX64("linux")
-
-    ios()
+    linuxX64()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 }
 
 val includeAndroid = System.getProperty("includeAndroid")?.toBoolean() ?: true
 if (includeAndroid) {
     extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
         defaultConfig {
-            compileSdkVersion(30)
-            minSdkVersion(21)
+            compileSdk = 30
+            minSdk = 21
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
 
