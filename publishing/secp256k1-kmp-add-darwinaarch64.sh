@@ -1,5 +1,10 @@
 #!/bin/bash -x
 
+if [[ -z "${VERSION}" ]]; then
+  echo "VERSION is not defined"
+  exit 1
+fi
+
 if [ $# -eq 0 ]
   then
     echo "specify either snapshot or release"
