@@ -87,7 +87,7 @@ jobs:
       - name: Check JVM (Windows)
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
-        run: ./gradlew jvmTest
+        run: ./gradlew mingwX64Test jvmTest
       - name: Check Linux
         if: matrix.os == 'ubuntu-latest'
         shell: bash
@@ -95,7 +95,7 @@ jobs:
       - name: Check iOS
         if: matrix.os == 'macOS-latest'
         shell: bash
-        run: ./gradlew iosX64Test
+        run: ./gradlew macosX64Test iosX64Test
       - name: Check Android
         if: matrix.os == 'macOS-latest'
         uses: reactivecircus/android-emulator-runner@v2
@@ -112,7 +112,7 @@ jobs:
       - name: Publish Windows
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
-        run: ./gradlew :jni:jvm:mingw:publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+        run: ./gradlew publishMingwX64PublicationToMavenLocal :jni:jvm:mingw:publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Publish MacOS
         if: matrix.os == 'macOS-latest'
         shell: bash
