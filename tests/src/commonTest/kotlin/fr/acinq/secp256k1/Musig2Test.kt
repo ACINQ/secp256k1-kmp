@@ -227,7 +227,7 @@ class Musig2Test {
                 .map { tweaks[it.first] to it.second }
                 .forEach {
                     if (it.second)
-                        Secp256k1.musigPubkeyTweakAdd(keyagg, it.first)
+                        Secp256k1.musigPubkeyXonlyTweakAdd(keyagg, it.first)
                     else
                         Secp256k1.musigPubkeyTweakAdd(keyagg, it.first)
                 }
