@@ -7,6 +7,12 @@ staticLibraries.linux = libsecp256k1.a
 libraryPaths.linux = c/secp256k1/build/linux/ native/build/linux/ native/build/darwin/
 linkerOpts.linux = -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/lib
 
+staticLibraries.mingw = libsecp256k1.a
+libraryPaths.mingw = c/secp256k1/build/mingw/ native/build/mingw/
+
+staticLibraries.macos = libsecp256k1.a
+libraryPaths.macos = c/secp256k1/build/macos/ native/build/macos/
+
 staticLibraries.ios = libsecp256k1.a
 libraryPaths.ios_x64 = c/secp256k1/build/ios/ /usr/local/lib native/build/ios/
 libraryPaths.ios_arm64 = c/secp256k1/build/ios/ /usr/local/lib native/build/ios/
