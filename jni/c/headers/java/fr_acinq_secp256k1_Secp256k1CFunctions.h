@@ -7,6 +7,34 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_TYPE_CONTEXT
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_TYPE_CONTEXT 1L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_TYPE_COMPRESSION
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_TYPE_COMPRESSION 2L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_BIT_CONTEXT_VERIFY
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_BIT_CONTEXT_VERIFY 256L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_BIT_CONTEXT_SIGN
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_BIT_CONTEXT_SIGN 512L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_BIT_COMPRESSION
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_FLAGS_BIT_COMPRESSION 256L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_CONTEXT_VERIFY
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_CONTEXT_VERIFY 257L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_CONTEXT_SIGN
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_CONTEXT_SIGN 513L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_CONTEXT_NONE
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_CONTEXT_NONE 1L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_EC_COMPRESSED
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_EC_COMPRESSED 258L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_EC_UNCOMPRESSED
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_EC_UNCOMPRESSED 2L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE 66L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SECRET_NONCE_SIZE
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SECRET_NONCE_SIZE 132L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE 197L
+#undef fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE
+#define fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE 133L
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
  * Method:    secp256k1_context_create
@@ -166,6 +194,78 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
  */
 JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1schnorrsig_1verify
   (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_nonce_gen
+ * Signature: (J[B[B[B[B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1nonce_1gen
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_nonce_agg
+ * Signature: (J[[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1nonce_1agg
+  (JNIEnv *, jclass, jlong, jobjectArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_pubkey_agg
+ * Signature: (J[[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1pubkey_1agg
+  (JNIEnv *, jclass, jlong, jobjectArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_pubkey_ec_tweak_add
+ * Signature: (J[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1pubkey_1ec_1tweak_1add
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_pubkey_xonly_tweak_add
+ * Signature: (J[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1pubkey_1xonly_1tweak_1add
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_nonce_process
+ * Signature: (J[B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1nonce_1process
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_partial_sign
+ * Signature: (J[B[B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1partial_1sign
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_partial_sig_verify
+ * Signature: (J[B[B[B[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1partial_1sig_1verify
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray, jbyteArray, jbyteArray, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_musig_partial_sig_agg
+ * Signature: (J[B[[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1partial_1sig_1agg
+  (JNIEnv *, jclass, jlong, jbyteArray, jobjectArray);
 
 #ifdef __cplusplus
 }

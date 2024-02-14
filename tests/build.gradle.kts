@@ -1,3 +1,7 @@
+import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
+
 plugins {
     kotlin("multiplatform")
     if (System.getProperty("includeAndroid")?.toBoolean() == true) {
@@ -19,6 +23,8 @@ kotlin {
         dependencies {
             implementation(kotlin("test-common"))
             implementation(kotlin("test-annotations-common"))
+            implementation("org.kodein.memory:klio-files:0.12.0")
+            api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
         }
     }
 
@@ -77,5 +83,27 @@ if (includeAndroid) {
                 enabled = false
             }
         }
+    }
+}
+
+afterEvaluate {
+    tasks.withType<AbstractTestTask> {
+        testLogging {
+            events("passed", "skipped", "failed", "standard_out", "standard_error")
+            showExceptions = true
+            showStackTraces = true
+        }
+    }
+
+    tasks.withType<KotlinJvmTest> {
+        environment("TEST_RESOURCES_PATH", projectDir.resolve("src/commonTest/resources"))
+    }
+
+    tasks.withType<KotlinNativeHostTest> {
+        environment("TEST_RESOURCES_PATH", projectDir.resolve("src/commonTest/resources"))
+    }
+
+    tasks.withType<KotlinNativeSimulatorTest> {
+        environment("SIMCTL_CHILD_TEST_RESOURCES_PATH", projectDir.resolve("src/commonTest/resources"))
     }
 }
