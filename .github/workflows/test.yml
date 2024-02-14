@@ -93,7 +93,7 @@ jobs:
       - name: Check JVM (Windows)
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
-        run: ./gradlew jvmTest
+        run: ./gradlew jvmTest mingwX64Test
       - name: Check Linux
         if: matrix.os == 'ubuntu-latest'
         shell: bash
@@ -101,7 +101,7 @@ jobs:
       - name: Check iOS
         if: matrix.os == 'macOS-latest'
         shell: bash
-        run: ./gradlew iosX64Test
+        run: ./gradlew iosX64Test macosX64Test
       - name: Check Android
         if: matrix.os == 'macOS-latest'
         uses: reactivecircus/android-emulator-runner@v2
