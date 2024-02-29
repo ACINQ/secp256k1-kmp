@@ -54,7 +54,17 @@ kotlin {
 
     val nativeMain by sourceSets.creating
 
-    linuxX64 {
+    if (currentOs.isLinux) {
+        linuxX64 {
+            secp256k1CInterop("host")
+        }
+    }
+
+    macosX64 {
+        secp256k1CInterop("host")
+    }
+
+    macosArm64 {
         secp256k1CInterop("host")
     }
 
