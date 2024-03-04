@@ -12,22 +12,20 @@ cd "$(dirname "$0")"
 cd secp256k1
 
 if [ "$TARGET" == "mingw" ]; then
-  CONF_OPTS="CFLAGS=-fPIC --host=x86_64-w64-mingw32"
+  CFLAGS="-fPIC"
+  CONF_OPTS=" --host=x86_64-w64-mingw32"
 elif [ "$TARGET" == "linux" ]; then
-  CONF_OPTS="CFLAGS=-fPIC"
+  CFLAGS="-fPIC"
 elif [ "$TARGET" == "darwin" ]; then
-  CONF_OPTS=""
+  CFLAGS="-arch arm64 -arch x86_64"
+  LDFLAGS="-arch arm64 -arch x86_64"
 else
   echo "Unknown TARGET=$TARGET"
   exit 1
 fi
 
 ./autogen.sh
-if [ "$TARGET" == "darwin" ]; then
-  CFLAGS="-arch arm64 -arch x86_64" ./configure $CONF_OPTS --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-module-schnorrsig --enable-module-musig --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
-else
-  ./configure $CONF_OPTS --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-module-schnorrsig --enable-module-musig --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
-fi
+CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" ./configure $CONF_OPTS --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-module-schnorrsig --enable-module-musig --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
 make clean
 make
 

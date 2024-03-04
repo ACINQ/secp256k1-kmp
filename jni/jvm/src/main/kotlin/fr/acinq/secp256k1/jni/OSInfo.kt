@@ -19,7 +19,8 @@ internal object OSInfo {
    private const val PPC = "ppc"
    private const val PPC64 = "ppc64"
 
-   @JvmStatic val nativeSuffix: String get() = "$os-$arch"
+    // on macos we build a universal library that contains arm64 and x64 binaries
+   @JvmStatic val nativeSuffix: String get() = if (os == "darwin") os else "$os-$arch"
 
    @JvmStatic val os: String get() = translateOSName(System.getProperty("os.name"))
 
