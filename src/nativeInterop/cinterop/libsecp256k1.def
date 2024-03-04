@@ -7,6 +7,14 @@ staticLibraries.linux = libsecp256k1.a
 libraryPaths.linux = c/secp256k1/build/linux/ native/build/linux/ native/build/darwin/
 linkerOpts.linux = -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/lib
 
+staticLibraries.macos_x64 = libsecp256k1.a
+libraryPaths.macos_x64 = c/secp256k1/build/darwin/ native/build/darwin/
+linkerOpts.macos_x64 = -framework Security -framework Foundation
+
+staticLibraries.macos_arm64 = libsecp256k1.a
+libraryPaths.macos_arm64 = c/secp256k1/build/darwin/ native/build/darwin/
+linkerOpts.macos_arm64 = -framework Security -framework Foundation
+
 staticLibraries.ios = libsecp256k1.a
 libraryPaths.ios_x64 = c/secp256k1/build/ios/ /usr/local/lib native/build/ios/
 libraryPaths.ios_arm64 = c/secp256k1/build/ios/ /usr/local/lib native/build/ios/

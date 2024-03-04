@@ -58,6 +58,14 @@ kotlin {
         secp256k1CInterop("host")
     }
 
+    macosX64 {
+        secp256k1CInterop("host")
+    }
+
+    macosArm64 {
+        secp256k1CInterop("host")
+    }
+
     iosX64 {
         secp256k1CInterop("ios")
     }
