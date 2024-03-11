@@ -549,9 +549,9 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jpubkeys == NULL)
     return NULL;
 
-    count = (*penv)->GetArrayLength(penv, jpubkeys);
-    CHECKRESULT(count < 1, "pubkey array cannot be empty")
-    pubkeys = calloc(count, sizeof(secp256k1_pubkey *));
+  count = (*penv)->GetArrayLength(penv, jpubkeys);
+  CHECKRESULT(count < 1, "pubkey array cannot be empty")
+  pubkeys = calloc(count, sizeof(secp256k1_pubkey *));
 
   for (i = 0; i < count; i++)
   {
@@ -894,6 +894,80 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   result = secp256k1_musig_nonce_gen(ctx, &secnonce, &pubnonce, session_id32,
                                      jseckey == NULL ? NULL : seckey, &pubkey,
                                      jmsg32 == NULL ? NULL : msg32, jkeyaggcache == NULL ? NULL : &keyaggcache, jextra_input32 == NULL ? NULL : extra_input32);
+  CHECKRESULT(!result, "secp256k1_musig_nonce_gen failed");
+
+  memcpy(nonce, secnonce.data, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SECRET_NONCE_SIZE);
+  result = secp256k1_musig_pubnonce_serialize(ctx, nonce + fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SECRET_NONCE_SIZE, &pubnonce);
+  CHECKRESULT(!result, "secp256k1_musig_pubnonce_serialize failed");
+
+  jnonce = (*penv)->NewByteArray(penv, sizeof(nonce));
+  nonce_ptr = (*penv)->GetByteArrayElements(penv, jnonce, 0);
+  memcpy(nonce_ptr, nonce, sizeof(nonce));
+  (*penv)->ReleaseByteArrayElements(penv, jnonce, nonce_ptr, 0);
+  return jnonce;
+}
+
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1nonce_1gen_1counter(JNIEnv *penv, jclass clazz, jlong jctx, jlong jcounter, jbyteArray jseckey, jbyteArray jpubkey, jbyteArray jmsg32, jbyteArray jkeyaggcache, jbyteArray jextra_input32)
+{
+  secp256k1_context *ctx = (secp256k1_context *)jctx;
+  int result = 0;
+  size_t size;
+  secp256k1_musig_pubnonce pubnonce;
+  secp256k1_musig_secnonce secnonce;
+  jbyte *pubkey_ptr;
+  secp256k1_pubkey pubkey;
+  unsigned char seckey[32];
+  unsigned char msg32[32];
+  secp256k1_musig_keyagg_cache keyaggcache;
+  unsigned char extra_input32[32];
+  jbyteArray jnonce;
+  jbyte *nonce_ptr = NULL;
+  unsigned char nonce[fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SECRET_NONCE_SIZE + fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE];
+
+  if (jctx == 0)
+    return NULL;
+
+  if (jseckey == NULL)
+    return NULL;
+
+  size = (*penv)->GetArrayLength(penv, jseckey);
+  CHECKRESULT(size != 32, "invalid private key size");
+  copy_bytes_from_java(penv, jseckey, size, seckey);
+
+  if (jpubkey == NULL)
+    return NULL;
+
+  size = (*penv)->GetArrayLength(penv, jpubkey);
+  CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
+  pubkey_ptr = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
+  result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (unsigned char *)pubkey_ptr, size);
+  (*penv)->ReleaseByteArrayElements(penv, jpubkey, pubkey_ptr, 0);
+  CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
+
+  if (jmsg32 != NULL)
+  {
+    size = (*penv)->GetArrayLength(penv, jmsg32);
+    CHECKRESULT(size != 32, "invalid message size");
+    copy_bytes_from_java(penv, jmsg32, size, msg32);
+  }
+
+  if (jkeyaggcache != NULL)
+  {
+    size = (*penv)->GetArrayLength(penv, jkeyaggcache);
+    CHECKRESULT(size != sizeof(secp256k1_musig_keyagg_cache), "invalid keyagg cache size");
+    copy_bytes_from_java(penv, jkeyaggcache, size, keyaggcache.data);
+  }
+
+  if (jextra_input32 != NULL)
+  {
+    size = (*penv)->GetArrayLength(penv, jextra_input32);
+    CHECKRESULT(size != 32, "invalid extra input size");
+    copy_bytes_from_java(penv, jextra_input32, size, extra_input32);
+  }
+
+  result = secp256k1_musig_nonce_gen_counter(ctx, &secnonce, &pubnonce, jcounter,
+                                             seckey, &pubkey,
+                                             jmsg32 == NULL ? NULL : msg32, jkeyaggcache == NULL ? NULL : &keyaggcache, jextra_input32 == NULL ? NULL : extra_input32);
   CHECKRESULT(!result, "secp256k1_musig_nonce_gen failed");
 
   memcpy(nonce, secnonce.data, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SECRET_NONCE_SIZE);
