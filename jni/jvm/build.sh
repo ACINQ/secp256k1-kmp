@@ -17,6 +17,7 @@ if [ "$TARGET" == "linux" ]; then
   CC_OPTS="-fPIC"
 elif [ "$TARGET" == "darwin" ]; then
   OUTFILE=libsecp256k1-jni.dylib
+  CC_OPTS="-arch arm64 -arch x86_64"
 elif [ "$TARGET" == "mingw" ]; then
   OUTFILE=secp256k1-jni.dll
   CC=x86_64-w64-mingw32-gcc
