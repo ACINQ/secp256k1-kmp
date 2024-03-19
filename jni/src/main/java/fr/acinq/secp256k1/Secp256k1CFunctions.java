@@ -89,7 +89,9 @@ public class Secp256k1CFunctions {
 
     public static native int secp256k1_schnorrsig_verify(long ctx, byte[] sig, byte[] msg, byte[] pubkey);
 
-    public static native byte[] secp256k1_musig_nonce_gen(long ctx, byte[] session_id32, byte[] seckey, byte[] pubkey, byte[] msg32, byte[] keyagg_cache, byte[] extra_input32);
+    public static native byte[] secp256k1_musig_nonce_gen(long ctx, byte[] session_rand32, byte[] seckey, byte[] pubkey, byte[] msg32, byte[] keyagg_cache, byte[] extra_input32);
+
+    public static native byte[] secp256k1_musig_nonce_gen_counter(long ctx, long nonrepeating_cnt, byte[] seckey, byte[] pubkey, byte[] msg32, byte[] keyagg_cache, byte[] extra_input32);
 
     public static native byte[] secp256k1_musig_nonce_agg(long ctx, byte[][] nonces);
 
