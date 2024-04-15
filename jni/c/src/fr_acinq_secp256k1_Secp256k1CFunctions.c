@@ -44,6 +44,11 @@ void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
     }                                                                          \
   }
 
+static void secp256k1_noop_illegal_callback_fn(const char* str, void* data) {
+   (void)str;
+   (void)data;
+}
+
 /*
  * Class:     fr_acinq_bitcoin_Secp256k1Bindings
  * Method:    secp256k1_context_create
@@ -51,7 +56,9 @@ void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
  */
 JNIEXPORT jlong JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1context_1create(JNIEnv *penv, jclass clazz, jint flags)
 {
-  return (jlong)secp256k1_context_create(flags);
+  jlong ctx = (jlong)secp256k1_context_create(flags);
+  secp256k1_context_set_illegal_callback(ctx, &secp256k1_noop_illegal_callback_fn, NULL);
+  return ctx;
 }
 
 /*

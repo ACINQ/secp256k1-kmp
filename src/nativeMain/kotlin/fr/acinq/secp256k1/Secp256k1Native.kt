@@ -9,8 +9,11 @@ import secp256k1.*
 public object Secp256k1Native : Secp256k1 {
 
     private val ctx: CPointer<secp256k1_context> by lazy {
-        secp256k1_context_create((SECP256K1_FLAGS_TYPE_CONTEXT or SECP256K1_FLAGS_BIT_CONTEXT_SIGN or SECP256K1_FLAGS_BIT_CONTEXT_VERIFY).toUInt())
+        val c = secp256k1_context_create((SECP256K1_FLAGS_TYPE_CONTEXT or SECP256K1_FLAGS_BIT_CONTEXT_SIGN or SECP256K1_FLAGS_BIT_CONTEXT_VERIFY).toUInt())
             ?: error("Could not create secp256k1 context")
+        val callback = staticCFunction { _: CPointer<ByteVar>?, _: COpaquePointer? -> }
+        secp256k1_context_set_illegal_callback(c, callback, null)
+        c
     }
 
     private fun Int.requireSuccess(message: String): Int = if (this != 1) throw Secp256k1Exception(message) else this

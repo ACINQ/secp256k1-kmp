@@ -520,6 +520,29 @@ class Secp256k1Test {
                 -1
             )
         }
+        assertFails {
+            val privkeys = listOf(
+                "0101010101010101010101010101010101010101010101010101010101010101",
+                "0202020202020202020202020202020202020202020202020202020202020202",
+            ).map { Hex.decode(it) }.toTypedArray()
+            val pubkeys = privkeys.map { Secp256k1.pubkeyCreate(it) }
+
+            val sessionId = Hex.decode("0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F")
+            val nonces = pubkeys.map { Secp256k1.musigNonceGen(sessionId, null, it, null, null, null) }
+            val secnonces = nonces.map { it.copyOfRange(0, 132) }
+            val pubnonces = nonces.map { it.copyOfRange(132, 132 + 66) }
+            val aggnonce = Secp256k1.musigNonceAgg(pubnonces.toTypedArray())
+
+            val keyaggCaches = (0 until 2).map { ByteArray(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
+            val aggpubkey = Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[0])
+            assertContentEquals(aggpubkey, Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[1]))
+            assertContentEquals(keyaggCaches[0], keyaggCaches[1])
+            val msg32 = Hex.decode("0303030303030303030303030303030303030303030303030303030303030303")
+            val sessions = (0 until 2).map { Secp256k1.musigNonceProcess(aggnonce, msg32, keyaggCaches[it]) }
+
+            // we sign with the wrong secret nonce. it should fail (i.e. trigger an exception) but not crash the JVM
+            Secp256k1.musigPartialSign(secnonces[1], privkeys[0], keyaggCaches[0], sessions[0])
+        }
     }
 
     @Test
