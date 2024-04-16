@@ -5,6 +5,14 @@ import kotlin.test.*
 
 class Secp256k1Test {
 
+    val random = Random.Default
+
+    fun randomBytes(length: Int): ByteArray {
+        val buffer = ByteArray(length)
+        random.nextBytes(buffer)
+        return buffer
+    }
+
     @Test
     fun verifyValidPrivateKey() {
         val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
@@ -451,16 +459,13 @@ class Secp256k1Test {
         val agg3 = Secp256k1.musigPubkeyXonlyTweakAdd(cache, Hex.decode("7468697320636f756c64206265206120746170726f6f7420747765616b2e2e00"))
         assertEquals("04537a081a8d32ff700ca86aaa77a423e9b8d1480938076b645c68ee39d263c93948026928799b2d942cb5851db397015b26b1759de1b9ab2c691ced64a2eef836", Hex.encode(agg3))
     }
-
+    
     @Test
     fun testMusig2SigningSession() {
-        val privkeys = listOf(
-            "0101010101010101010101010101010101010101010101010101010101010101",
-            "0202020202020202020202020202020202020202020202020202020202020202",
-        ).map { Hex.decode(it) }.toTypedArray()
+        val privkeys = listOf(randomBytes(32), randomBytes(32))
         val pubkeys = privkeys.map { Secp256k1.pubkeyCreate(it) }
 
-        val sessionId = Hex.decode("0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F")
+        val sessionId = randomBytes(32)
         val nonces = pubkeys.map { Secp256k1.musigNonceGen(sessionId, null, it, null, null, null) }
         val secnonces = nonces.map { it.copyOfRange(0, 132) }
         val pubnonces = nonces.map { it.copyOfRange(132, 132 + 66) }
@@ -471,13 +476,22 @@ class Secp256k1Test {
         assertContentEquals(aggpubkey, Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[1]))
         assertContentEquals(keyaggCaches[0], keyaggCaches[1])
 
-        val msg32 = Hex.decode("0303030303030303030303030303030303030303030303030303030303030303")
+        val msg32 = randomBytes(32)
         val sessions = (0 until 2).map { Secp256k1.musigNonceProcess(aggnonce, msg32, keyaggCaches[it]) }
         val psigs = (0 until 2).map {
             val psig = Secp256k1.musigPartialSign(secnonces[it], privkeys[it], keyaggCaches[it], sessions[it])
             assertEquals(1, Secp256k1.musigPartialSigVerify(psig, pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]))
             assertEquals(0, Secp256k1.musigPartialSigVerify(Random.nextBytes(32), pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]))
             psig
+        }
+
+        // signing fails if the secret nonce does not match the private key's public key
+        assertFails {
+            Secp256k1.musigPartialSign(secnonces[1], privkeys[0], keyaggCaches[0], sessions[0])
+        }
+
+        assertFails {
+            Secp256k1.musigPartialSign(secnonces[0], privkeys[1], keyaggCaches[1], sessions[1])
         }
 
         val sig = Secp256k1.musigPartialSigAgg(sessions[0], psigs.toTypedArray())
@@ -523,15 +537,14 @@ class Secp256k1Test {
     }
 
     @Test
-    fun fuzzEcdsaSignVerify() {
-        val random = Random.Default
-
-        fun randomBytes(length: Int): ByteArray {
-            val buffer = ByteArray(length)
-            random.nextBytes(buffer)
-            return buffer
+    fun fuzzMusig2SigningSession() {
+        repeat(1000) {
+            testMusig2SigningSession()
         }
+    }
 
+    @Test
+    fun fuzzEcdsaSignVerify() {
         repeat(200) {
             val priv = randomBytes(32)
             assertTrue(Secp256k1.secKeyVerify(priv))

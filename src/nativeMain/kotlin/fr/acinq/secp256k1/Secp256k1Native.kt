@@ -393,6 +393,7 @@ public object Secp256k1Native : Secp256k1 {
         require(privkey.size == 32)
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(session.size == Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE)
+        require(musigNoncevalidate(secnonce, pubkeyCreate(privkey)))
 
         memScoped {
             val nSecnonce = alloc<secp256k1_musig_secnonce>()

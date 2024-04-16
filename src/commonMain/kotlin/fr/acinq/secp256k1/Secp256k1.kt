@@ -218,6 +218,26 @@ public interface Secp256k1 {
     public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyaggCache: ByteArray): ByteArray
 
     /**
+     * Validate a musig2 secret nonce
+     * @param secretnonce secret nonce
+     * @param pubkey public key that was passed to the nonce generation method
+     * @return false if the secret nonce does not match the public key
+     */
+    public fun musigNoncevalidate(secretnonce: ByteArray, pubkey: ByteArray): Boolean {
+        if (secretnonce.size != MUSIG2_SECRET_NONCE_SIZE) return false
+        if (pubkey.size != 33 && pubkey.size != 65) return false
+        val pk = Secp256k1.pubkeyParse(pubkey)
+        // this is a bit hackish but the secp256k1 library does not export methods to do this cleanly
+        val x = secretnonce.copyOfRange(68, 68 + 32)
+        x.reverse()
+        val y = secretnonce.copyOfRange(68 + 32, 68 + 32 + 32)
+        y.reverse()
+        val pkx = pk.copyOfRange(1, 1 + 32)
+        val pky = pk.copyOfRange(33, 33 + 32)
+        return x.contentEquals(pkx) && y.contentEquals(pky)
+    }
+
+    /**
      * Create a partial signature.
      *
      * @param secnonce signer's secret nonce (see [musigNonceGen]).
@@ -255,6 +275,7 @@ public interface Secp256k1 {
      * Delete the secp256k1 context from dynamic memory.
      */
     public fun cleanup()
+
 
     public companion object : Secp256k1 by getSecpk256k1() {
         @JvmStatic
