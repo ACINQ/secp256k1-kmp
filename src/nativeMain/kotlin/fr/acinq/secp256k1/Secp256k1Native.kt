@@ -81,7 +81,7 @@ public object Secp256k1Native : Secp256k1 {
         return serialized.readBytes(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
     }
 
-    private fun DeferScope.toNat(bytes: ByteArray): CPointer<UByteVar>  {
+    private fun DeferScope.toNat(bytes: ByteArray): CPointer<UByteVar> {
         val ubytes = bytes.asUByteArray()
         val pinned = ubytes.pin()
         this.defer { pinned.unpin() }
@@ -112,7 +112,7 @@ public object Secp256k1Native : Secp256k1 {
     }
 
     public override fun signatureNormalize(sig: ByteArray): Pair<ByteArray, Boolean> {
-        require(sig.size >= 64){ "invalid signature ${Hex.encode(sig)}" }
+        require(sig.size >= 64) { "invalid signature ${Hex.encode(sig)}" }
         memScoped {
             val nSig = allocSignature(sig)
             val isHighS = secp256k1_ecdsa_signature_normalize(ctx, nSig.ptr, nSig.ptr)
@@ -307,7 +307,16 @@ public object Secp256k1Native : Secp256k1 {
                 memcpy(n.ptr, toNat(it), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
                 n
             }
-            secp256k1_musig_nonce_gen(ctx, secnonce.ptr, pubnonce.ptr, toNat(sessionId32), privkey?.let { toNat(it) }, nPubkey.ptr, msg32?.let { toNat(it) },nKeyAggCache?.ptr, extraInput32?.let { toNat(it) }).requireSuccess("secp256k1_musig_nonce_gen() failed")
+            secp256k1_musig_nonce_gen(
+                ctx,
+                secnonce.ptr,
+                pubnonce.ptr,
+                toNat(sessionId32),
+                privkey?.let { toNat(it) },
+                nPubkey.ptr,
+                msg32?.let { toNat(it) },
+                nKeyAggCache?.ptr,
+                extraInput32?.let { toNat(it) }).requireSuccess("secp256k1_musig_nonce_gen() failed")
             val nPubnonce = allocArray<UByteVar>(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
             secp256k1_musig_pubnonce_serialize(ctx, nPubnonce, pubnonce.ptr).requireSuccess("secp256k1_musig_pubnonce_serialize failed")
             secnonce.ptr.readBytes(Secp256k1.MUSIG2_SECRET_NONCE_SIZE) + nPubnonce.readBytes(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
@@ -339,7 +348,7 @@ public object Secp256k1Native : Secp256k1 {
                 n
             }
             secp256k1_musig_pubkey_agg(ctx, combined.ptr, nKeyAggCache?.ptr, nPubkeys.toCValues(), pubkeys.size.convert()).requireSuccess("secp256k1_musig_nonce_agg() failed")
-            val agg =  serializeXonlyPubkey(combined)
+            val agg = serializeXonlyPubkey(combined)
             keyaggCache?.let { blob -> nKeyAggCache?.let { memcpy(toNat(blob), it.ptr, Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong()) } }
             return agg
         }
@@ -386,14 +395,14 @@ public object Secp256k1Native : Secp256k1 {
             memcpy(toNat(session), nSession.ptr, Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE.toULong())
             return session
         }
-     }
+    }
 
     override fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyaggCache: ByteArray, session: ByteArray): ByteArray {
         require(secnonce.size == Secp256k1.MUSIG2_SECRET_NONCE_SIZE)
         require(privkey.size == 32)
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(session.size == Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE)
-        require(musigNoncevalidate(secnonce, pubkeyCreate(privkey)))
+        require(musigNonceValidate(secnonce, pubkeyCreate(privkey)))
 
         memScoped {
             val nSecnonce = alloc<secp256k1_musig_secnonce>()

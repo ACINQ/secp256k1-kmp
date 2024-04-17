@@ -218,12 +218,12 @@ public interface Secp256k1 {
     public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyaggCache: ByteArray): ByteArray
 
     /**
-     * Validate a musig2 secret nonce
-     * @param secretnonce secret nonce
-     * @param pubkey public key that was passed to the nonce generation method
-     * @return false if the secret nonce does not match the public key
+     * Check that a secret nonce was generated with a public key that matches the private key used for signing.
+     * @param secretnonce secret nonce.
+     * @param pubkey public key for the private key that will be used, with the secret nonce, to generate a partial signature.
+     * @return false if the secret nonce does not match the public key.
      */
-    public fun musigNoncevalidate(secretnonce: ByteArray, pubkey: ByteArray): Boolean {
+    public fun musigNonceValidate(secretnonce: ByteArray, pubkey: ByteArray): Boolean {
         if (secretnonce.size != MUSIG2_SECRET_NONCE_SIZE) return false
         if (pubkey.size != 33 && pubkey.size != 65) return false
         val pk = Secp256k1.pubkeyParse(pubkey)
