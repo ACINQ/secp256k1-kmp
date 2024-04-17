@@ -276,7 +276,6 @@ public interface Secp256k1 {
      */
     public fun cleanup()
 
-
     public companion object : Secp256k1 by getSecpk256k1() {
         @JvmStatic
         public fun get(): Secp256k1 = this
