@@ -467,53 +467,50 @@ class Secp256k1Test {
         val msg32 = randomBytes(32)
         val pubkeys = privkeys.map { Secp256k1.pubkeyCreate(it) }
         val nonces = pubkeys.map { Secp256k1.musigNonceGen(sessionId, null, it, null, null, null) }
+        val testData = run {
+            val builder = StringBuilder()
+            builder.append("private keys\n")
+            privkeys.forEach { builder.append(Hex.encode(it)).append("\n") }
+            builder.append("sessionId ${Hex.encode(sessionId)}\n")
+            builder.append("msg32 ${Hex.encode(msg32)}\n")
+            builder.append("nonces\n")
+            nonces.forEach { builder.append(Hex.encode(it)).append("\n") }
+            builder.toString()
+        }
         val secnonces = nonces.map { it.copyOfRange(0, 132) }
         val pubnonces = nonces.map { it.copyOfRange(132, 132 + 66) }
         val aggnonce = Secp256k1.musigNonceAgg(pubnonces.toTypedArray())
 
         val keyaggCaches = (0 until 2).map { ByteArray(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
         val aggpubkey = Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[0])
-        assertContentEquals(aggpubkey, Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[1]))
-        assertContentEquals(keyaggCaches[0], keyaggCaches[1])
+        assertContentEquals(aggpubkey, Secp256k1.musigPubkeyAgg(pubkeys.toTypedArray(), keyaggCaches[1]), testData)
+        assertContentEquals(keyaggCaches[0], keyaggCaches[1], testData)
 
         val sessions = (0 until 2).map { Secp256k1.musigNonceProcess(aggnonce, msg32, keyaggCaches[it]) }
         val psigs = (0 until 2).map {
             val psig = Secp256k1.musigPartialSign(secnonces[it], privkeys[it], keyaggCaches[it], sessions[it])
-            assertEquals(1, Secp256k1.musigPartialSigVerify(psig, pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]))
-            assertEquals(0, Secp256k1.musigPartialSigVerify(Random.nextBytes(32), pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]))
+            assertEquals(1, Secp256k1.musigPartialSigVerify(psig, pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]), testData)
+            assertEquals(0, Secp256k1.musigPartialSigVerify(Random.nextBytes(32), pubnonces[it], pubkeys[it], keyaggCaches[it], sessions[it]), testData)
             psig
         }
 
-        fun printTestData() {
-            println("private keys")
-            privkeys.forEach { println(Hex.encode(it)) }
-            println("sessionId ${Hex.encode(sessionId)}")
-            println("msg32 ${Hex.encode(msg32)}")
-            println("nonces")
-            nonces.forEach { println(Hex.encode(it)) }
-        }
-
         // signing fails if the secret nonce does not match the private key's public key
-        assertFails {
+        assertFails(testData) {
             Secp256k1.musigPartialSign(secnonces[1], privkeys[0], keyaggCaches[0], sessions[0])
-            println("musigPartialSign should have failed !")
-            printTestData()
         }
 
-        assertFails {
+        assertFails(testData) {
             Secp256k1.musigPartialSign(secnonces[0], privkeys[1], keyaggCaches[1], sessions[1])
-            println("musigPartialSign should have failed !")
-            printTestData()
         }
 
         val sig = Secp256k1.musigPartialSigAgg(sessions[0], psigs.toTypedArray())
-        assertContentEquals(sig, Secp256k1.musigPartialSigAgg(sessions[1], psigs.toTypedArray()))
-        assertTrue(Secp256k1.verifySchnorr(sig, msg32, aggpubkey))
+        assertContentEquals(sig, Secp256k1.musigPartialSigAgg(sessions[1], psigs.toTypedArray()), testData)
+        assertTrue(Secp256k1.verifySchnorr(sig, msg32, aggpubkey), testData)
 
         val invalidSig1 = Secp256k1.musigPartialSigAgg(sessions[0], arrayOf(psigs[0], psigs[0]))
-        assertFalse(Secp256k1.verifySchnorr(invalidSig1, msg32, aggpubkey))
+        assertFalse(Secp256k1.verifySchnorr(invalidSig1, msg32, aggpubkey), testData)
         val invalidSig2 = Secp256k1.musigPartialSigAgg(sessions[0], arrayOf(Random.nextBytes(32), Random.nextBytes(32)))
-        assertFalse(Secp256k1.verifySchnorr(invalidSig2, msg32, aggpubkey))
+        assertFalse(Secp256k1.verifySchnorr(invalidSig2, msg32, aggpubkey), testData)
     }
 
     @Test
