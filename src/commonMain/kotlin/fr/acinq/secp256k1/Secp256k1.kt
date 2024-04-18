@@ -218,6 +218,26 @@ public interface Secp256k1 {
     public fun musigNonceProcess(aggnonce: ByteArray, msg32: ByteArray, keyaggCache: ByteArray): ByteArray
 
     /**
+     * Check that a secret nonce was generated with a public key that matches the private key used for signing.
+     * @param secretnonce secret nonce.
+     * @param pubkey public key for the private key that will be used, with the secret nonce, to generate a partial signature.
+     * @return false if the secret nonce does not match the public key.
+     */
+    public fun musigNonceValidate(secretnonce: ByteArray, pubkey: ByteArray): Boolean {
+        if (secretnonce.size != MUSIG2_SECRET_NONCE_SIZE) return false
+        if (pubkey.size != 33 && pubkey.size != 65) return false
+        val pk = Secp256k1.pubkeyParse(pubkey)
+        // this is a bit hackish but the secp256k1 library does not export methods to do this cleanly
+        val x = secretnonce.copyOfRange(68, 68 + 32)
+        x.reverse()
+        val y = secretnonce.copyOfRange(68 + 32, 68 + 32 + 32)
+        y.reverse()
+        val pkx = pk.copyOfRange(1, 1 + 32)
+        val pky = pk.copyOfRange(33, 33 + 32)
+        return x.contentEquals(pkx) && y.contentEquals(pky)
+    }
+
+    /**
      * Create a partial signature.
      *
      * @param secnonce signer's secret nonce (see [musigNonceGen]).

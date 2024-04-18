@@ -117,6 +117,7 @@ public object NativeSecp256k1 : Secp256k1 {
     }
 
     override fun musigPartialSign(secnonce: ByteArray, privkey: ByteArray, keyaggCache: ByteArray, session: ByteArray): ByteArray {
+        require(musigNonceValidate(secnonce, pubkeyCreate(privkey)))
         return Secp256k1CFunctions.secp256k1_musig_partial_sign(Secp256k1Context.getContext(), secnonce, privkey, keyaggCache, session)
     }
 
