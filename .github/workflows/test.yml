@@ -62,7 +62,7 @@ jobs:
           rm.exe "C:/WINDOWS/system32/bash.EXE"
       - name: Install Automake
         if: matrix.os == 'macOS-latest'
-        run: brew install automake
+        run: brew install automake libtool
       - name: Install Automake (windows)
         if: matrix.os == 'windows-latest'
         uses: msys2/setup-msys2@v2
@@ -103,7 +103,7 @@ jobs:
         shell: bash
         run: ./gradlew iosX64Test
       - name: Check Android
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == 'ubuntu-latest'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 27
