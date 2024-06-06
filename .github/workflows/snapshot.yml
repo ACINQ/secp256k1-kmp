@@ -97,7 +97,7 @@ jobs:
         shell: bash
         run: ./gradlew iosX64Test
       - name: Check Android
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == 'ubuntu-latest'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 27
@@ -108,7 +108,7 @@ jobs:
       - name: Publish Linux
         if: matrix.os == 'ubuntu-latest'
         shell: bash
-        run: ./gradlew publishLinuxX64PublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+        run: ./gradlew publishAndroidPublicationToMavenLocal publishLinuxX64PublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
       - name: Publish Windows
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}

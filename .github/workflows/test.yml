@@ -103,7 +103,7 @@ jobs:
         shell: bash
         run: ./gradlew iosX64Test
       - name: Check Android
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == 'ubuntu-latest'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 27
