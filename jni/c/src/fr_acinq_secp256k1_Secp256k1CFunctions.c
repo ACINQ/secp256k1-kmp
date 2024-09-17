@@ -907,17 +907,16 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   return jnonce;
 }
 
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1nonce_1gen_1counter(JNIEnv *penv, jclass clazz, jlong jctx, jlong jcounter, jbyteArray jseckey, jbyteArray jpubkey, jbyteArray jmsg32, jbyteArray jkeyaggcache, jbyteArray jextra_input32)
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1musig_1nonce_1gen_1counter(JNIEnv *penv, jclass clazz, jlong jctx, jlong jcounter, jbyteArray jseckey, jbyteArray jmsg32, jbyteArray jkeyaggcache, jbyteArray jextra_input32)
 {
   secp256k1_context *ctx = (secp256k1_context *)jctx;
   int result = 0;
   size_t size;
   secp256k1_musig_pubnonce pubnonce;
   secp256k1_musig_secnonce secnonce;
-  jbyte *pubkey_ptr;
-  secp256k1_pubkey pubkey;
-  unsigned char seckey[32];
+  jbyte *seckey;
   unsigned char msg32[32];
+  secp256k1_keypair keypair;
   secp256k1_musig_keyagg_cache keyaggcache;
   unsigned char extra_input32[32];
   jbyteArray jnonce;
@@ -930,19 +929,14 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jseckey == NULL)
     return NULL;
 
+  seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
+  result = secp256k1_keypair_create(ctx, &keypair, seckey);
+  (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
+  CHECKRESULT(!result, "secp256k1_keypair_create failed");
+
   size = (*penv)->GetArrayLength(penv, jseckey);
   CHECKRESULT(size != 32, "invalid private key size");
   copy_bytes_from_java(penv, jseckey, size, seckey);
-
-  if (jpubkey == NULL)
-    return NULL;
-
-  size = (*penv)->GetArrayLength(penv, jpubkey);
-  CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
-  pubkey_ptr = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-  result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (unsigned char *)pubkey_ptr, size);
-  (*penv)->ReleaseByteArrayElements(penv, jpubkey, pubkey_ptr, 0);
-  CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
 
   if (jmsg32 != NULL)
   {
@@ -966,7 +960,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   }
 
   result = secp256k1_musig_nonce_gen_counter(ctx, &secnonce, &pubnonce, jcounter,
-                                             seckey, &pubkey,
+                                             &keypair,
                                              jmsg32 == NULL ? NULL : msg32, jkeyaggcache == NULL ? NULL : &keyaggcache, jextra_input32 == NULL ? NULL : extra_input32);
   CHECKRESULT(!result, "secp256k1_musig_nonce_gen failed");
 

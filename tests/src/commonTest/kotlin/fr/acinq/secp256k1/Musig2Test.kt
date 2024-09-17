@@ -93,8 +93,7 @@ class Musig2Test {
     @Test
     fun `generate secret nonce from counter`() {
         val sk = Hex.decode("EEC1CB7D1B7254C5CAB0D9C61AB02E643D464A59FE6C96A7EFE871F07C5AEF54")
-        val pk = Secp256k1.pubkeyCreate(sk)
-        val nonce = Secp256k1.musigNonceGenCounter(0UL, sk, pk, null, null, null)
+        val nonce = Secp256k1.musigNonceGenCounter(0UL, sk, null, null, null)
         val secnonce = nonce.copyOfRange(0, Secp256k1.MUSIG2_SECRET_NONCE_SIZE)
         val pubnonce = nonce.copyOfRange(Secp256k1.MUSIG2_SECRET_NONCE_SIZE, Secp256k1.MUSIG2_SECRET_NONCE_SIZE + Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
         assertContentEquals(secnonce.copyOfRange(4, 4 + 64), Hex.decode("842F1380CD17A198FC3DAD3B7DA7492941F46976F2702FF7C66F24F472036AF1DA3F952DDE4A2DA6B6325707CE87A4E3616D06FC5F81A9C99386D20A99CECF99"))

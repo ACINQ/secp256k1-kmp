@@ -176,13 +176,12 @@ public interface Secp256k1 {
      *
      * @param nonRepeatingCounter non-repeating counter that must never be reused with the same private key
      * @param privkey signer's private key.
-     * @param pubkey signer's public key
      * @param msg32 (optional) 32-byte message that will be signed, if already known.
      * @param keyaggCache (optional) key aggregation cache data from the signing session.
      * @param extraInput32 (optional) additional 32-byte random data.
      * @return serialized version of the secret nonce and the corresponding public nonce.
      */
-    public fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, pubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray
+    public fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray
 
     /**
      * Aggregate public nonces from all participants of a signing session.
