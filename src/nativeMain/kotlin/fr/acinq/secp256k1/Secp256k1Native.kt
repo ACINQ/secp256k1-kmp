@@ -325,22 +325,22 @@ public object Secp256k1Native : Secp256k1 {
         return nonce
     }
 
-    override fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, pubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
+    override fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
         require(privkey.size ==32)
-        require(pubkey.size == 33 || pubkey.size == 65)
         msg32?.let { require(it.size == 32) }
         keyaggCache?.let { require(it.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
         extraInput32?.let { require(it.size == 32) }
         val nonce = memScoped {
             val secnonce = alloc<secp256k1_musig_secnonce>()
             val pubnonce = alloc<secp256k1_musig_pubnonce>()
-            val nPubkey = allocPublicKey(pubkey)
+            val nKeypair = alloc<secp256k1_keypair>()
+            secp256k1_keypair_create(ctx, nKeypair.ptr, toNat(privkey))
             val nKeyAggCache = keyaggCache?.let {
                 val n = alloc<secp256k1_musig_keyagg_cache>()
                 memcpy(n.ptr, toNat(it), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
                 n
             }
-            secp256k1_musig_nonce_gen_counter(ctx, secnonce.ptr, pubnonce.ptr, nonRepeatingCounter, toNat(privkey), nPubkey.ptr, msg32?.let { toNat(it) },nKeyAggCache?.ptr, extraInput32?.let { toNat(it) }).requireSuccess("secp256k1_musig_nonce_gen_counter() failed")
+            secp256k1_musig_nonce_gen_counter(ctx, secnonce.ptr, pubnonce.ptr, nonRepeatingCounter, nKeypair.ptr, msg32?.let { toNat(it) },nKeyAggCache?.ptr, extraInput32?.let { toNat(it) }).requireSuccess("secp256k1_musig_nonce_gen_counter() failed")
             val nPubnonce = allocArray<UByteVar>(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
             secp256k1_musig_pubnonce_serialize(ctx, nPubnonce, pubnonce.ptr).requireSuccess("secp256k1_musig_pubnonce_serialize failed")
             secnonce.ptr.readBytes(Secp256k1.MUSIG2_SECRET_NONCE_SIZE) + nPubnonce.readBytes(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)

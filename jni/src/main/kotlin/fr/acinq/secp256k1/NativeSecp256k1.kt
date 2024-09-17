@@ -96,8 +96,8 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_musig_nonce_gen(Secp256k1Context.getContext(), sessionRandom32, privkey, pubkey, msg32, keyaggCache, extraInput32)
     }
 
-    override fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, pubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
-        return Secp256k1CFunctions.secp256k1_musig_nonce_gen_counter(Secp256k1Context.getContext(), nonRepeatingCounter.toLong(), privkey, pubkey, msg32, keyaggCache, extraInput32)
+    override fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
+        return Secp256k1CFunctions.secp256k1_musig_nonce_gen_counter(Secp256k1Context.getContext(), nonRepeatingCounter.toLong(), privkey, msg32, keyaggCache, extraInput32)
     }
 
     override fun musigNonceAgg(pubnonces: Array<ByteArray>): ByteArray {
