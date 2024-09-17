@@ -3,8 +3,8 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.dokka.Platform
 
 plugins {
-    kotlin("multiplatform") version "1.9.22"
-    id("org.jetbrains.dokka") version "1.9.10"
+    kotlin("multiplatform") version "2.0.20"
+    id("org.jetbrains.dokka") version "1.9.20"
     `maven-publish`
 }
 
@@ -16,7 +16,7 @@ buildscript {
 
     dependencies {
         classpath("com.android.tools.build:gradle:7.3.1")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.9.10")
+        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.9.20")
     }
 }
 
