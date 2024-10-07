@@ -3,7 +3,6 @@ package fr.acinq.secp256k1
 import kotlinx.cinterop.*
 import platform.posix.memcpy
 import platform.posix.size_tVar
-import platform.posix.uint64_t
 import secp256k1.*
 
 @OptIn(ExperimentalUnsignedTypes::class, ExperimentalForeignApi::class)
@@ -308,11 +307,14 @@ public object Secp256k1Native : Secp256k1 {
                 memcpy(n.ptr, toNat(it), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
                 n
             }
+            // we make a native copy of sessionRandom32, which will be zeroed by secp256k1_musig_nonce_gen
+            val sessionRand32 = allocArray<UByteVar>(32)
+            memcpy(sessionRand32.pointed.ptr, toNat(sessionRandom32), 32u)
             secp256k1_musig_nonce_gen(
                 ctx,
                 secnonce.ptr,
                 pubnonce.ptr,
-                toNat(sessionRandom32),
+                sessionRand32,
                 privkey?.let { toNat(it) },
                 nPubkey.ptr,
                 msg32?.let { toNat(it) },
