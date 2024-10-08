@@ -159,15 +159,29 @@ public interface Secp256k1 {
      * This nonce must never be persisted or reused across signing sessions.
      * All optional arguments exist to enrich the quality of the randomness used, which is critical for security.
      *
-     * @param sessionId32 unique 32-byte session ID.
+     * @param sessionRandom32 unique 32-byte random data that must not be reused to generate other nonces
      * @param privkey (optional) signer's private key.
-     * @param aggpubkey aggregated public key of all participants in the signing session.
+     * @param pubkey signer's public key
      * @param msg32 (optional) 32-byte message that will be signed, if already known.
      * @param keyaggCache (optional) key aggregation cache data from the signing session.
      * @param extraInput32 (optional) additional 32-byte random data.
      * @return serialized version of the secret nonce and the corresponding public nonce.
      */
-    public fun musigNonceGen(sessionId32: ByteArray, privkey: ByteArray?, aggpubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray
+    public fun musigNonceGen(sessionRandom32: ByteArray, privkey: ByteArray?, pubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray
+
+    /**
+     * Alternative counter-based method for generating nonce.
+     * This nonce must never be persisted or reused across signing sessions.
+     * All optional arguments exist to enrich the quality of the randomness used, which is critical for security.
+     *
+     * @param nonRepeatingCounter non-repeating counter that must never be reused with the same private key
+     * @param privkey signer's private key.
+     * @param msg32 (optional) 32-byte message that will be signed, if already known.
+     * @param keyaggCache (optional) key aggregation cache data from the signing session.
+     * @param extraInput32 (optional) additional 32-byte random data.
+     * @return serialized version of the secret nonce and the corresponding public nonce.
+     */
+    public fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray
 
     /**
      * Aggregate public nonces from all participants of a signing session.
