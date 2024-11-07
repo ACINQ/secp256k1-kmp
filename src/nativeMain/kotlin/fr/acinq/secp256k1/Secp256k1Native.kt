@@ -291,8 +291,8 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    override fun musigNonceGen(sessionId32: ByteArray, privkey: ByteArray?, aggpubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
-        require(sessionId32.size == 32)
+    override fun musigNonceGen(sessionRandom32: ByteArray, privkey: ByteArray?, pubkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
+        require(sessionRandom32.size == 32)
         privkey?.let { require(it.size == 32) }
         msg32?.let { require(it.size == 32) }
         keyaggCache?.let { require(it.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
@@ -301,22 +301,48 @@ public object Secp256k1Native : Secp256k1 {
         val nonce = memScoped {
             val secnonce = alloc<secp256k1_musig_secnonce>()
             val pubnonce = alloc<secp256k1_musig_pubnonce>()
-            val nPubkey = allocPublicKey(aggpubkey)
+            val nPubkey = allocPublicKey(pubkey)
             val nKeyAggCache = keyaggCache?.let {
                 val n = alloc<secp256k1_musig_keyagg_cache>()
                 memcpy(n.ptr, toNat(it), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
                 n
             }
+            // we make a native copy of sessionRandom32, which will be zeroed by secp256k1_musig_nonce_gen
+            val sessionRand32 = allocArray<UByteVar>(32)
+            memcpy(sessionRand32.pointed.ptr, toNat(sessionRandom32), 32u)
             secp256k1_musig_nonce_gen(
                 ctx,
                 secnonce.ptr,
                 pubnonce.ptr,
-                toNat(sessionId32),
+                sessionRand32,
                 privkey?.let { toNat(it) },
                 nPubkey.ptr,
                 msg32?.let { toNat(it) },
                 nKeyAggCache?.ptr,
                 extraInput32?.let { toNat(it) }).requireSuccess("secp256k1_musig_nonce_gen() failed")
+            val nPubnonce = allocArray<UByteVar>(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
+            secp256k1_musig_pubnonce_serialize(ctx, nPubnonce, pubnonce.ptr).requireSuccess("secp256k1_musig_pubnonce_serialize failed")
+            secnonce.ptr.readBytes(Secp256k1.MUSIG2_SECRET_NONCE_SIZE) + nPubnonce.readBytes(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
+        }
+        return nonce
+    }
+
+    override fun musigNonceGenCounter(nonRepeatingCounter: ULong, privkey: ByteArray, msg32: ByteArray?, keyaggCache: ByteArray?, extraInput32: ByteArray?): ByteArray {
+        require(privkey.size ==32)
+        msg32?.let { require(it.size == 32) }
+        keyaggCache?.let { require(it.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
+        extraInput32?.let { require(it.size == 32) }
+        val nonce = memScoped {
+            val secnonce = alloc<secp256k1_musig_secnonce>()
+            val pubnonce = alloc<secp256k1_musig_pubnonce>()
+            val nKeypair = alloc<secp256k1_keypair>()
+            secp256k1_keypair_create(ctx, nKeypair.ptr, toNat(privkey))
+            val nKeyAggCache = keyaggCache?.let {
+                val n = alloc<secp256k1_musig_keyagg_cache>()
+                memcpy(n.ptr, toNat(it), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
+                n
+            }
+            secp256k1_musig_nonce_gen_counter(ctx, secnonce.ptr, pubnonce.ptr, nonRepeatingCounter, nKeypair.ptr, msg32?.let { toNat(it) },nKeyAggCache?.ptr, extraInput32?.let { toNat(it) }).requireSuccess("secp256k1_musig_nonce_gen_counter() failed")
             val nPubnonce = allocArray<UByteVar>(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
             secp256k1_musig_pubnonce_serialize(ctx, nPubnonce, pubnonce.ptr).requireSuccess("secp256k1_musig_pubnonce_serialize failed")
             secnonce.ptr.readBytes(Secp256k1.MUSIG2_SECRET_NONCE_SIZE) + nPubnonce.readBytes(Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
