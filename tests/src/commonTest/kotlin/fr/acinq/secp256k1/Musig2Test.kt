@@ -1,30 +1,12 @@
 package fr.acinq.secp256k1
 
 import kotlinx.serialization.json.*
-import org.kodein.memory.file.FileSystem
-import org.kodein.memory.file.Path
-import org.kodein.memory.file.openReadableFile
-import org.kodein.memory.file.resolve
-import org.kodein.memory.system.Environment
-import org.kodein.memory.text.readString
-import org.kodein.memory.use
 import kotlin.test.*
 
 class Musig2Test {
-    fun resourcesDir() =
-        Environment.findVariable("TEST_RESOURCES_PATH")?.let { Path(it) }
-            ?: FileSystem.workingDir().resolve("src/commonTest/resources")
-
-    fun readData(filename: String): JsonElement {
-        val file = resourcesDir().resolve(filename)
-        val raw = file.openReadableFile().use { it.readString() }
-        val format = Json { ignoreUnknownKeys = true }
-        return format.parseToJsonElement(raw)
-    }
-
     @Test
     fun `aggregate public keys`() {
-        val tests = readData("musig2/key_agg_vectors.json")
+        val tests = TestHelpers.readResourceAsJson("musig2/key_agg_vectors.json")
         val pubkeys = tests.jsonObject["pubkeys"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
         val tweaks = tests.jsonObject["tweaks"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
 
@@ -81,7 +63,7 @@ class Musig2Test {
 
     @Test
     fun `generate secret nonce`() {
-        val tests = readData("musig2/nonce_gen_vectors.json")
+        val tests = TestHelpers.readResourceAsJson("musig2/nonce_gen_vectors.json")
         tests.jsonObject["test_cases"]!!.jsonArray.forEach {
             val randprime = Hex.decode(it.jsonObject["rand_"]!!.jsonPrimitive.content)
             val sk = it.jsonObject["sk"]?.jsonPrimitive?.contentOrNull?.let { Hex.decode(it) }
@@ -110,7 +92,7 @@ class Musig2Test {
 
     @Test
     fun `aggregate nonces`() {
-        val tests = readData("musig2/nonce_agg_vectors.json")
+        val tests = TestHelpers.readResourceAsJson("musig2/nonce_agg_vectors.json")
         val nonces = tests.jsonObject["pnonces"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
         tests.jsonObject["valid_test_cases"]!!.jsonArray.forEach {
             val nonceIndices = it.jsonObject["pnonce_indices"]!!.jsonArray.map { it.jsonPrimitive.int }
@@ -129,7 +111,7 @@ class Musig2Test {
 
     @Test
     fun sign() {
-        val tests = readData("musig2/sign_verify_vectors.json")
+        val tests = TestHelpers.readResourceAsJson("musig2/sign_verify_vectors.json")
         val sk = Hex.decode(tests.jsonObject["sk"]!!.jsonPrimitive.content)
         val pubkeys = tests.jsonObject["pubkeys"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
         val secnonces = tests.jsonObject["secnonces"]!!.jsonArray.map { deserializeSecretNonce(it.jsonPrimitive.content) }
@@ -179,7 +161,7 @@ class Musig2Test {
 
     @Test
     fun `aggregate signatures`() {
-        val tests = readData("musig2/sig_agg_vectors.json")
+        val tests = TestHelpers.readResourceAsJson("musig2/sig_agg_vectors.json")
         val pubkeys = tests.jsonObject["pubkeys"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
         val pnonces = tests.jsonObject["pnonces"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
         val tweaks = tests.jsonObject["tweaks"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
@@ -240,7 +222,7 @@ class Musig2Test {
 
     @Test
     fun `tweak tests`() {
-        val tests = readData("musig2/tweak_vectors.json")
+        val tests = TestHelpers.readResourceAsJson("musig2/tweak_vectors.json")
         val sk = Hex.decode(tests.jsonObject["sk"]!!.jsonPrimitive.content)
         val pubkeys = tests.jsonObject["pubkeys"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
         val pnonces = tests.jsonObject["pnonces"]!!.jsonArray.map { Hex.decode(it.jsonPrimitive.content) }
