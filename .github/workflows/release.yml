@@ -35,13 +35,13 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
       - name: Android environment
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_NDK_VERSION=25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=27.2.12479018" >> $GITHUB_ENV
       - name: Cached Android NDK
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/cache@v4
         with:
           path: ${{ format('{0}/ndk/{1}', env.ANDROID_HOME, env.ANDROID_NDK_VERSION) }}
@@ -65,13 +65,17 @@ jobs:
             autotools
             mingw-w64-x86_64-gcc
       - name: Setup Android
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "ndk;$ANDROID_NDK_VERSION"
-      - name: Setup Android
+      - name: Skip Android (windows)
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
+        run: |
+          echo "skip.android=true" > local.properties
+      - name: Skip Android (macos)
+        if: matrix.os == 'macOS-latest'
         run: |
           echo "skip.android=true" > local.properties
       - name: Set up JDK 11
