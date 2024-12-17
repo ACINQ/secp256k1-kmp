@@ -13,13 +13,13 @@ val copyJni by tasks.creating(Sync::class) {
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isMacOsX }
     dependsOn(":jni:jvm:buildNativeHost")
     from(rootDir.resolve("jni/jvm/build/darwin/libsecp256k1-jni.dylib"))
-    into(buildDir.resolve("jniResources/fr/acinq/secp256k1/jni/native/darwin"))
+    into(layout.buildDirectory.dir("jniResources/fr/acinq/secp256k1/jni/native/darwin"))
 }
 
 (tasks["processResources"] as ProcessResources).apply {
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isMacOsX }
     dependsOn(copyJni)
-    from(buildDir.resolve("jniResources"))
+    from(layout.buildDirectory.dir("jniResources"))
 }
 
 publishing {

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka")
@@ -11,6 +13,9 @@ java {
 
 kotlin {
     explicitApi()
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
 }
 
 dependencies {
@@ -20,15 +25,15 @@ dependencies {
 val generateHeaders by tasks.creating(JavaCompile::class) {
     group = "build"
     classpath = sourceSets["main"].compileClasspath
-    destinationDirectory.set(file("${buildDir}/generated/jni"))
+    destinationDirectory.set(layout.buildDirectory.dir("generated/jni"))
     source = sourceSets["main"].java
     options.compilerArgs = listOf(
-        "-h", file("${buildDir}/generated/jni").absolutePath,
-        "-d", file("${buildDir}/generated/jni-tmp").absolutePath
+        "-h", layout.buildDirectory.dir("generated./jni").get().asFile.absolutePath,
+        "-d", layout.buildDirectory.dir("generated./jni-tmp").get().asFile.absolutePath
     )
     // options.verbose = true
     doLast {
-        delete(file("${buildDir}/generated/jni-tmp"))
+        layout.buildDirectory.dir("generated/jni-tmp").get().asFile.delete()
     }
 }
 
