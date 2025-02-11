@@ -26,7 +26,7 @@ internal object OSInfo {
 
    @JvmStatic val hardwareName: String get() =
        try {
-           val p = Runtime.getRuntime().exec("uname -m")
+           val p = Runtime.getRuntime().exec(arrayOf("uname", "-m"))
            p.waitFor()
            val input = p.inputStream
            input.use {
@@ -83,7 +83,7 @@ internal object OSInfo {
                    val javaHome = System.getProperty("java.home")
                    try {
                        // determine if first JVM found uses ARM hard-float ABI
-                       var exitCode = Runtime.getRuntime().exec("which readelf").waitFor()
+                       var exitCode = Runtime.getRuntime().exec(arrayOf("which", "readelf")).waitFor()
                        if (exitCode == 0) {
                            val cmdarray = arrayOf(
                                "/bin/sh", "-c", "find '" + javaHome +
@@ -119,7 +119,7 @@ internal object OSInfo {
            val javaHome = System.getProperty("java.home")
            try {
                // determine if first JVM found uses ARM hard-float ABI
-               var exitCode = Runtime.getRuntime().exec("which readelf").waitFor()
+               var exitCode = Runtime.getRuntime().exec(arrayOf("which", "readelf")).waitFor()
                if (exitCode == 0) {
                    val cmdarray = arrayOf(
                        "/bin/sh", "-c", "find '" + javaHome +

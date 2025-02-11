@@ -1,11 +1,12 @@
 import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.dokka.Platform
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.*
 
 plugins {
-    kotlin("multiplatform") version "1.9.22"
-    id("org.jetbrains.dokka") version "1.9.10"
+    kotlin("multiplatform") version "2.1.10"
+    id("org.jetbrains.dokka") version "1.9.20"
     `maven-publish`
 }
 
@@ -17,7 +18,6 @@ buildscript {
 
     dependencies {
         classpath("com.android.tools.build:gradle:8.2.2")
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.9.10")
     }
 }
 
@@ -39,8 +39,8 @@ kotlin {
     val commonMain by sourceSets.getting
 
     jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_18)
         }
     }
 
@@ -102,7 +102,11 @@ allprojects {
                     compileTaskProvider { enabled = false }
                     tasks[processResourcesTaskName].enabled = false
                 }
-                binaries.all { linkTask.enabled = false }
+                binaries.all {
+                    linkTaskProvider.configure {
+                        enabled = false
+                    }
+                }
 
                 mavenPublication {
                     val publicationToDisable = this
