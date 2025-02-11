@@ -48,14 +48,28 @@ android {
     }
 
     publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
+        singleVariant("release")
     }
 }
 
 afterEvaluate {
     tasks.filter { it.name.startsWith("configureCMake") }.forEach {
         it.dependsOn(":native:buildSecp256k1Android")
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("android") {
+                artifactId = "secp256k1-kmp-jni-android"
+                from(components["release"])
+                val sourcesJar = task<Jar>("sourcesJar") {
+                    archiveClassifier.set("sources")
+                    from(android.sourceSets["main"].java.srcDirs)
+                }
+                artifact(sourcesJar)
+            }
+        }
     }
 }
