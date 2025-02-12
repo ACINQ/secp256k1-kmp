@@ -31,7 +31,7 @@ kotlin {
 
     jvm {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_18)
+            jvmTarget.set(JvmTarget.JVM_1_8)
         }
         compilations["main"].dependencies {
             implementation(project(":jni:jvm:all"))
