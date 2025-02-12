@@ -741,7 +741,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT((*penv)->GetArrayLength(penv, jauxrand32) != 32, "auxiliary random data must be 32 bytes");
   }
   seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
-  result = secp256k1_keypair_create(ctx, &keypair, seckey);
+  result = secp256k1_keypair_create(ctx, &keypair, (const unsigned char*)seckey);
   (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
   CHECKRESULT(!result, "secp256k1_keypair_create failed");
 
@@ -751,7 +751,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     auxrand32 = (*penv)->GetByteArrayElements(penv, jauxrand32, 0);
   }
 
-  result = secp256k1_schnorrsig_sign32(ctx, signature, (unsigned char *)msg, &keypair, auxrand32);
+  result = secp256k1_schnorrsig_sign32(ctx, signature, (unsigned char *)msg, &keypair, (const unsigned char*)auxrand32);
   (*penv)->ReleaseByteArrayElements(penv, jmsg, msg, 0);
   if (auxrand32 != 0)
   {
@@ -930,13 +930,13 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     return NULL;
 
   seckey = (*penv)->GetByteArrayElements(penv, jseckey, 0);
-  result = secp256k1_keypair_create(ctx, &keypair, seckey);
+  result = secp256k1_keypair_create(ctx, &keypair, (const unsigned char*)seckey);
   (*penv)->ReleaseByteArrayElements(penv, jseckey, seckey, 0);
   CHECKRESULT(!result, "secp256k1_keypair_create failed");
 
   size = (*penv)->GetArrayLength(penv, jseckey);
   CHECKRESULT(size != 32, "invalid private key size");
-  copy_bytes_from_java(penv, jseckey, size, seckey);
+  copy_bytes_from_java(penv, jseckey, size, (unsigned char*)seckey);
 
   if (jmsg32 != NULL)
   {
@@ -1125,14 +1125,14 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   CHECKRESULT((*penv)->GetArrayLength(penv, jtweak32) != 32, "tweak must be 32 bytes");
   tweak32 = (*penv)->GetByteArrayElements(penv, jtweak32, 0);
 
-  result = secp256k1_musig_pubkey_ec_tweak_add(ctx, &pubkey, &keyaggcache, tweak32);
+  result = secp256k1_musig_pubkey_ec_tweak_add(ctx, &pubkey, &keyaggcache, (const unsigned char*)tweak32);
   (*penv)->ReleaseByteArrayElements(penv, jtweak32, tweak32, 0);
   CHECKRESULT(!result, "secp256k1_musig_pubkey_ec_tweak_add failed");
 
   jpubkey = (*penv)->NewByteArray(penv, 65);
   pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
   size = 65;
-  result = secp256k1_ec_pubkey_serialize(ctx, pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+  result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
   (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
   CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
@@ -1170,14 +1170,14 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   CHECKRESULT((*penv)->GetArrayLength(penv, jtweak32) != 32, "tweak must be 32 bytes");
   tweak32 = (*penv)->GetByteArrayElements(penv, jtweak32, 0);
 
-  result = secp256k1_musig_pubkey_xonly_tweak_add(ctx, &pubkey, &keyaggcache, tweak32);
+  result = secp256k1_musig_pubkey_xonly_tweak_add(ctx, &pubkey, &keyaggcache, (const unsigned char*)tweak32);
   (*penv)->ReleaseByteArrayElements(penv, jtweak32, tweak32, 0);
   CHECKRESULT(!result, "secp256k1_musig_pubkey_xonly_tweak_add failed");
 
   jpubkey = (*penv)->NewByteArray(penv, 65);
   pub = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
   size = 65;
-  result = secp256k1_ec_pubkey_serialize(ctx, pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
+  result = secp256k1_ec_pubkey_serialize(ctx, (unsigned char*)pub, &size, &pubkey, SECP256K1_EC_UNCOMPRESSED);
   (*penv)->ReleaseByteArrayElements(penv, jpubkey, pub, 0);
   CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
@@ -1218,7 +1218,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   CHECKRESULT((*penv)->GetArrayLength(penv, jkeyaggcache) != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, "invalid keyagg cache size");
 
   ptr = (*penv)->GetByteArrayElements(penv, jaggnonce, 0);
-  result = secp256k1_musig_aggnonce_parse(ctx, &aggnonce, ptr);
+  result = secp256k1_musig_aggnonce_parse(ctx, &aggnonce, (const unsigned char*)ptr);
   (*penv)->ReleaseByteArrayElements(penv, jaggnonce, ptr, 0);
   CHECKRESULT(!result, "secp256k1_musig_aggnonce_parse failed");
 
@@ -1321,17 +1321,17 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1mu
   CHECKRESULT((*penv)->GetArrayLength(penv, jsession) != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE, "invalid session size");
 
   ptr = (*penv)->GetByteArrayElements(penv, jpsig, 0);
-  result = secp256k1_musig_partial_sig_parse(ctx, &psig, ptr);
+  result = secp256k1_musig_partial_sig_parse(ctx, &psig, (const unsigned char*)ptr);
   (*penv)->ReleaseByteArrayElements(penv, jpsig, ptr, 0);
   CHECKRESULT(!result, "secp256k1_musig_partial_sig_parse failed");
 
   ptr = (*penv)->GetByteArrayElements(penv, jpubnonce, 0);
-  result = secp256k1_musig_pubnonce_parse(ctx, &pubnonce, ptr);
+  result = secp256k1_musig_pubnonce_parse(ctx, &pubnonce, (const unsigned char*)ptr);
   (*penv)->ReleaseByteArrayElements(penv, jpubnonce, ptr, 0);
   CHECKRESULT(!result, "secp256k1_musig_pubnonce_parse failed");
 
   ptr = (*penv)->GetByteArrayElements(penv, jpubkey, 0);
-  result = secp256k1_ec_pubkey_parse(ctx, &pubkey, ptr, (*penv)->GetArrayLength(penv, jpubkey));
+  result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (const unsigned char*)ptr, (*penv)->GetArrayLength(penv, jpubkey));
   (*penv)->ReleaseByteArrayElements(penv, jpubkey, ptr, 0);
   CHECKRESULT(!result, "secp256k1_musig_pubkey_parse failed");
 

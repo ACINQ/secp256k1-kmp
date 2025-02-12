@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.library")
     kotlin("android")
@@ -7,6 +9,9 @@ plugins {
 
 kotlin {
     explicitApi()
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
 }
 
 dependencies {
@@ -14,6 +19,8 @@ dependencies {
 }
 
 android {
+    namespace = "fr.acinq.secp256k1.jni"
+
     defaultConfig {
         compileSdk = 33
         minSdk = 21
@@ -32,12 +39,16 @@ android {
         }
     }
 
-    ndkVersion = "25.2.9519653"
+    ndkVersion = "27.2.12479018"
 
     afterEvaluate {
         tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
             enabled = false
         }
+    }
+
+    publishing {
+        singleVariant("release")
     }
 }
 

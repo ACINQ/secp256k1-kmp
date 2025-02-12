@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
@@ -29,8 +30,8 @@ kotlin {
     }
 
     jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_1_8)
         }
         compilations["main"].dependencies {
             implementation(project(":jni:jvm:all"))
@@ -42,8 +43,8 @@ kotlin {
 
     if (includeAndroid) {
         androidTarget {
-            compilations.all {
-                kotlinOptions.jvmTarget = "1.8"
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_1_8)
             }
             sourceSets["androidMain"].dependencies {
                 implementation(project(":jni:android"))
@@ -67,6 +68,8 @@ kotlin {
 val includeAndroid = System.getProperty("includeAndroid")?.toBoolean() ?: true
 if (includeAndroid) {
     extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
+        namespace = "fr.acinq.secp256k1.tests"
+
         defaultConfig {
             compileSdk = 30
             minSdk = 21
