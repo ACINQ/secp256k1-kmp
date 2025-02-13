@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     kotlin("jvm")
     id("org.jetbrains.dokka")
@@ -29,6 +31,16 @@ val buildNativeHost by tasks.creating(Exec::class) {
 
 dependencies {
     api(project(":jni"))
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
 }
 
 publishing {
