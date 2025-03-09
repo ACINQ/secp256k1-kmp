@@ -30,6 +30,21 @@ val buildSecp256k1Host by tasks.creating(Exec::class) {
     commandLine(bash, "-l", "build.sh")
 }
 
+// specific build task for linux arm64, which is cross-compiled on a linux x64 host
+val buildSecp256k1LinuxArm64 by tasks.creating(Exec::class) {
+    group = "build"
+    buildSecp256k1.dependsOn(this)
+
+    val target = "linuxArm64"
+
+    inputs.files(projectDir.resolve("build.sh"))
+    outputs.dir(projectDir.resolve("build/$target"))
+
+    workingDir = projectDir
+    environment("TARGET", target)
+    commandLine(bash, "-l", "build.sh")
+}
+
 val buildSecp256k1Ios by tasks.creating(Exec::class) {
     group = "build"
     buildSecp256k1.dependsOn(this)

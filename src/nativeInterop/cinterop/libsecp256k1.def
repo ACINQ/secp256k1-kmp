@@ -3,9 +3,13 @@ package = secp256k1
 headers = secp256k1.h secp256k1_ecdh.h secp256k1_recovery.h secp256k1_extrakeys.h secp256k1_schnorrsig.h secp256k1_musig.h
 headerFilter = secp256k1/** secp256k1_ecdh.h secp256k1_recovery.h secp256k1_extrakeys.h secp256k1_schnorrsig.h secp256k1_musig.h secp256k1.h
 
-staticLibraries.linux = libsecp256k1.a
-libraryPaths.linux = c/secp256k1/build/linux/ native/build/linux/ native/build/darwin/
-linkerOpts.linux = -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/lib
+staticLibraries.linux_x64 = libsecp256k1.a
+libraryPaths.linux_x64 = c/secp256k1/build/linux/ native/build/linux/
+linkerOpts.linux_x64 = -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/lib
+
+staticLibraries.linux_arm64 = libsecp256k1.a
+libraryPaths.linux_arm64 = c/secp256k1/build/linuxArm65/ native/build/linuxArm64/
+linkerOpts.linux_arm64 = -L/usr/aarch64-linux-gnu/lib
 
 staticLibraries.macos_x64 = libsecp256k1.a
 libraryPaths.macos_x64 = c/secp256k1/build/darwin/ native/build/darwin/

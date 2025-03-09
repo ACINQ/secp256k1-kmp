@@ -16,6 +16,9 @@ if [ "$TARGET" == "mingw" ]; then
   CONF_OPTS=" --host=x86_64-w64-mingw32"
 elif [ "$TARGET" == "linux" ]; then
   CFLAGS="-fPIC"
+elif [ "$TARGET" == "linuxArm64" ]; then
+  CFLAGS="-fPIC"
+  CONF_OPTS="--host=aarch64-linux-gnu"
 elif [ "$TARGET" == "darwin" ]; then
   CFLAGS="-arch arm64 -arch x86_64"
   LDFLAGS="-arch arm64 -arch x86_64"

@@ -23,7 +23,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.17.1"
+    version = "0.17.2-SNAPSHOT"
 
     repositories {
         google()
@@ -59,6 +59,10 @@ kotlin {
         secp256k1CInterop("host")
     }
 
+    linuxArm64 {
+        secp256k1CInterop("linuxArm64")
+    }
+
     macosX64 {
         secp256k1CInterop("host")
     }
@@ -91,9 +95,9 @@ allprojects {
             val currentOs = OperatingSystem.current()
             val targets = when {
                 currentOs.isLinux -> listOf()
-                currentOs.isMacOsX -> listOf("linuxX64")
-                currentOs.isWindows -> listOf("linuxX64")
-                else -> listOf("linuxX64")
+                currentOs.isMacOsX -> listOf("linuxX64", "linuxArm64")
+                currentOs.isWindows -> listOf("linuxX64", "linuxArm64")
+                else -> listOf("linuxX64", "linuxArm64")
             }.mapNotNull { kotlin.targets.findByName(it) as? KotlinNativeTarget }
 
             configure(targets) {
