@@ -23,7 +23,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.17.2-SNAPSHOT"
+    version = "0.17.2"
 
     repositories {
         google()
