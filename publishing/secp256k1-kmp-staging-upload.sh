@@ -28,7 +28,10 @@ for i in 	secp256k1-kmp \
 		secp256k1-kmp-jni-jvm-linux \
 		secp256k1-kmp-jni-jvm-mingw \
 		secp256k1-kmp-jvm \
-		secp256k1-kmp-linuxx64
+		secp256k1-kmp-linuxarm64 \
+		secp256k1-kmp-linuxx64 \
+		secp256k1-kmp-macosarm64 \
+		secp256k1-kmp-macosx64
 do
 	pushd .
 	cd release/fr/acinq/secp256k1/$i/$VERSION

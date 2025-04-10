@@ -21,7 +21,7 @@ mvn deploy:deploy-file -DrepositoryId=ossrh -Durl=https://oss.sonatype.org/conte
   -Djavadoc=$ARTIFACT_ID_BASE-$VERSION-javadoc.jar
 popd
 pushd .
-for i in iosarm64 iossimulatorarm64 iosx64 macosarm64 macosx64 jni-android jni-common jni-jvm-darwin jni-jvm-extract jni-jvm-linux jni-jvm-mingw jni-jvm jvm linuxx64; do
+for i in iosarm64 iossimulatorarm64 iosx64 macosarm64 macosx64 jni-android jni-common jni-jvm-darwin jni-jvm-extract jni-jvm-linux jni-jvm-mingw jni-jvm jvm linuxarm64 linuxx64; do
   cd fr/acinq/secp256k1/secp256k1-kmp-$i/$VERSION
 
   case $i in
@@ -35,7 +35,7 @@ for i in iosarm64 iossimulatorarm64 iosx64 macosarm64 macosx64 jni-android jni-c
             -Dsources=$ARTIFACT_ID_BASE-$i-$VERSION-sources.jar \
             -Djavadoc=$ARTIFACT_ID_BASE-$i-$VERSION-javadoc.jar
           ;;
-    linuxx64)
+    linuxx64 | linuxarm64)
       mvn deploy:deploy-file -DrepositoryId=ossrh -Durl=https://oss.sonatype.org/content/repositories/snapshots/ \
         -DpomFile=$ARTIFACT_ID_BASE-$i-$VERSION.pom \
         -Dfile=$ARTIFACT_ID_BASE-$i-$VERSION.klib \
