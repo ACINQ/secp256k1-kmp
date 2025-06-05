@@ -44,6 +44,11 @@ kotlin {
         }
     }
 
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
     fun KotlinNativeTarget.secp256k1CInterop(target: String) {
         compilations["main"].cinterops {
             val libsecp256k1 by creating {
