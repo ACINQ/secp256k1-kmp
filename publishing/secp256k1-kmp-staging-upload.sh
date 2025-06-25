@@ -36,7 +36,6 @@ for i in 	secp256k1-kmp \
 		secp256k1-kmp-macosx64
 do
 	DIR=fr/acinq/secp256k1/$i/$VERSION
-	echo DIR is $DIR
 	case $1 in
 	create)
   	for file in $DIR/*
