@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.*
 
 plugins {
-    kotlin("multiplatform") version "2.1.10"
+    kotlin("multiplatform") version "2.1.21"
     id("org.jetbrains.dokka") version "1.9.20"
     `maven-publish`
 }
@@ -23,7 +23,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.17.3"
+    version = "0.18.0"
 
     repositories {
         google()
@@ -42,6 +42,11 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_1_8)
         }
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     fun KotlinNativeTarget.secp256k1CInterop(target: String) {
