@@ -65,15 +65,15 @@ public class Secp256k1CFunctions {
 
     public static native int secp256k1_ecdsa_signature_normalize(long ctx, byte[] sigin, byte[] sigout);
 
-    public static native byte[] secp256k1_ec_privkey_negate(long ctx, byte[] privkey);
+    public static native byte[] secp256k1_ec_seckey_negate(long ctx, byte[] privkey);
 
     public static native byte[] secp256k1_ec_pubkey_negate(long ctx, byte[] pubkey);
 
-    public static native byte[] secp256k1_ec_privkey_tweak_add(long ctx, byte[] seckey, byte[] tweak);
+    public static native byte[] secp256k1_ec_seckey_tweak_add(long ctx, byte[] seckey, byte[] tweak);
 
     public static native byte[] secp256k1_ec_pubkey_tweak_add(long ctx, byte[] pubkey, byte[] tweak);
 
-    public static native byte[] secp256k1_ec_privkey_tweak_mul(long ctx, byte[] seckey, byte[] tweak);
+    public static native byte[] secp256k1_ec_seckey_tweak_mul(long ctx, byte[] seckey, byte[] tweak);
 
     public static native byte[] secp256k1_ec_pubkey_tweak_mul(long ctx, byte[] pubkey, byte[] tweak);
 
