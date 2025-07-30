@@ -26,7 +26,7 @@ You must edit `secp256k1-kmp-staging-upload.sh` and add your sonatype credential
 
 ## Adding custom JNI bindings
 
-Github CI currently generates JNI bindings for Windows x64, Linux x64 and iOS x64. But it is possible to add custom bindings to JNI packages before 
+Github CI currently generates JNI bindings for Windows x64, Linux x64, macOS x64 and arm64, and iOS x64. But it is possible to add custom bindings to JNI packages before 
 they are published to maven central. 
 
 This is how we add linux arm64 bindings:
@@ -41,17 +41,3 @@ This is how we add linux arm64 bindings:
 - run `secp256k1-kmp-add-linuxarm64.sh` and specify either `release` or `snapshot` and the `VERSION` environment variable, for example:
   - VERSION=0.9.0-SNAPSHOT ./secp256k1-kmp-add-linuxarm64.sh snapshot
   - VERSION=0.9.0 ./secp256k1-kmp-add-linuxarm64.sh release
-
-This is how we add macos arm64 (M1/M2) bindings:
-- compile JNI bindings for macos Arm64 (on a macos Arm64 machine, cross-compilation is not supported)
-  - git clone --recursive https://github.com/ACINQ/secp256k1-kmp.git
-  - cd secp256k1-kmp
-  - TARGET=darwin ./native/build.sh
-  - mkdir -p jni/jvm/build/darwin
-  - TARGET=darwin ./jni/jvm/build.sh
-  - JNI library is: jni/jvm/build/darwin/libsecp256k1-jni.dylib
-- copy libsecp256k1-jni.dylib to fr/acinq/secp256k1/jni/native/darwin-aarch64/libsecp256k1-jni.dylib
-- run `secp256k1-kmp-add-darwinaarch64.sh` and specify either `release` or `snapshot` and the `VERSION` environment variable, for example:
-  - VERSION=0.9.0-SNAPSHOT ./secp256k1-kmp-add-darwinaarch64.sh snapshot
-  - VERSION=0.9.0 ./secp256k1-kmp-add-darwinaarch64.sh release
-
