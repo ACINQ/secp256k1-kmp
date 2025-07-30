@@ -32,6 +32,8 @@ kotlin {
     jvm {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_1_8)
+            // See https://jakewharton.com/kotlins-jdk-release-compatibility-flag/ and https://youtrack.jetbrains.com/issue/KT-49746/
+            freeCompilerArgs.add("-Xjdk-release=1.8")
         }
         compilations["main"].dependencies {
             implementation(project(":jni:jvm:all"))

@@ -11,6 +11,7 @@ kotlin {
     explicitApi()
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_1_8)
+        // Setting freeCompilerArgs.add("-Xjdk-release=1.8" is not needed here become android builds are different from jvm builds
     }
 }
 
@@ -22,7 +23,7 @@ android {
     namespace = "fr.acinq.secp256k1.jni"
 
     defaultConfig {
-        compileSdk = 33
+        compileSdk = 35
         minSdk = 21
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -34,12 +35,12 @@ android {
 
     externalNativeBuild {
         cmake {
-            version = "3.22.1"
+            version = "3.31.5"
             path("src/main/CMakeLists.txt")
         }
     }
 
-    ndkVersion = "27.2.12479018"
+    ndkVersion = "28.1.13356709"
 
     afterEvaluate {
         tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {

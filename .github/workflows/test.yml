@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_NDK_VERSION=27.2.12479018" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=28.1.13356709" >> $GITHUB_ENV
       - name: Cached Android NDK
         if: matrix.os == 'ubuntu-latest'
         uses: actions/cache@v4
@@ -120,5 +120,5 @@ jobs:
           api-level: 27
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           ndk: ${{ env.ANDROID_NDK_VERSION }}
-          cmake: 3.22.1
+          cmake: 3.31.5
           script: ./gradlew connectedCheck
