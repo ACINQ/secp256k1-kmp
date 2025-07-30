@@ -175,7 +175,7 @@ public object Secp256k1Native : Secp256k1 {
             val multiplied = privkey.copyOf()
             val natMul = toNat(multiplied)
             val natTweak = toNat(tweak)
-            secp256k1_ec_privkey_tweak_mul(ctx, natMul, natTweak).requireSuccess("secp256k1_ec_privkey_tweak_mul() failed")
+            secp256k1_ec_seckey_tweak_mul(ctx, natMul, natTweak).requireSuccess("secp256k1_ec_seckey_tweak_mul() failed")
             return multiplied
         }
     }

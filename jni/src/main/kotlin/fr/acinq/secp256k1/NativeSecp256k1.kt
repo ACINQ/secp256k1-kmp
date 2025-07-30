@@ -45,15 +45,15 @@ public object NativeSecp256k1 : Secp256k1 {
     }
 
     override fun privKeyNegate(privkey: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ec_privkey_negate(Secp256k1Context.getContext(), privkey)
+        return Secp256k1CFunctions.secp256k1_ec_seckey_negate(Secp256k1Context.getContext(), privkey)
     }
 
     override fun privKeyTweakAdd(privkey: ByteArray, tweak: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ec_privkey_tweak_add(Secp256k1Context.getContext(), privkey, tweak)
+        return Secp256k1CFunctions.secp256k1_ec_seckey_tweak_add(Secp256k1Context.getContext(), privkey, tweak)
     }
 
     override fun privKeyTweakMul(privkey: ByteArray, tweak: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ec_privkey_tweak_mul(Secp256k1Context.getContext(), privkey, tweak)
+        return Secp256k1CFunctions.secp256k1_ec_seckey_tweak_mul(Secp256k1Context.getContext(), privkey, tweak)
     }
 
     override fun pubKeyNegate(pubkey: ByteArray): ByteArray {

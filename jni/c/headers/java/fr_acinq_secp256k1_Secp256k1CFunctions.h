@@ -101,10 +101,10 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
 
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
- * Method:    secp256k1_ec_privkey_negate
+ * Method:    secp256k1_ec_seckey_negate
  * Signature: (J[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1privkey_1negate
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1seckey_1negate
   (JNIEnv *, jclass, jlong, jbyteArray);
 
 /*
@@ -117,10 +117,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
- * Method:    secp256k1_ec_privkey_tweak_add
+ * Method:    secp256k1_ec_seckey_tweak_add
  * Signature: (J[B[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1privkey_1tweak_1add
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1seckey_1tweak_1add
   (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray);
 
 /*
@@ -133,10 +133,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
- * Method:    secp256k1_ec_privkey_tweak_mul
+ * Method:    secp256k1_ec_seckey_tweak_mul
  * Signature: (J[B[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1privkey_1tweak_1mul
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec_1seckey_1tweak_1mul
   (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray);
 
 /*
