@@ -119,43 +119,24 @@ jobs:
           ndk: ${{ env.ANDROID_NDK_VERSION }}
           cmake: 3.22.1
           script: ./gradlew connectedCheck
-      - name: Publish Linux
+      - name: Publish Linux to GitHub Packages
         if: matrix.os == 'ubuntu-latest'
         shell: bash
-        run: ./gradlew publishAndroidPublicationToMavenLocal publishLinuxArm64PublicationToMavenLocal publishLinuxX64PublicationToMavenLocal :jni:jvm:linux:publishJvmPublicationToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-      - name: Publish Windows
+        env:
+          PACKAGE_USERNAME: ${{ secrets.GITHUB_ACTOR }}
+          PACKAGE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew publishAllPublicationsToGithubRepository -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+      - name: Publish Windows to GitHub Packages
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
-        run: ./gradlew :jni:jvm:mingw:publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-      - name: Publish MacOS
+        env:
+          PACKAGE_USERNAME: ${{ secrets.GITHUB_ACTOR }}
+          PACKAGE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew publishAllPublicationsToGithubRepository -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
+      - name: Publish macOS to GitHub Packages
         if: matrix.os == 'macOS-latest'
         shell: bash
-        run: ./gradlew publishToMavenLocal -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}
-      - name: Copy artifact files
-        run: |
-          mkdir -p maven-local/snapshot
-          cp -r ~/.m2/repository/* maven-local/snapshot
-      - name: Upload linux artifacts
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: snapshot-linux
-          path: |
-            maven-local
-            !maven-local/**/maven-metadata-local.xml
-      - name: Upload macos artifacts
-        if: matrix.os == 'macOS-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: snapshot-macos
-          path: |
-            maven-local
-            !maven-local/**/maven-metadata-local.xml
-      - name: Upload windows artifacts
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: snapshot-windows
-          path: |
-            maven-local
-            !maven-local/**/maven-metadata-local.xml
+        env:
+          PACKAGE_USERNAME: ${{ secrets.GITHUB_ACTOR }}
+          PACKAGE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew publishAllPublicationsToGithubRepository -PsnapshotNumber=${{ github.run_number }} -PgitRef=${{ github.ref }}

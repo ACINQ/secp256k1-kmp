@@ -1,5 +1,5 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.10-blue.svg?style=flat&logo=kotlin)](http://kotlinlang.org)
-[![Maven Central](https://img.shields.io/maven-central/v/fr.acinq.secp256k1/secp256k1-kmp)](https://search.maven.org/search?q=g:fr.acinq.secp256k1%20a:secp256k1-kmp*)
+[![Maven Central](https://img.shields.io/maven-central/v/x.ai.secp256k1/secp256k1-kmp)](https://search.maven.org/search?q=g:x.ai.secp256k1%20a:secp256k1-kmp*)
 ![Github Actions](https://github.com/ACINQ/secp256k1-kmp/actions/workflows/test.yml/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/ACINQ/secp256k1-kmp/blob/master/LICENSE)
 
@@ -9,7 +9,26 @@ Kotlin/Multiplatform wrapper for Bitcoin Core's secp256k1 library. Targets: JVM,
 
 ## Installation
 
-secp256k1-kmp is available on [maven central](https://search.maven.org/search?q=g:fr.acinq.secp256k1%20a:secp256k1-kmp*)
+secp256k1-kmp is available on [maven central](https://search.maven.org/search?q=g:x.ai.secp256k1%20a:secp256k1-kmp*) and [GitHub Packages](https://github.com/x-clients/secp256k1-kmp/packages).
+
+### Using GitHub Packages
+
+To use artifacts from GitHub Packages, add the repository to your `build.gradle.kts`:
+
+```kotlin
+repositories {
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/x-clients/secp256k1-kmp")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+        }
+    }
+}
+```
+
+Note: You'll need a GitHub Personal Access Token with `read:packages` permission.
 
 Then, the actual dependency depends on your targeted platform(s):
 
@@ -30,19 +49,19 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(kotlin("stdlib-common"))
-                implementation("fr.acinq.secp256k1:secp256k1-kmp:$secp256k1_version")
+                implementation("x.ai.secp256k1:secp256k1-kmp:$secp256k1_version")
             }
         }
         val jvmMain by getting {
             dependencies {
                 implementation(kotlin("stdlib"))
-                implementation("fr.acinq.secp256k1:secp256k1-kmp-jni-jvm:$secp256k1_version")
+                implementation("x.ai.secp256k1:secp256k1-kmp-jni-jvm:$secp256k1_version")
             }
         }
         val androidMain by getting {
             dependencies {
                 implementation(kotlin("stdlib"))
-                implementation("fr.acinq.secp256k1:secp256k1-kmp-jni-android:$secp256k1_version")
+                implementation("x.ai.secp256k1:secp256k1-kmp-jni-android:$secp256k1_version")
             }
         }
     }
@@ -51,7 +70,7 @@ kotlin {
 
 ### Native targets (iOS, linux64)
 
-Native targets include libsecp256k1, called through KMP's c-interop, simply add the `fr.acinq.secp256k1:secp256k1` dependency.
+Native targets include libsecp256k1, called through KMP's c-interop, simply add the `x.ai.secp256k1:secp256k1` dependency.
 
 ### JVM targets & Android
 
@@ -65,20 +84,20 @@ JNI libraries are included for:
 Along this library, you **must** specify which JNI native library to use in your dependency manager:
 
 * **For desktop or server JVMs**, you must add the dependency:
-  * Either the `fr.acinq.secp256k1:secp256k1-kmp-jni-jvm` dependency which imports all supported platforms.
+  * Either the `x.ai.secp256k1:secp256k1-kmp-jni-jvm` dependency which imports all supported platforms.
   * Or the platform specific dependencies (note that you can add multiple as they do not conflict):
-    * `fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-linux` for Linux
-    * `fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-darwin` for Mac OS X
-    * `fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-mingw` for Windows
-* **For Android**, you must add the `fr.acinq.secp256k1:secp256k1-kmp-jni-android` dependency
+    * `x.ai.secp256k1:secp256k1-kmp-jni-jvm-linux` for Linux
+    * `x.ai.secp256k1:secp256k1-kmp-jni-jvm-darwin` for Mac OS X
+    * `x.ai.secp256k1:secp256k1-kmp-jni-jvm-mingw` for Windows
+* **For Android**, you must add the `x.ai.secp256k1:secp256k1-kmp-jni-android` dependency
 
 If you are using the JVM on an OS for which we don't provide JNI bindings (32 bits OS for example), you can use your own library native library by
-adding the `fr.acinq.secp256k1:secp256k1-kmp-jni-jvm` dependency and specifying its path with `-Dfr.acinq.secp256k1.lib.path` and optionally its name with `-Dfr.acinq.secp256k1.lib.name`
+adding the `x.ai.secp256k1:secp256k1-kmp-jni-jvm` dependency and specifying its path with `-Dx.ai.secp256k1.lib.path` and optionally its name with `-Dx.ai.secp256k1.lib.name`
 (if unspecified bitcoink use the standard name for your OS i.e. libsecp256k1.so on Linux, secp256k1.dll on Windows, ...).
 
 To compile your own JNI bindings, have a look add the `native/build.sh` and `jni/build.sh` scripts.
 
-You can also specify the temporary directory where the library will be extracted with `-Djava.io.tmpdir` or `-Dfr.acinq.secp256k1.tmpdir`
+You can also specify the temporary directory where the library will be extracted with `-Djava.io.tmpdir` or `-Dx.ai.secp256k1.tmpdir`
 (if you want to use a different directory from `-Djava.io.tmpdir`).
 
 ## Usage
@@ -101,6 +120,19 @@ To build the library and publish compiled artefacts locally (so they can be used
 ./gradlew :build
 ./gradlew :publishToMavenLocal
 ```
+
+### Publishing to GitHub Packages
+
+To publish releases to GitHub Packages, create a GitHub release. The release workflow will automatically build and publish artifacts for all platforms.
+
+For manual publishing, you can run:
+```sh
+./gradlew publishAllPublicationsToGithubRepository
+```
+
+You'll need to set the following environment variables:
+- `PACKAGE_USERNAME`: Your GitHub username
+- `PACKAGE_TOKEN`: A GitHub Personal Access Token with `write:packages` permission
 
 To run all tests on all platforms:
 

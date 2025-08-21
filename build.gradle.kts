@@ -22,8 +22,8 @@ buildscript {
 }
 
 allprojects {
-    group = "fr.acinq.secp256k1"
-    version = "0.19.0-SNAPSHOT"
+    group = "x.ai.secp256k1"
+    version = "1.19.0"
 
     repositories {
         google()
@@ -136,6 +136,21 @@ allprojects {
     // Publication
     plugins.withId("maven-publish") {
         publishing {
+            repositories {
+                maven {
+                    name = "github"
+                    // Update to your GitHub org/repo where packages should be published
+                    url = uri("https://maven.pkg.github.com/x-clients/secp256k1-kmp")
+                    credentials {
+                        username = providers.gradleProperty("PACKAGE_USERNAME")
+                            .orElse(providers.environmentVariable("PACKAGE_USERNAME"))
+                            .orNull ?: error("Could not find PACKAGE_USERNAME")
+                        password = providers.gradleProperty("PACKAGE_TOKEN")
+                            .orElse(providers.environmentVariable("PACKAGE_TOKEN"))
+                            .orNull ?: error("Could not find PACKAGE_TOKEN")
+                    }
+                }
+            }
             publications.withType<MavenPublication>().configureEach {
                 version = project.version.toString()
                 artifact(javadocJar)

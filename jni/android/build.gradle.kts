@@ -19,7 +19,7 @@ dependencies {
 }
 
 android {
-    namespace = "fr.acinq.secp256k1.jni"
+    namespace = "x.ai.secp256k1.jni"
 
     defaultConfig {
         compileSdk = 33

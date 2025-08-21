@@ -68,7 +68,7 @@ kotlin {
 val includeAndroid = System.getProperty("includeAndroid")?.toBoolean() ?: true
 if (includeAndroid) {
     extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
-        namespace = "fr.acinq.secp256k1.tests"
+        namespace = "x.ai.secp256k1.tests"
 
         defaultConfig {
             compileSdk = 30
