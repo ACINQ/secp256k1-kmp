@@ -11,7 +11,7 @@ kotlin {
     explicitApi()
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_1_8)
-        // Setting freeCompilerArgs.add("-Xjdk-release=1.8" is not needed here become android builds are different from jvm builds
+        // Setting freeCompilerArgs.add("-Xjdk-release=1.8" is not needed here because android builds are different from jvm builds
     }
 }
 
