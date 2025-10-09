@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.*
 
 plugins {
-    kotlin("multiplatform") version "2.1.21"
+    kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.dokka") version "1.9.20"
     `maven-publish`
 }
@@ -23,7 +23,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.19.0"
+    version = "0.20.0-SNAPSHOT"
 
     repositories {
         google()
