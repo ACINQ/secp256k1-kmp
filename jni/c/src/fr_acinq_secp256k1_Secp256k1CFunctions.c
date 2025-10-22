@@ -15,7 +15,7 @@
 #define SIG_FORMAT_COMPACT 1
 #define SIG_FORMAT_DER 2
 
-void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
+static void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
 {
   jclass cls = (*penv)->FindClass(penv, name);
   if (cls != NULL)
@@ -182,7 +182,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   return jsig;
 }
 
-int GetSignatureFormat(size_t size)
+static int GetSignatureFormat(size_t size)
 {
   if (size == 64)
     return SIG_FORMAT_COMPACT;
@@ -475,7 +475,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   return jpubkey;
 }
 
-void free_pubkeys(secp256k1_pubkey **pubkeys, size_t count)
+static void free_pubkeys(secp256k1_pubkey **pubkeys, size_t count)
 {
   size_t i;
   if (pubkeys == NULL) return;
@@ -869,7 +869,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   return jnonce;
 }
 
-void free_nonces(secp256k1_musig_pubnonce **nonces, size_t count)
+static void free_nonces(secp256k1_musig_pubnonce **nonces, size_t count)
 {
   size_t i;
   if (nonces == NULL) return;
@@ -1091,7 +1091,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   unsigned char msg32[32];
   jbyteArray jsession;
   jbyte buffer[fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE];
-  size_t size;
   int result = 0;
 
   if (jctx == 0) return NULL;
@@ -1223,7 +1222,7 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1mu
   return result;
 }
 
-void free_partial_sigs(secp256k1_musig_partial_sig **psigs, size_t count)
+static void free_partial_sigs(secp256k1_musig_partial_sig **psigs, size_t count)
 {
   size_t i;
   if (psigs == NULL) return;
@@ -1246,7 +1245,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   secp256k1_musig_session session;
   secp256k1_musig_partial_sig **psigs;
   unsigned char sig64[64];
-  secp256k1_musig_keyagg_cache keyaggcache;
   jbyteArray jpsig;
   size_t size, count;
   size_t i;
