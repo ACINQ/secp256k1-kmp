@@ -9,7 +9,8 @@ plugins {
 val currentOs = org.gradle.internal.os.OperatingSystem.current()
 val bash = if (currentOs.isWindows) "bash.exe" else "bash"
 
-val buildNativeHost by tasks.creating(Exec::class) {
+val buildNativeHost by tasks.registering(Exec::class) {
+    ->
     group = "build"
     dependsOn(":jni:generateHeaders")
     dependsOn(":native:buildSecp256k1Host")

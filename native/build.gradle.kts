@@ -1,3 +1,4 @@
+import com.android.build.gradle.LibraryExtension
 import org.gradle.internal.os.OperatingSystem
 
 val includeAndroid = System.getProperty("includeAndroid")?.toBoolean() ?: true
@@ -9,11 +10,13 @@ if (includeAndroid) {
 val currentOs = OperatingSystem.current()
 val bash = "bash"
 
-val buildSecp256k1 by tasks.creating { group = "build" }
-
-val buildSecp256k1Host by tasks.creating(Exec::class) {
+val buildSecp256k1 = tasks.register("buildSecp256k1") {
     group = "build"
-    buildSecp256k1.dependsOn(this)
+    dependsOn("buildSecp256k1Host")
+}
+
+tasks.register<Exec>("buildSecp256k1Host") {
+    group = "build"
 
     val target = when {
         currentOs.isLinux -> "linux"
@@ -30,10 +33,10 @@ val buildSecp256k1Host by tasks.creating(Exec::class) {
     commandLine(bash, "-l", "build.sh")
 }
 
+
 // specific build task for linux arm64, which is cross-compiled on a linux x64 host
-val buildSecp256k1LinuxArm64 by tasks.creating(Exec::class) {
+tasks.register<Exec>("buildSecp256k1LinuxArm64") {
     group = "build"
-    buildSecp256k1.dependsOn(this)
 
     val target = "linuxArm64"
 
@@ -45,9 +48,8 @@ val buildSecp256k1LinuxArm64 by tasks.creating(Exec::class) {
     commandLine(bash, "-l", "build.sh")
 }
 
-val buildSecp256k1Ios by tasks.creating(Exec::class) {
+tasks.register<Exec>("buildSecp256k1Ios") {
     group = "build"
-    buildSecp256k1.dependsOn(this)
 
     onlyIf { currentOs.isMacOsX }
 
@@ -59,15 +61,18 @@ val buildSecp256k1Ios by tasks.creating(Exec::class) {
 }
 
 if (includeAndroid) {
-
-    val buildSecp256k1Android by tasks.creating {
+    tasks.register("buildSecp256k1Android") {
         group = "build"
-        buildSecp256k1.dependsOn(this)
+        dependsOn("buildSecp256k1Androidx86_64")
+        dependsOn("buildSecp256k1Androidx86")
+        dependsOn("buildSecp256k1Androidarm64-v8a")
+        dependsOn("buildSecp256k1Androidarmeabi-v7a")
     }
 
-    fun creatingBuildSecp256k1Android(arch: String) = tasks.creating(Exec::class) {
+    buildSecp256k1 { dependsOn("buildSecp256k1Android") }
+
+    fun createBuildSecp256k1Android(arch: String) = tasks.register<Exec>("buildSecp256k1Android$arch") {
         group = "build"
-        buildSecp256k1Android.dependsOn(this)
 
         inputs.files(projectDir.resolve("build-android.sh"))
         outputs.dir(projectDir.resolve("build/android/$arch"))
@@ -82,17 +87,17 @@ if (includeAndroid) {
         }
         environment("TOOLCHAIN", toolchain)
         environment("ARCH", arch)
-        environment("ANDROID_NDK", (project(":jni:android").extensions["android"] as com.android.build.gradle.LibraryExtension).ndkDirectory)
+        environment("ANDROID_NDK", (project(":jni:android").extensions["android"] as LibraryExtension).ndkDirectory)
         commandLine(bash, "build-android.sh")
     }
 
-    val buildSecp256k1AndroidX86_64 by creatingBuildSecp256k1Android("x86_64")
-    val buildSecp256k1AndroidX86 by creatingBuildSecp256k1Android("x86")
-    val buildSecp256k1AndroidArm64v8a by creatingBuildSecp256k1Android("arm64-v8a")
-    val buildSecp256k1AndroidArmeabiv7a by creatingBuildSecp256k1Android("armeabi-v7a")
+    createBuildSecp256k1Android("x86_64")
+    createBuildSecp256k1Android("x86")
+    createBuildSecp256k1Android("arm64-v8a")
+    createBuildSecp256k1Android("armeabi-v7a")
 }
 
-val clean by tasks.creating {
+val clean by tasks.registering {
     group = "build"
     doLast {
         delete(projectDir.resolve("build"))

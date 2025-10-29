@@ -1,4 +1,5 @@
 import org.gradle.internal.os.OperatingSystem
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.dokka.Platform
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -130,7 +131,7 @@ allprojects {
 }
 
 allprojects {
-    val javadocJar = tasks.create<Jar>("javadocJar") {
+    val javadocJar = tasks.register<Jar>("javadocJar") {
         archiveClassifier.set("javadoc")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
@@ -200,8 +201,10 @@ allprojects {
                 delete(dokkaOutputDir)
             }
 
-            javadocJar.dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
-            javadocJar.from(dokkaOutputDir)
+            javadocJar {
+                dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+                from(dokkaOutputDir)
+            }
         }
     }
 }
