@@ -1,5 +1,5 @@
 package fr.acinq.secp256k1
 
-actual fun readEnvironmentVariable(name: String): String? {
-    return System.getenv(name)
-}
+import kotlinx.serialization.json.JsonElement
+
+actual fun readResourceAsJson(filename: String): JsonElement = readResourceAsJsonDefault(filename)
