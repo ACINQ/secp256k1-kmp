@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -52,7 +53,7 @@ publishing {
         create<MavenPublication>("jvm") {
             artifactId = "secp256k1-kmp-jni-jvm-extract"
             from(components["java"])
-            val sourcesJar = task<Jar>("sourcesJar") {
+            val sourcesJar = tasks.register<Jar>("sourcesJar") {
                 archiveClassifier.set("sources")
             }
             artifact(sourcesJar)

@@ -7,7 +7,7 @@ import java.util.*
 
 plugins {
     kotlin("multiplatform") version "2.2.0"
-    id("org.jetbrains.dokka") version "1.9.20"
+    id("org.jetbrains.dokka") version "2.1.0"
     `maven-publish`
 }
 
@@ -173,25 +173,21 @@ allprojects {
 
     if (project.name !in listOf("native", "tests")) {
         afterEvaluate {
-            val dokkaOutputDir = layout.buildDirectory.dir("dokka").get().asFile
+            val dokkaOutputDir = layout.buildDirectory.dir("dokka")
 
-            tasks.dokkaHtml {
-                outputDirectory.set(file(dokkaOutputDir))
-                dokkaSourceSets {
-                    configureEach {
-                        val platformName = when (platform.get()) {
-                            Platform.jvm -> "jvm"
-                            Platform.js -> "js"
-                            Platform.native -> "native"
-                            Platform.common -> "common"
-                            Platform.wasm -> "wasm"
-                            else -> error("invalid platform ${platform.get()}")
-                        }
-                        displayName.set(platformName)
+            dokka {
+                moduleName = "secp256k1-kmp"
+                dokkaPublications.html {
+                    outputDirectory.set(dokkaOutputDir)
+                    dokkaSourceSets {
+                        configureEach {
+                            val platformName = analysisPlatform.get().name
+                            displayName.set(platformName)
 
-                        perPackageOption {
-                            matchingRegex.set(".*\\.internal.*") // will match all .internal packages and sub-packages
-                            suppress.set(true)
+                            perPackageOption {
+                                matchingRegex.set(".*\\.internal.*") // will match all .internal packages and sub-packages
+                                suppress.set(true)
+                            }
                         }
                     }
                 }
@@ -202,7 +198,7 @@ allprojects {
             }
 
             javadocJar {
-                dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
+                dependsOn(deleteDokkaOutputDir, tasks.dokkaGenerate)
                 from(dokkaOutputDir)
             }
         }

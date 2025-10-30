@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -65,7 +66,7 @@ afterEvaluate {
             create<MavenPublication>("android") {
                 artifactId = "secp256k1-kmp-jni-android"
                 from(components["release"])
-                val sourcesJar = task<Jar>("sourcesJar") {
+                val sourcesJar = tasks.register<Jar>("sourcesJar") {
                     archiveClassifier.set("sources")
                     from(android.sourceSets["main"].java.srcDirs)
                 }
