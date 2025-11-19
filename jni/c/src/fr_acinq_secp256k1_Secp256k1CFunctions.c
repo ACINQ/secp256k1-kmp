@@ -15,6 +15,14 @@
 #define SIG_FORMAT_COMPACT 1
 #define SIG_FORMAT_DER 2
 
+#define MAX_PUBKEY_COUNT 200
+#define MAX_NONCE_COUNT 200
+#define MAX_PSIGS_COUNT 200
+
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+
 static void JNI_ThrowByName(JNIEnv *penv, const char *name, const char *msg)
 {
   jclass cls = (*penv)->FindClass(penv, name);
@@ -475,18 +483,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   return jpubkey;
 }
 
-static void free_pubkeys(secp256k1_pubkey **pubkeys, size_t count)
-{
-  size_t i;
-  if (pubkeys == NULL) return;
-  for (i = 0; i < count; i++)
-  {
-    if (pubkeys[i] != NULL)
-      free(pubkeys[i]);
-  }
-  free(pubkeys);
-}
-
 /*
  * Class:     fr_acinq_bitcoin_Secp256k1Bindings
  * Method:    secp256k1_ec_pubkey_combine
@@ -496,7 +492,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 {
   const secp256k1_context *ctx = (const secp256k1_context *)jctx;
   jbyte pub[65];
-  secp256k1_pubkey **pubkeys;
+  static secp256k1_pubkey pubkeys[MAX_PUBKEY_COUNT];
+  const secp256k1_pubkey* pubkeys_ptr[MAX_PUBKEY_COUNT];
   secp256k1_pubkey combined;
   jbyteArray jpubkey;
   size_t size, count;
@@ -508,24 +505,21 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jpubkeys == NULL)
     return NULL;
 
+  for (i = 0; i < MAX_PUBKEY_COUNT; i++) pubkeys_ptr[i] = &pubkeys[i];
   count = (*penv)->GetArrayLength(penv, jpubkeys);
   CHECKRESULT(count < 1, "pubkey array cannot be empty")
-  pubkeys = calloc(count, sizeof(secp256k1_pubkey *));
-  CHECKRESULT(pubkeys == NULL, "memory allocation failed");
+  CHECKRESULT(count > MAX_PUBKEY_COUNT, "pubkey array cannot be greater than " STR(MAX_PUBKEY_COUNT))
 
   for (i = 0; i < count; i++)
   {
-    pubkeys[i] = calloc(1, sizeof(secp256k1_pubkey));
-    CHECKRESULT1(pubkeys[i] == NULL, "memory allocation failed", free_pubkeys(pubkeys, i));
     jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
     size = (*penv)->GetArrayLength(penv, jpubkey);
-    CHECKRESULT1((size != 33) && (size != 65), "invalid public key size", free_pubkeys(pubkeys, i));
+    CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
     (*penv)->GetByteArrayRegion(penv, jpubkey, 0, size, pub);
-    result = secp256k1_ec_pubkey_parse(ctx, pubkeys[i], (unsigned char *)pub, size);
-    CHECKRESULT1(!result, "secp256k1_ec_pubkey_parse failed", free_pubkeys(pubkeys, i));
+    result = secp256k1_ec_pubkey_parse(ctx, &pubkeys[i], (unsigned char *)pub, size);
+    CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
   }
-  result = secp256k1_ec_pubkey_combine(ctx, &combined, (const secp256k1_pubkey *const *)pubkeys, count);
-  free_pubkeys(pubkeys, count);
+  result = secp256k1_ec_pubkey_combine(ctx, &combined, pubkeys_ptr, count);
   CHECKRESULT(!result, "secp256k1_ec_pubkey_combine failed");
 
   size = 65;
@@ -869,18 +863,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   return jnonce;
 }
 
-static void free_nonces(secp256k1_musig_pubnonce **nonces, size_t count)
-{
-  size_t i;
-  if (nonces == NULL) return;
-  for (i = 0; i < count; i++)
-  {
-    if (nonces[i] != NULL)
-      free(nonces[i]);
-  }
-  free(nonces);
-}
-
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
  * Method:    secp256k1_musig_nonce_agg
@@ -890,7 +872,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 {
   const secp256k1_context *ctx = (const secp256k1_context *)jctx;
   jbyte in66[fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE];
-  secp256k1_musig_pubnonce **pubnonces;
+  static secp256k1_musig_pubnonce pubnonces[MAX_NONCE_COUNT];
+  const secp256k1_musig_pubnonce* pubnonces_ptr[MAX_NONCE_COUNT];
   secp256k1_musig_aggnonce combined;
   jbyteArray jnonce;
   size_t size, count;
@@ -899,31 +882,22 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
   if (jctx == 0) return NULL;
   if (jnonces == NULL) return NULL;
+  for (i = 0; i < MAX_NONCE_COUNT; i++) pubnonces_ptr[i] = &pubnonces[i];
 
   count = (*penv)->GetArrayLength(penv, jnonces);
   CHECKRESULT(count == 0, "public nonces count cannot be 0");
-  for (i = 0; i < count; i++)
-  {
-    jnonce = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jnonces, i);
-    size = (*penv)->GetArrayLength(penv, jnonce);
-    CHECKRESULT(size != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, "invalid public nonce size");
-  }
-
-  pubnonces = calloc(count, sizeof(secp256k1_musig_pubnonce *));
-  CHECKRESULT(pubnonces == NULL, "memory allocation error");
+  CHECKRESULT(count >  MAX_NONCE_COUNT, "public nonces count cannot be greater than " STR(MAX_NONCE_COUNT));
 
   for (i = 0; i < count; i++)
   {
-    pubnonces[i] = calloc(1, sizeof(secp256k1_musig_pubnonce));
-    CHECKRESULT1(pubnonces[i] == NULL, "memory allocation error", free_nonces(pubnonces, i));
     jnonce = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jnonces, i);
     size = fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE;
+    CHECKRESULT(size != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, "invalid public nonce size");
     (*penv)->GetByteArrayRegion(penv, jnonce, 0, size, in66);
-    result = secp256k1_musig_pubnonce_parse(ctx, pubnonces[i], (unsigned char *)in66);
-    CHECKRESULT1(!result, "secp256k1_musig_pubnonce_parse failed", free_nonces(pubnonces, i));
+    result = secp256k1_musig_pubnonce_parse(ctx, &pubnonces[i], (unsigned char *)in66);
+    CHECKRESULT(!result, "secp256k1_musig_pubnonce_parse failed");
   }
-  result = secp256k1_musig_nonce_agg(ctx, &combined, (const secp256k1_musig_pubnonce *const *)pubnonces, count);
-  free_nonces(pubnonces, count);
+  result = secp256k1_musig_nonce_agg(ctx, &combined, pubnonces_ptr, count);
   CHECKRESULT(!result, "secp256k1_musig_nonce_agg failed");
 
   result = secp256k1_musig_aggnonce_serialize(ctx, (unsigned char *)in66, &combined);
@@ -942,7 +916,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 {
   const secp256k1_context *ctx = (const secp256k1_context *)jctx;
   jbyte pub[65];
-  secp256k1_pubkey **pubkeys;
+  static secp256k1_pubkey pubkeys[MAX_PUBKEY_COUNT];
+  const secp256k1_pubkey* pubkeys_ptr[MAX_PUBKEY_COUNT];
   secp256k1_xonly_pubkey combined;
   secp256k1_musig_keyagg_cache keyaggcache;
   jbyteArray jpubkey;
@@ -950,16 +925,12 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   size_t i;
   int result = 0;
 
+  for (i = 0; i < MAX_PUBKEY_COUNT; i++) pubkeys_ptr[i] = &(pubkeys[i]);
   if (jctx == 0) return NULL;
   if (jpubkeys == NULL) return NULL;
   count = (*penv)->GetArrayLength(penv, jpubkeys);
   CHECKRESULT(count == 0, "pubkeys count cannot be 0");
-  for (i = 0; i < count; i++)
-  {
-    jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
-    size = (*penv)->GetArrayLength(penv, jpubkey);
-    CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
-  }
+  CHECKRESULT(count > MAX_PUBKEY_COUNT, "pubkeys count cannot be greater than " STR(MAX_PUBKEY_COUNT));
 
   if (jkeyaggcache != NULL)
   {
@@ -968,21 +939,16 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     (*penv)->GetByteArrayRegion(penv, jkeyaggcache, 0, size, keyaggcache.data);
   }
 
-  pubkeys = calloc(count, sizeof(secp256k1_pubkey *));
-  CHECKRESULT(pubkeys == NULL, "memory allocation error");
-
   for (i = 0; i < count; i++)
   {
-    pubkeys[i] = calloc(1, sizeof(secp256k1_pubkey));
-    CHECKRESULT1(pubkeys[i] == NULL, "memory allocation error", free_pubkeys(pubkeys, i));
     jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
     size = (*penv)->GetArrayLength(penv, jpubkey);
+    CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
     (*penv)->GetByteArrayRegion(penv, jpubkey, 0, size, pub);
-    result = secp256k1_ec_pubkey_parse(ctx, pubkeys[i], (unsigned char *)pub, size);
-    CHECKRESULT1(!result, "secp256k1_ec_pubkey_parse failed", free_pubkeys(pubkeys, i));
+    result = secp256k1_ec_pubkey_parse(ctx, &pubkeys[i], (unsigned char *)pub, size);
+    CHECKRESULT(!result, "secp256k1_ec_pubkey_parse failed");
   }
-  result = secp256k1_musig_pubkey_agg(ctx, &combined, jkeyaggcache == NULL ? NULL : &keyaggcache, (const secp256k1_pubkey *const *)pubkeys, count);
-  free_pubkeys(pubkeys, count);
+  result = secp256k1_musig_pubkey_agg(ctx, &combined, jkeyaggcache == NULL ? NULL : &keyaggcache, pubkeys_ptr, count);
   CHECKRESULT(!result, "secp256k1_musig_pubkey_agg failed");
   result = secp256k1_xonly_pubkey_serialize(ctx, (unsigned char *)pub, &combined);
   CHECKRESULT(!result, "secp256k1_xonly_pubkey_serialize failed");
@@ -1222,18 +1188,6 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1mu
   return result;
 }
 
-static void free_partial_sigs(secp256k1_musig_partial_sig **psigs, size_t count)
-{
-  size_t i;
-  if (psigs == NULL) return;
-  for (i = 0; i < count; i++)
-  {
-    if (psigs[i] != NULL)
-      free(psigs[i]);
-  }
-  free(psigs);
-}
-
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
  * Method:    secp256k1_musig_partial_sig_agg
@@ -1243,13 +1197,16 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 {
   const secp256k1_context *ctx = (const secp256k1_context *)jctx;
   secp256k1_musig_session session;
-  secp256k1_musig_partial_sig **psigs;
+  static secp256k1_musig_partial_sig psigs[MAX_PSIGS_COUNT];
+  const secp256k1_musig_partial_sig* psigs_ptr[MAX_PSIGS_COUNT];
+
   unsigned char sig64[64];
   jbyteArray jpsig;
   size_t size, count;
   size_t i;
   int result = 0;
 
+  for (i = 0; i < MAX_PSIGS_COUNT; i++) psigs_ptr[i] = &(psigs[i]);
   if (jctx == 0) return NULL;
   if (jsession == NULL) return NULL;
   CHECKRESULT((*penv)->GetArrayLength(penv, jsession) != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE, "invalid session size");
@@ -1258,23 +1215,18 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   if (jpsigs == NULL) return NULL;
   count = (*penv)->GetArrayLength(penv, jpsigs);
   CHECKRESULT(count == 0, "partial sigs count cannot be 0");
-
-  psigs = calloc(count, sizeof(secp256k1_musig_partial_sig *));
-  CHECKRESULT(psigs == NULL, "memory allocation error");
+  CHECKRESULT(count > MAX_PSIGS_COUNT, "partial sigs count cannot greater than " STR(MAX_PSIGS_COUNT));
 
   for (i = 0; i < count; i++)
   {
-    psigs[i] = calloc(1, sizeof(secp256k1_musig_partial_sig));
-    CHECKRESULT1(psigs[i] == NULL, "memory allocation error", free_partial_sigs(psigs, i));
     jpsig = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpsigs, i);
     size = (*penv)->GetArrayLength(penv, jpsig);
-    CHECKRESULT1(size != 32, "invalid partial signature size", free_partial_sigs(psigs, i));
+    CHECKRESULT(size != 32, "invalid partial signature size");
     (*penv)->GetByteArrayRegion(penv, jpsig, 0, 32, (jbyte*)sig64);
-    result = secp256k1_musig_partial_sig_parse(ctx, psigs[i], sig64);
-    CHECKRESULT1(!result, "secp256k1_musig_partial_sig_parse failed", free_partial_sigs(psigs, i));
+    result = secp256k1_musig_partial_sig_parse(ctx, &(psigs[i]), sig64);
+    CHECKRESULT(!result, "secp256k1_musig_partial_sig_parse failed");
   }
-  result = secp256k1_musig_partial_sig_agg(ctx, sig64, &session, (const secp256k1_musig_partial_sig *const *)psigs, count);
-  free_partial_sigs(psigs, count);
+  result = secp256k1_musig_partial_sig_agg(ctx, sig64, &session, psigs_ptr, count);
   CHECKRESULT(!result, "secp256k1_musig_pubkey_agg failed");
 
   jpsig = (*penv)->NewByteArray(penv, 64);

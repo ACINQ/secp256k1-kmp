@@ -14,7 +14,7 @@ JNI_HEADERS=$TARGET
 
 if [ "$TARGET" == "linux" ]; then
   OUTFILE=libsecp256k1-jni.so
-  CC_OPTS="-fPIC"
+  CC_OPTS="-fPIC -O0 -g"
 elif [ "$TARGET" == "darwin" ]; then
   OUTFILE=libsecp256k1-jni.dylib
   CC_OPTS="-arch arm64 -arch x86_64"
