@@ -23,7 +23,7 @@ buildscript {
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.21.0"
+    version = "0.21.1-VALGRIND-SNAPSHOT"
 
     repositories {
         google()
@@ -170,7 +170,7 @@ allprojects {
         }
     }
 
-    if (project.name !in listOf("native", "tests")) {
+    if (project.name !in listOf("native", "tests", "leaktest")) {
         afterEvaluate {
             val dokkaOutputDir = layout.buildDirectory.dir("dokka").get().asFile
 

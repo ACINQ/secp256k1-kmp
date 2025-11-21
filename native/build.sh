@@ -28,7 +28,7 @@ else
 fi
 
 ./autogen.sh
-CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" ./configure $CONF_OPTS --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-module-schnorrsig --enable-module-musig --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
+CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" ./configure $CONF_OPTS --with-valgrind=yes --enable-experimental --enable-module_ecdh --enable-module-recovery --enable-module-schnorrsig --enable-module-musig --enable-benchmark=no --enable-shared=no --enable-exhaustive-tests=no --enable-tests=no
 make clean
 make
 

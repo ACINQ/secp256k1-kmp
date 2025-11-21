@@ -40,3 +40,5 @@ if (!skipAndroid) {
 } else {
     print("skipping android build")
 }
+
+include("leaktest")
