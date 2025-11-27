@@ -516,13 +516,13 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   for (i = 0; i < count; i++)
   {
     pubkeys[i] = calloc(1, sizeof(secp256k1_pubkey));
-    CHECKRESULT1(pubkeys[i] == NULL, "memory allocation failed", free_pubkeys(pubkeys, i));
+    CHECKRESULT1(pubkeys[i] == NULL, "memory allocation failed", free_pubkeys(pubkeys, count));
     jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
     size = (*penv)->GetArrayLength(penv, jpubkey);
-    CHECKRESULT1((size != 33) && (size != 65), "invalid public key size", free_pubkeys(pubkeys, i));
+    CHECKRESULT1((size != 33) && (size != 65), "invalid public key size", free_pubkeys(pubkeys, count));
     (*penv)->GetByteArrayRegion(penv, jpubkey, 0, size, pub);
     result = secp256k1_ec_pubkey_parse(ctx, pubkeys[i], (unsigned char *)pub, size);
-    CHECKRESULT1(!result, "secp256k1_ec_pubkey_parse failed", free_pubkeys(pubkeys, i));
+    CHECKRESULT1(!result, "secp256k1_ec_pubkey_parse failed", free_pubkeys(pubkeys, count));
   }
   result = secp256k1_ec_pubkey_combine(ctx, &combined, (const secp256k1_pubkey *const *)pubkeys, count);
   free_pubkeys(pubkeys, count);
@@ -915,12 +915,12 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   for (i = 0; i < count; i++)
   {
     pubnonces[i] = calloc(1, sizeof(secp256k1_musig_pubnonce));
-    CHECKRESULT1(pubnonces[i] == NULL, "memory allocation error", free_nonces(pubnonces, i));
+    CHECKRESULT1(pubnonces[i] == NULL, "memory allocation error", free_nonces(pubnonces, count));
     jnonce = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jnonces, i);
     size = fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE;
     (*penv)->GetByteArrayRegion(penv, jnonce, 0, size, in66);
     result = secp256k1_musig_pubnonce_parse(ctx, pubnonces[i], (unsigned char *)in66);
-    CHECKRESULT1(!result, "secp256k1_musig_pubnonce_parse failed", free_nonces(pubnonces, i));
+    CHECKRESULT1(!result, "secp256k1_musig_pubnonce_parse failed", free_nonces(pubnonces, count));
   }
   result = secp256k1_musig_nonce_agg(ctx, &combined, (const secp256k1_musig_pubnonce *const *)pubnonces, count);
   free_nonces(pubnonces, count);
@@ -974,12 +974,12 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   for (i = 0; i < count; i++)
   {
     pubkeys[i] = calloc(1, sizeof(secp256k1_pubkey));
-    CHECKRESULT1(pubkeys[i] == NULL, "memory allocation error", free_pubkeys(pubkeys, i));
+    CHECKRESULT1(pubkeys[i] == NULL, "memory allocation error", free_pubkeys(pubkeys, count));
     jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
     size = (*penv)->GetArrayLength(penv, jpubkey);
     (*penv)->GetByteArrayRegion(penv, jpubkey, 0, size, pub);
     result = secp256k1_ec_pubkey_parse(ctx, pubkeys[i], (unsigned char *)pub, size);
-    CHECKRESULT1(!result, "secp256k1_ec_pubkey_parse failed", free_pubkeys(pubkeys, i));
+    CHECKRESULT1(!result, "secp256k1_ec_pubkey_parse failed", free_pubkeys(pubkeys, count));
   }
   result = secp256k1_musig_pubkey_agg(ctx, &combined, jkeyaggcache == NULL ? NULL : &keyaggcache, (const secp256k1_pubkey *const *)pubkeys, count);
   free_pubkeys(pubkeys, count);
@@ -1265,13 +1265,13 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
   for (i = 0; i < count; i++)
   {
     psigs[i] = calloc(1, sizeof(secp256k1_musig_partial_sig));
-    CHECKRESULT1(psigs[i] == NULL, "memory allocation error", free_partial_sigs(psigs, i));
+    CHECKRESULT1(psigs[i] == NULL, "memory allocation error", free_partial_sigs(psigs, count));
     jpsig = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpsigs, i);
     size = (*penv)->GetArrayLength(penv, jpsig);
-    CHECKRESULT1(size != 32, "invalid partial signature size", free_partial_sigs(psigs, i));
+    CHECKRESULT1(size != 32, "invalid partial signature size", free_partial_sigs(psigs, count));
     (*penv)->GetByteArrayRegion(penv, jpsig, 0, 32, (jbyte*)sig64);
     result = secp256k1_musig_partial_sig_parse(ctx, psigs[i], sig64);
-    CHECKRESULT1(!result, "secp256k1_musig_partial_sig_parse failed", free_partial_sigs(psigs, i));
+    CHECKRESULT1(!result, "secp256k1_musig_partial_sig_parse failed", free_partial_sigs(psigs, count));
   }
   result = secp256k1_musig_partial_sig_agg(ctx, sig64, &session, (const secp256k1_musig_partial_sig *const *)psigs, count);
   free_partial_sigs(psigs, count);
