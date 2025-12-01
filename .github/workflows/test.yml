@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_NDK_VERSION=28.1.13356709" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=28.2.13676358" >> $GITHUB_ENV
       - name: Cached Android NDK
         if: matrix.os == 'ubuntu-latest'
         uses: actions/cache@v4
