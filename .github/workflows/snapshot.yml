@@ -115,6 +115,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 27
+          disk-size: 5GB
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           ndk: ${{ env.ANDROID_NDK_VERSION }}
           cmake: 3.31.5
