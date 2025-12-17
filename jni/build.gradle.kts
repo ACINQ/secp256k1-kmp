@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -24,7 +25,7 @@ dependencies {
     api(rootProject)
 }
 
-val generateHeaders by tasks.creating(JavaCompile::class) {
+val generateHeaders by tasks.registering(JavaCompile::class) { ->
     group = "build"
     classpath = sourceSets["main"].compileClasspath
     destinationDirectory.set(layout.buildDirectory.dir("generated/jni"))
@@ -33,7 +34,6 @@ val generateHeaders by tasks.creating(JavaCompile::class) {
         "-h", layout.buildDirectory.dir("generated./jni").get().asFile.absolutePath,
         "-d", layout.buildDirectory.dir("generated./jni-tmp").get().asFile.absolutePath
     )
-    // options.verbose = true
     doLast {
         layout.buildDirectory.dir("generated/jni-tmp").get().asFile.delete()
     }
@@ -44,7 +44,7 @@ publishing {
         create<MavenPublication>("jvm") {
             artifactId = "secp256k1-kmp-jni-common"
             from(components["java"])
-            val sourcesJar = task<Jar>("sourcesJar") {
+            val sourcesJar = tasks.register<Jar>("sourcesJar") {
                 archiveClassifier.set("sources")
                 from(sourceSets["main"].allSource)
             }

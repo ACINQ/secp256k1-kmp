@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_NDK_VERSION=28.1.13356709" >> $GITHUB_ENV
+          echo "ANDROID_NDK_VERSION=28.2.13676358" >> $GITHUB_ENV
       - name: Cached Android NDK
         if: matrix.os == 'ubuntu-latest'
         uses: actions/cache@v4
@@ -118,6 +118,7 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 27
+          disk-size: 5GB
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           ndk: ${{ env.ANDROID_NDK_VERSION }}
           cmake: 3.31.5

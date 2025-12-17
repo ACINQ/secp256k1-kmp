@@ -1,12 +1,13 @@
 import org.gradle.internal.os.OperatingSystem
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.dokka.Platform
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.*
 
 plugins {
-    kotlin("multiplatform") version "2.2.0"
-    id("org.jetbrains.dokka") version "1.9.20"
+    kotlin("multiplatform") version "2.2.21"
+    id("org.jetbrains.dokka") version "2.1.0"
     `maven-publish`
 }
 
@@ -17,13 +18,13 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.3")
+        classpath("com.android.tools.build:gradle:8.13.1")
     }
 }
 
 allprojects {
     group = "fr.acinq.secp256k1"
-    version = "0.21.0"
+    version = "0.22.0-SNAPSHOT"
 
     repositories {
         google()
@@ -130,7 +131,7 @@ allprojects {
 }
 
 allprojects {
-    val javadocJar = tasks.create<Jar>("javadocJar") {
+    val javadocJar = tasks.register<Jar>("javadocJar") {
         archiveClassifier.set("javadoc")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
@@ -172,25 +173,21 @@ allprojects {
 
     if (project.name !in listOf("native", "tests")) {
         afterEvaluate {
-            val dokkaOutputDir = layout.buildDirectory.dir("dokka").get().asFile
+            val dokkaOutputDir = layout.buildDirectory.dir("dokka")
 
-            tasks.dokkaHtml {
-                outputDirectory.set(file(dokkaOutputDir))
-                dokkaSourceSets {
-                    configureEach {
-                        val platformName = when (platform.get()) {
-                            Platform.jvm -> "jvm"
-                            Platform.js -> "js"
-                            Platform.native -> "native"
-                            Platform.common -> "common"
-                            Platform.wasm -> "wasm"
-                            else -> error("invalid platform ${platform.get()}")
-                        }
-                        displayName.set(platformName)
+            dokka {
+                moduleName = "secp256k1-kmp"
+                dokkaPublications.html {
+                    outputDirectory.set(dokkaOutputDir)
+                    dokkaSourceSets {
+                        configureEach {
+                            val platformName = analysisPlatform.get().name
+                            displayName.set(platformName)
 
-                        perPackageOption {
-                            matchingRegex.set(".*\\.internal.*") // will match all .internal packages and sub-packages
-                            suppress.set(true)
+                            perPackageOption {
+                                matchingRegex.set(".*\\.internal.*") // will match all .internal packages and sub-packages
+                                suppress.set(true)
+                            }
                         }
                     }
                 }
@@ -200,8 +197,10 @@ allprojects {
                 delete(dokkaOutputDir)
             }
 
-            javadocJar.dependsOn(deleteDokkaOutputDir, tasks.dokkaHtml)
-            javadocJar.from(dokkaOutputDir)
+            javadocJar {
+                dependsOn(deleteDokkaOutputDir, tasks.dokkaGenerate)
+                from(dokkaOutputDir)
+            }
         }
     }
 }

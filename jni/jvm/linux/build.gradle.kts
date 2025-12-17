@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.register
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -23,7 +24,8 @@ dependencies {
     implementation(project(":jni:jvm"))
 }
 
-val copyJni by tasks.creating(Sync::class) {
+val copyJni by tasks.registering(Sync::class) {
+    ->
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
     dependsOn(":jni:jvm:buildNativeHost")
     from(rootDir.resolve("jni/jvm/build/linux/libsecp256k1-jni.so"))
@@ -41,7 +43,7 @@ publishing {
         val pub = create<MavenPublication>("jvm") {
             artifactId = "secp256k1-kmp-jni-jvm-linux"
             from(components["java"])
-            val sourcesJar = task<Jar>("sourcesJar") {
+            val sourcesJar = tasks.register<Jar>("sourcesJar") {
                 archiveClassifier.set("sources")
             }
             artifact(sourcesJar)

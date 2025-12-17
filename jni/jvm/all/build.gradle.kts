@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.register
+
 plugins {
     `java-library`
     id("org.jetbrains.dokka")
@@ -15,7 +17,7 @@ publishing {
         create<MavenPublication>("jvm") {
             artifactId = "secp256k1-kmp-jni-jvm"
             from(components["java"])
-            val sourcesJar = task<Jar>("sourcesJar") {
+            val sourcesJar = tasks.register<Jar>("sourcesJar") {
                 archiveClassifier.set("sources")
             }
             artifact(sourcesJar)

@@ -1,4 +1,6 @@
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest
@@ -9,23 +11,21 @@ plugins {
         id("com.android.library")
     }
 }
+val includeAndroid = System.getProperty("includeAndroid")?.toBoolean() ?: true
 
 kotlin {
     explicitApi()
 
-    val includeAndroid = System.getProperty("includeAndroid")?.toBoolean() ?: true
-
-    val commonMain by sourceSets.getting {
-        dependencies {
-            implementation(rootProject)
-        }
-    }
-    val commonTest by sourceSets.getting {
-        dependencies {
-            implementation(kotlin("test-common"))
-            implementation(kotlin("test-annotations-common"))
-            implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.5.4")
-            api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    if (includeAndroid) {
+        androidTarget {
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_1_8)
+            }
+            @OptIn(ExperimentalKotlinGradlePluginApi::class)
+            instrumentedTestVariant {
+                // This makes instrumented tests depend on commonTest source
+                sourceSetTree.set(KotlinSourceSetTree.test)
+            }
         }
     }
 
@@ -43,22 +43,37 @@ kotlin {
         }
     }
 
-    if (includeAndroid) {
-        androidTarget {
-            compilerOptions {
-                jvmTarget.set(JvmTarget.JVM_1_8)
+    applyDefaultHierarchyTemplate()
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(rootProject)
             }
-            sourceSets["androidMain"].dependencies {
-                implementation(project(":jni:android"))
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test-common"))
+                implementation(kotlin("test-annotations-common"))
+                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.8.0")
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
             }
-            sourceSets["androidUnitTest"].dependencies {
-                implementation(kotlin("test-junit"))
-                implementation("androidx.test.ext:junit:1.1.2")
-                implementation("androidx.test.espresso:espresso-core:3.3.0")
+        }
+        if (includeAndroid) {
+            val androidMain by getting {
+                dependencies {
+                    implementation(project(":jni:android"))
+                }
+            }
+            val androidInstrumentedTest by getting {
+                dependencies {
+                    implementation(kotlin("test-junit"))
+                    implementation("androidx.test.ext:junit:1.3.0")
+                    implementation("androidx.test.espresso:espresso-core:3.7.0")
+                }
             }
         }
     }
-
     linuxX64()
     macosX64()
     macosArm64()
@@ -67,13 +82,12 @@ kotlin {
     iosSimulatorArm64()
 }
 
-val includeAndroid = System.getProperty("includeAndroid")?.toBoolean() ?: true
 if (includeAndroid) {
     extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
         namespace = "fr.acinq.secp256k1.tests"
 
         defaultConfig {
-            compileSdk = 30
+            compileSdk = 31
             minSdk = 21
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         }
