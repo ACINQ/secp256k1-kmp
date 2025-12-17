@@ -10,6 +10,7 @@ build/
 local.properties
 .gradletasknamecache
 .cxx
+.kotlin
 
 # OS
 .DS_Store
