@@ -18,6 +18,7 @@ on:
       - '**/.gitignore'
       - '.github/**'
       - '!.github/workflows/test.yml'
+      - '!.github/workflows/snapshot.yml'
 
 jobs:
   check:
