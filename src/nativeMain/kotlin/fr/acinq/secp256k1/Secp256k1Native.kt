@@ -16,15 +16,12 @@ public object Secp256k1Native : Secp256k1 {
     private fun Int.requireSuccess(message: String): Int = if (this != 1) throw Secp256k1Exception(message) else this
 
     private fun MemScope.allocSignature(input: ByteArray): secp256k1_ecdsa_signature {
+        require(input.size == 64){ "signature size must be 64 bytes"}
         val sig = alloc<secp256k1_ecdsa_signature>()
         val nativeBytes = toNat(input)
 
-        val result = when {
-            input.size == 64 -> secp256k1_ecdsa_signature_parse_compact(ctx, sig.ptr, nativeBytes)
-            input.size < 64 -> throw Secp256k1Exception("Unknown signature format")
-            else -> secp256k1_ecdsa_signature_parse_der(ctx, sig.ptr, nativeBytes, input.size.convert())
-        }
-        result.requireSuccess("cannot parse signature (size = ${input.size} sig = ${Hex.encode(input)}")
+        val result = secp256k1_ecdsa_signature_parse_compact(ctx, sig.ptr, nativeBytes)
+        result.requireSuccess("cannot parse signature sig = ${Hex.encode(input)}")
         return sig
     }
 
@@ -112,7 +109,6 @@ public object Secp256k1Native : Secp256k1 {
     }
 
     public override fun signatureNormalize(sig: ByteArray): Pair<ByteArray, Boolean> {
-        require(sig.size >= 64) { "invalid signature ${Hex.encode(sig)}" }
         memScoped {
             val nSig = allocSignature(sig)
             val isHighS = secp256k1_ecdsa_signature_normalize(ctx, nSig.ptr, nSig.ptr)
@@ -250,7 +246,6 @@ public object Secp256k1Native : Secp256k1 {
     }
 
     public override fun compact2der(sig: ByteArray): ByteArray {
-        require(sig.size == 64)
         memScoped {
             val nSig = allocSignature(sig)
             val natOutput = allocArray<UByteVar>(73)
@@ -258,6 +253,19 @@ public object Secp256k1Native : Secp256k1 {
             len.value = 73.convert()
             secp256k1_ecdsa_signature_serialize_der(ctx, natOutput, len.ptr, nSig.ptr).requireSuccess("secp256k1_ecdsa_signature_serialize_der() failed")
             return natOutput.readBytes(len.value.toInt())
+        }
+    }
+
+    override fun der2compact(sig: ByteArray): ByteArray {
+        require(sig.size <= 73)
+        memScoped {
+            val nSig = alloc<secp256k1_ecdsa_signature>()
+            val nativeBytes = toNat(sig)
+            secp256k1_ecdsa_signature_parse_der(ctx, nSig.ptr, nativeBytes, sig.size.convert()).requireSuccess("secp256k1_ecdsa_signature_parse_der() failed")
+
+            val natOutput = allocArray<UByteVar>(64)
+            secp256k1_ecdsa_signature_serialize_compact(ctx, natOutput, nSig.ptr).requireSuccess("secp256k1_ecdsa_signature_serialize_compact() failed")
+            return natOutput.readBytes(64)
         }
     }
 
@@ -336,7 +344,7 @@ public object Secp256k1Native : Secp256k1 {
             val secnonce = alloc<secp256k1_musig_secnonce>()
             val pubnonce = alloc<secp256k1_musig_pubnonce>()
             val nKeypair = alloc<secp256k1_keypair>()
-            secp256k1_keypair_create(ctx, nKeypair.ptr, toNat(privkey))
+            secp256k1_keypair_create(ctx, nKeypair.ptr, toNat(privkey)).requireSuccess("secp256k1_keypair_create() failed")
             val nKeyAggCache = keyaggCache?.let {
                 val n = alloc<secp256k1_musig_keyagg_cache>()
                 memcpy(n.ptr, toNat(it), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
@@ -434,7 +442,7 @@ public object Secp256k1Native : Secp256k1 {
             val nSecnonce = alloc<secp256k1_musig_secnonce>()
             memcpy(nSecnonce.ptr, toNat(secnonce), Secp256k1.MUSIG2_SECRET_NONCE_SIZE.toULong())
             val nKeypair = alloc<secp256k1_keypair>()
-            secp256k1_keypair_create(ctx, nKeypair.ptr, toNat(privkey))
+            secp256k1_keypair_create(ctx, nKeypair.ptr, toNat(privkey)).requireSuccess("secp256k1_keypair_create() failed")
             val nPsig = alloc<secp256k1_musig_partial_sig>()
             val nKeyAggCache = alloc<secp256k1_musig_keyagg_cache>()
             memcpy(nKeyAggCache.ptr, toNat(keyaggCache), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())

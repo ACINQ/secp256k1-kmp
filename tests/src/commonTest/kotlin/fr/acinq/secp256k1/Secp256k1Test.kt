@@ -129,14 +129,14 @@ class Secp256k1Test {
     @Test
     fun normalizeEcdsaSignature() {
         val normalizedDerSig = Hex.decode("30440220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A202201C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9".lowercase())
-        val (normalizedCompactSig1, wasNotNormalized1) = Secp256k1.signatureNormalize(normalizedDerSig)
+        val (normalizedCompactSig1, wasNotNormalized1) = Secp256k1.signatureNormalize(Secp256k1.der2compact(normalizedDerSig))
         assertFalse(wasNotNormalized1)
         assertEquals(
             "182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
             Hex.encode(normalizedCompactSig1).uppercase(),
         )
         val notNormalizedDerSig = Hex.decode("30450220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A2022100E3990C925DEE3F780C50774AF120B062E0080D86D8C721C6E32F10DBACA57A58".lowercase())
-        val (normalizedCompactSig2, wasNotNormalized2) = Secp256k1.signatureNormalize(notNormalizedDerSig)
+        val (normalizedCompactSig2, wasNotNormalized2) = Secp256k1.signatureNormalize(Secp256k1.der2compact(notNormalizedDerSig))
         assertTrue(wasNotNormalized2)
         assertEquals(
             "182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A21C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9",
@@ -181,7 +181,8 @@ class Secp256k1Test {
     @Test
     fun verifyValidEcdsaSignatures() {
         val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase()) //sha256hash of "testing"
-        val sig = Hex.decode("3044022079BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F817980220294F14E883B3F525B5367756C2A11EF6CF84B730B36C17CB0C56F0AAB2C98589".lowercase())
+        val der = Hex.decode("3044022079BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F817980220294F14E883B3F525B5367756C2A11EF6CF84B730B36C17CB0C56F0AAB2C98589".lowercase())
+        val sig = Secp256k1.der2compact(der)
         val pub = Hex.decode("040A629506E1B65CD9D2E0BA9C75DF9C4FED0DB16DC9625ED14397F0AFC836FAE595DC53F8B0EFE61E703075BD9B143BAC75EC0E19F82A2208CAEB32BE53414C40".lowercase())
         assertTrue(Secp256k1.verify(sig, message, pub))
         val sigCompact = Hex.decode("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798294F14E883B3F525B5367756C2A11EF6CF84B730B36C17CB0C56F0AAB2C98589".lowercase())
@@ -191,7 +192,8 @@ class Secp256k1Test {
     @Test
     fun verifyInvalidEcdsaSignatures() {
         val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A91".lowercase()) //sha256hash of "testing"
-        val sig = Hex.decode("3044022079BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F817980220294F14E883B3F525B5367756C2A11EF6CF84B730B36C17CB0C56F0AAB2C98589".lowercase())
+        val der = Hex.decode("3044022079BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F817980220294F14E883B3F525B5367756C2A11EF6CF84B730B36C17CB0C56F0AAB2C98589".lowercase())
+        val sig = Secp256k1.der2compact(der)
         val pub = Hex.decode("040A629506E1B65CD9D2E0BA9C75DF9C4FED0DB16DC9625ED14397F0AFC836FAE595DC53F8B0EFE61E703075BD9B143BAC75EC0E19F82A2208CAEB32BE53414C40".lowercase())
         assertFalse(Secp256k1.verify(sig, message, pub))
     }
@@ -561,8 +563,8 @@ class Secp256k1Test {
             val message = randomBytes(32)
             val sig = Secp256k1.sign(message, priv)
             assertTrue(Secp256k1.verify(sig, message, pub))
-            val der = Secp256k1.compact2der(sig)
-            assertTrue(Secp256k1.verify(der, message, pub))
+            val sig1 = Secp256k1.der2compact(Secp256k1.compact2der(sig))
+            assertTrue(Secp256k1.verify(sig1, message, pub))
         }
     }
 }

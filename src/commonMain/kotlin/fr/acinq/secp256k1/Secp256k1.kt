@@ -139,6 +139,11 @@ public interface Secp256k1 {
     public fun compact2der(sig: ByteArray): ByteArray
 
     /**
+     * Convert a DER signature to compact format (64 bytes)
+     */
+    public fun der2compact(sig: ByteArray): ByteArray
+
+    /**
      * Serialize a public key to compact form (33 bytes).
      */
     public fun pubKeyCompress(pubkey: ByteArray): ByteArray {
