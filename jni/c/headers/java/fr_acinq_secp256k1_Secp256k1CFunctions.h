@@ -181,6 +181,14 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
 /*
  * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_der_to_compact
+ * Signature: (J[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1der_1to_1compact
+  (JNIEnv *, jclass, jlong, jbyteArray);
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
  * Method:    secp256k1_schnorrsig_sign
  * Signature: (J[B[B[B)[B
  */
