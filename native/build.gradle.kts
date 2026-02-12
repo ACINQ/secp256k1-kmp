@@ -9,6 +9,7 @@ if (includeAndroid) {
 
 val currentOs = OperatingSystem.current()
 val bash = "bash"
+val CMAKE_DEFAULT_OPTS="-DBUILD_SHARED_LIBS=OFF -DSECP256K1_ENABLE_MODULE_ECDH=ON -DSECP256K1_ENABLE_MODULE_MUSIG=ON -DSECP256K1_ENABLE_MODULE_RECOVERY=ON -DSECP256K1_ENABLE_MODULE_SCHNORRSIG=ON -DSECP256K1_BUILD_BENCHMARK=OFF -DSECP256K1_BUILD_CTIME_TESTS=OFF -DSECP256K1_BUILD_EXHAUSTIVE_TESTS=OFF -DSECP256K1_BUILD_TESTS=OFF"
 
 val buildSecp256k1 = tasks.register("buildSecp256k1") {
     group = "build"
@@ -30,6 +31,7 @@ tasks.register<Exec>("buildSecp256k1Host") {
 
     workingDir = projectDir
     environment("TARGET", target)
+    environment("CMAKE_DEFAULT_OPTS", CMAKE_DEFAULT_OPTS)
     commandLine(bash, "-l", "build.sh")
 }
 
@@ -38,6 +40,8 @@ tasks.register<Exec>("buildSecp256k1Host") {
 tasks.register<Exec>("buildSecp256k1LinuxArm64") {
     group = "build"
 
+    onlyIf { currentOs.isLinux }
+
     val target = "linuxArm64"
 
     inputs.files(projectDir.resolve("build.sh"))
@@ -45,6 +49,7 @@ tasks.register<Exec>("buildSecp256k1LinuxArm64") {
 
     workingDir = projectDir
     environment("TARGET", target)
+    environment("CMAKE_DEFAULT_OPTS", CMAKE_DEFAULT_OPTS)
     commandLine(bash, "-l", "build.sh")
 }
 
@@ -57,6 +62,7 @@ tasks.register<Exec>("buildSecp256k1Ios") {
     outputs.dir(projectDir.resolve("build/ios"))
 
     workingDir = projectDir
+    environment("CMAKE_DEFAULT_OPTS", CMAKE_DEFAULT_OPTS)
     commandLine(bash, "build-ios.sh")
 }
 
@@ -79,15 +85,9 @@ if (includeAndroid) {
 
         workingDir = projectDir
 
-        val toolchain = when {
-            currentOs.isLinux -> "linux-x86_64"
-            currentOs.isMacOsX -> "darwin-x86_64"
-            currentOs.isWindows -> "windows-x86_64"
-            else -> error("No Android toolchain defined for this OS: $currentOs")
-        }
-        environment("TOOLCHAIN", toolchain)
         environment("ARCH", arch)
         environment("ANDROID_NDK", (project(":jni:android").extensions["android"] as LibraryExtension).ndkDirectory)
+        environment("CMAKE_DEFAULT_OPTS", CMAKE_DEFAULT_OPTS)
         commandLine(bash, "build-android.sh")
     }
 
