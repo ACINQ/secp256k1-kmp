@@ -150,10 +150,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
  * Method:    secp256k1_ecdsa_sign
  * Signature: (J[B[B)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ecdsa_1sign(JNIEnv* penv, jclass clazz, jlong jctx, jbyteArray jmsg, jbyteArray jseckey)
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ecdsa_1sign(JNIEnv* penv, jclass clazz, jlong jctx, jbyteArray jmsg, jbyteArray jseckey, jbyteArray jndata)
 {
     const secp256k1_context* ctx = (const secp256k1_context*)jctx;
-    jbyte seckey[32], msg[32], sig[64];
+    jbyte seckey[32], msg[32], ndata[32], sig[64];
     secp256k1_ecdsa_signature signature;
     int result = 0;
     jbyteArray jsig;
@@ -164,10 +164,16 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     CHECKRESULT((*penv)->GetArrayLength(penv, jseckey) != 32, "secret key must be 32 bytes");
     CHECKRESULT((*penv)->GetArrayLength(penv, jmsg) != 32, "message key must be 32 bytes");
+    if (jndata != NULL) {
+        CHECKRESULT((*penv)->GetArrayLength(penv, jndata) != 32, "auxiliary data must be 32 bytes");
+    }
     (*penv)->GetByteArrayRegion(penv, jseckey, 0, 32, seckey);
     (*penv)->GetByteArrayRegion(penv, jmsg, 0, 32, msg);
+    if (jndata != NULL) {
+        (*penv)->GetByteArrayRegion(penv, jndata, 0, 32, ndata);
+    }
 
-    result = secp256k1_ecdsa_sign(ctx, &signature, (unsigned char*)msg, (unsigned char*)seckey, NULL, NULL);
+    result = secp256k1_ecdsa_sign(ctx, &signature, (unsigned char*)msg, (unsigned char*)seckey, NULL, jndata != NULL ? (unsigned char*)ndata : NULL);
     CHECKRESULT(!result, "secp256k1_ecdsa_sign failed");
 
     result = secp256k1_ecdsa_signature_serialize_compact(ctx, (unsigned char*)sig, &signature);

@@ -127,6 +127,77 @@ class Secp256k1Test {
     }
 
     @Test
+    fun signWithAuxData() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+        val pub = Secp256k1.pubkeyCreate(priv)
+
+        // Sign without ndata (standard RFC 6979)
+        val sig1 = Secp256k1.sign(message, priv)
+        val sig1Again = Secp256k1.sign(message, priv, null)
+        // null ndata should produce the same result as omitting it
+        assertContentEquals(sig1, sig1Again)
+
+        // Sign with ndata (different nonce)
+        val ndata = ByteArray(32).also { it[0] = 1 }
+        val sig2 = Secp256k1.sign(message, priv, ndata)
+        // ndata should produce a different valid signature
+        assertFalse(sig1.contentEquals(sig2))
+
+        // Both signatures must verify
+        assertTrue(Secp256k1.verify(sig1, message, pub))
+        assertTrue(Secp256k1.verify(sig2, message, pub))
+
+        // Signing with the same ndata is deterministic
+        val sig2Again = Secp256k1.sign(message, priv, ndata)
+        assertContentEquals(sig2, sig2Again)
+    }
+
+    @Test
+    fun signWithAuxDataRejectsInvalidSize() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+
+        assertFails { Secp256k1.sign(message, priv, ByteArray(31)) }
+        assertFails { Secp256k1.sign(message, priv, ByteArray(33)) }
+        assertFails { Secp256k1.sign(message, priv, ByteArray(0)) }
+    }
+
+    @Test
+    fun signWithZeroAuxDataDiffersFromNull() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+        val pub = Secp256k1.pubkeyCreate(priv)
+
+        val sigNull = Secp256k1.sign(message, priv, null)
+        val sigZeros = Secp256k1.sign(message, priv, ByteArray(32))
+
+        // All-zeros ndata is valid auxiliary data, not equivalent to null
+        assertFalse(sigNull.contentEquals(sigZeros))
+        assertTrue(Secp256k1.verify(sigZeros, message, pub))
+    }
+
+    @Test
+    fun signWithSequentialAuxDataProducesUniqueSigs() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+        val pub = Secp256k1.pubkeyCreate(priv)
+
+        // Simulate R grinding: sequential counter values must each produce a unique valid signature
+        val sigs = (0..9).map { counter ->
+            val ndata = ByteArray(32).also { it[0] = counter.toByte() }
+            Secp256k1.sign(message, priv, ndata)
+        }
+
+        // All 10 signatures should be unique
+        val uniqueSigs = sigs.map { Hex.encode(it) }.toSet()
+        assertEquals(10, uniqueSigs.size)
+
+        // All 10 signatures should verify
+        sigs.forEach { sig -> assertTrue(Secp256k1.verify(sig, message, pub)) }
+    }
+
+    @Test
     fun normalizeEcdsaSignature() {
         val normalizedDerSig = Hex.decode("30440220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A202201C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9".lowercase())
         val (normalizedCompactSig1, wasNotNormalized1) = Secp256k1.signatureNormalize(normalizedDerSig)

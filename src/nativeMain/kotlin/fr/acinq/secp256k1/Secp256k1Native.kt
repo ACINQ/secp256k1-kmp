@@ -99,14 +99,16 @@ public object Secp256k1Native : Secp256k1 {
         }
     }
 
-    public override fun sign(message: ByteArray, privkey: ByteArray): ByteArray {
+    public override fun sign(message: ByteArray, privkey: ByteArray, ndata: ByteArray?): ByteArray {
         require(privkey.size == 32)
         require(message.size == 32)
+        ndata?.let { require(it.size == 32) }
         memScoped {
             val nPrivkey = toNat(privkey)
             val nMessage = toNat(message)
+            val nNdata = ndata?.let { toNat(it) }
             val nSig = alloc<secp256k1_ecdsa_signature>()
-            secp256k1_ecdsa_sign(ctx, nSig.ptr, nMessage, nPrivkey, null, null).requireSuccess("secp256k1_ecdsa_sign() failed")
+            secp256k1_ecdsa_sign(ctx, nSig.ptr, nMessage, nPrivkey, null, nNdata).requireSuccess("secp256k1_ecdsa_sign() failed")
             return serializeSignature(nSig)
         }
     }
