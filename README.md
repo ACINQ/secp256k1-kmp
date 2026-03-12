@@ -94,6 +94,14 @@ To build the library you need the following:
 - OpenJDK11 (we recommend using packages provided by https://adoptopenjdk.net/ but there are other options)
 - (optional) Android SDK
 
+On Linux X64 you need to install a cross-compiler, which is used to cross-build for Linux Arm64.
+On Ubuntu, this is done with:
+
+```sh
+sudo apt install g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
+
+```
+
 It may work with other Operating Systems and JDKs, but then you're on your own (in particular we don't plan to support 32 bits Operating Systems).
 To build the library and publish compiled artefacts locally (so they can be used by other projects):
 
