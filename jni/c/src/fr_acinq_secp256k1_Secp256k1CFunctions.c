@@ -110,6 +110,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pubkeyBytes);
     return jpubkey;
 }
@@ -141,6 +142,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pubkey);
     return jpubkey;
 }
@@ -174,19 +176,9 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ecdsa_signature_serialize_compact failed");
 
     jsig = (*penv)->NewByteArray(penv, 64);
+    CHECKRESULT(jsig == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jsig, 0, 64, sig);
     return jsig;
-}
-
-static int GetSignatureFormat(size_t size)
-{
-    if (size == 64)
-        return SIG_FORMAT_COMPACT;
-    if (size < 64)
-        return SIG_FORMAT_UNKNOWN;
-    if (size > 73)
-        return SIG_FORMAT_UNKNOWN;
-    return SIG_FORMAT_DER;
 }
 
 /*
@@ -197,10 +189,10 @@ static int GetSignatureFormat(size_t size)
 JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ecdsa_1verify(JNIEnv* penv, jclass clazz, jlong jctx, jbyteArray jsig, jbyteArray jmsg, jbyteArray jpubkey)
 {
     const secp256k1_context* ctx = (const secp256k1_context*)jctx;
-    jbyte pub[65], msg[32], sig[73];
+    jbyte pub[65], msg[32], sig[64];
     secp256k1_ecdsa_signature signature;
     secp256k1_pubkey pubkey;
-    size_t sigSize, pubSize;
+    size_t pubSize;
     int result = 0;
 
     if (jctx == 0) return 0;
@@ -208,26 +200,16 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
     if (jmsg == NULL) return 0;
     if (jpubkey == NULL) return 0;
 
-    sigSize = (*penv)->GetArrayLength(penv, jsig);
-    int sigFormat = GetSignatureFormat(sigSize);
-    CHECKRESULT(sigFormat == SIG_FORMAT_UNKNOWN, "invalid signature size");
+    CHECKRESULT((*penv)->GetArrayLength(penv, jsig) != 64, "signature must be 64 bytes");
 
     pubSize = (*penv)->GetArrayLength(penv, jpubkey);
     CHECKRESULT((pubSize != 33) && (pubSize != 65), "invalid public key size");
 
     CHECKRESULT((*penv)->GetArrayLength(penv, jmsg) != 32, "message must be 32 bytes");
 
-    (*penv)->GetByteArrayRegion(penv, jsig, 0, sigSize, sig);
-    switch (sigFormat) {
-    case SIG_FORMAT_COMPACT:
-        result = secp256k1_ecdsa_signature_parse_compact(ctx, &signature, (unsigned char*)sig);
-        CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_compact failed");
-        break;
-    case SIG_FORMAT_DER:
-        result = secp256k1_ecdsa_signature_parse_der(ctx, &signature, (unsigned char*)sig, sigSize);
-        CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_der failed");
-        break;
-    }
+    (*penv)->GetByteArrayRegion(penv, jsig, 0, 64, sig);
+    result = secp256k1_ecdsa_signature_parse_compact(ctx, &signature, (unsigned char*)sig);
+    CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_compact failed");
 
     (*penv)->GetByteArrayRegion(penv, jpubkey, 0, pubSize, pub);
     result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (unsigned char*)pub, pubSize);
@@ -246,7 +228,7 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
 JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ecdsa_1signature_1normalize(JNIEnv* penv, jclass clazz, jlong jctx, jbyteArray jsigin, jbyteArray jsigout)
 {
     const secp256k1_context* ctx = (const secp256k1_context*)jctx;
-    jbyte sig[73];
+    jbyte sig[64];
     secp256k1_ecdsa_signature signature_in, signature_out;
     size_t size;
     int result = 0;
@@ -257,22 +239,13 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ec
     if (jsigin == NULL) return 0;
     if (jsigout == NULL) return 0;
 
-    size = (*penv)->GetArrayLength(penv, jsigin);
-    sigFormat = GetSignatureFormat(size);
-    CHECKRESULT(sigFormat == SIG_FORMAT_UNKNOWN, "invalid signature size");
+    CHECKRESULT((*penv)->GetArrayLength(penv, jsigin) != 64, " signature must be 64 bytes");
     CHECKRESULT((*penv)->GetArrayLength(penv, jsigout) != 64, "output signature length must be 64 bytes");
 
-    (*penv)->GetByteArrayRegion(penv, jsigin, 0, size, sig);
-    switch (sigFormat) {
-    case SIG_FORMAT_COMPACT:
-        result = secp256k1_ecdsa_signature_parse_compact(ctx, &signature_in, (unsigned char*)sig);
-        CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_compact failed");
-        break;
-    case SIG_FORMAT_DER:
-        result = secp256k1_ecdsa_signature_parse_der(ctx, &signature_in, (unsigned char*)sig, size);
-        CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_der failed");
-        break;
-    }
+    (*penv)->GetByteArrayRegion(penv, jsigin, 0, 64, sig);
+    result = secp256k1_ecdsa_signature_parse_compact(ctx, &signature_in, (unsigned char*)sig);
+    CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_compact failed");
+
     return_value = secp256k1_ecdsa_signature_normalize(ctx, &signature_out, &signature_in);
     result = secp256k1_ecdsa_signature_serialize_compact(ctx, (unsigned char*)sig, &signature_out);
     CHECKRESULT(!result, "secp256k1_ecdsa_signature_serialize_compact failed");
@@ -301,6 +274,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_seckey_negate failed");
 
     jseckey = (*penv)->NewByteArray(penv, 32);
+    CHECKRESULT(jseckey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jseckey, 0, 32, seckey);
     return jseckey;
 }
@@ -335,6 +309,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pub);
     return jpubkey;
 }
@@ -363,6 +338,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_seckey_tweak_add failed");
 
     jseckey = (*penv)->NewByteArray(penv, 32);
+    CHECKRESULT(jseckey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jseckey, 0, 32, seckey);
     return jseckey;
 }
@@ -401,6 +377,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pub);
     return jpubkey;
 }
@@ -428,6 +405,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_seckey_tweak_mul failed");
 
     jseckey = (*penv)->NewByteArray(penv, 32);
+    CHECKRESULT(jseckey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jseckey, 0, 32, seckey);
     return jseckey;
 }
@@ -465,6 +443,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pub);
     return jpubkey;
 }
@@ -505,9 +484,10 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(pubkeys == NULL, "memory allocation failed");
 
     for (i = 0; i < count; i++) {
+        jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
+        CHECKRESULT1(jpubkey == NULL, "input value must not be NULL", free_pubkeys(pubkeys, count));
         pubkeys[i] = calloc(1, sizeof(secp256k1_pubkey));
         CHECKRESULT1(pubkeys[i] == NULL, "memory allocation failed", free_pubkeys(pubkeys, count));
-        jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
         size = (*penv)->GetArrayLength(penv, jpubkey);
         CHECKRESULT1((size != 33) && (size != 65), "invalid public key size", free_pubkeys(pubkeys, count));
         (*penv)->GetByteArrayRegion(penv, jpubkey, 0, size, pub);
@@ -523,6 +503,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pub);
     return jpubkey;
 }
@@ -558,6 +539,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ecdh failed");
 
     joutput = (*penv)->NewByteArray(penv, 32);
+    CHECKRESULT(joutput == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, joutput, 0, 32, output);
     return joutput;
 }
@@ -570,13 +552,13 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ecdsa_1recover(JNIEnv* penv, jclass clazz, jlong jctx, jbyteArray jsig, jbyteArray jmsg, jint recid)
 {
     const secp256k1_context* ctx = (const secp256k1_context*)jctx;
-    jbyte sig[73], msg[32], pub[65];
+    jbyte sig[64], msg[32], pub[65];
     jbyteArray jpubkey;
     secp256k1_pubkey pubkey;
     secp256k1_ecdsa_recoverable_signature signature;
     secp256k1_ecdsa_signature dummy;
     unsigned char dummyBytes[64];
-    size_t sigSize, size;
+    size_t size;
     int result;
 
     if (jctx == 0) return NULL;
@@ -584,26 +566,13 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     if (jmsg == NULL) return NULL;
     CHECKRESULT(recid < 0 || recid > 3, "invalid recovery id");
 
-    sigSize = (*penv)->GetArrayLength(penv, jsig);
-    int sigFormat = GetSignatureFormat(sigSize);
-    CHECKRESULT(sigFormat == SIG_FORMAT_UNKNOWN, "invalid signature size");
+    CHECKRESULT((*penv)->GetArrayLength(penv, jsig) != 64, "signature must be 64 bytes");
 
     CHECKRESULT((*penv)->GetArrayLength(penv, jmsg) != 32, "message must be 32 bytes");
-    (*penv)->GetByteArrayRegion(penv, jsig, 0, sigSize, sig);
-    switch (sigFormat) {
-    case SIG_FORMAT_COMPACT:
-        result = secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &signature, (unsigned char*)sig, recid);
-        CHECKRESULT(!result, "secp256k1_ecdsa_recoverable_signature_parse_compact failed");
-        break;
-    case SIG_FORMAT_DER:
-        result = secp256k1_ecdsa_signature_parse_der(ctx, &dummy, (unsigned char*)sig, sigSize);
-        CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_der failed");
-        result = secp256k1_ecdsa_signature_serialize_compact(ctx, dummyBytes, &dummy);
-        CHECKRESULT(!result, "secp256k1_ecdsa_signature_serialize_compact failed");
-        result = secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &signature, dummyBytes, recid);
-        CHECKRESULT(!result, "secp256k1_ecdsa_recoverable_signature_parse_compact failed");
-        break;
-    }
+    (*penv)->GetByteArrayRegion(penv, jsig, 0, 64, sig);
+    result = secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &signature, (unsigned char*)sig, recid);
+    CHECKRESULT(!result, "secp256k1_ecdsa_recoverable_signature_parse_compact failed");
+
     (*penv)->GetByteArrayRegion(penv, jmsg, 0, 32, msg);
     result = secp256k1_ecdsa_recover(ctx, &pubkey, &signature, (unsigned char*)msg);
     CHECKRESULT(!result, "secp256k1_ecdsa_recover failed");
@@ -613,6 +582,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pub);
     return jpubkey;
 }
@@ -643,7 +613,40 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     result = secp256k1_ecdsa_signature_serialize_der(ctx, der, &size, &signature);
     CHECKRESULT(!result, "secp256k1_ecdsa_signature_serialize_der failed");
     jsig = (*penv)->NewByteArray(penv, size);
+    CHECKRESULT(jsig == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jsig, 0, size, (jbyte*)der);
+    return jsig;
+}
+
+/*
+ * Class:     fr_acinq_secp256k1_Secp256k1CFunctions
+ * Method:    secp256k1_der_to_compact
+ * Signature: (J[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1der_1to_1compact(JNIEnv* penv, jclass clazz, jlong jctx, jbyteArray jsig)
+{
+    const secp256k1_context* ctx = (const secp256k1_context*)jctx;
+    jbyte sig[73];
+    secp256k1_ecdsa_signature signature;
+    unsigned char compact[64];
+    size_t size;
+    int result = 0;
+
+    if (jctx == 0) return 0;
+    if (jsig == NULL) return 0;
+    size = (*penv)->GetArrayLength(penv, jsig);
+    CHECKRESULT(size > 73, "invalid signature size");
+
+    (*penv)->GetByteArrayRegion(penv, jsig, 0, size, sig);
+    result = secp256k1_ecdsa_signature_parse_der(ctx, &signature, (unsigned char*)sig, size);
+    CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_der failed");
+
+    size = 73;
+    result = secp256k1_ecdsa_signature_serialize_compact(ctx, compact, &signature);
+    CHECKRESULT(!result, "secp256k1_ecdsa_signature_serialize_der failed");
+    jsig = (*penv)->NewByteArray(penv, 64);
+    CHECKRESULT(jsig == NULL, "memory allocation error");
+    (*penv)->SetByteArrayRegion(penv, jsig, 0, 64, (jbyte*)compact);
     return jsig;
 }
 
@@ -683,6 +686,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_schnorrsig_sign failed");
 
     jsig = (*penv)->NewByteArray(penv, 64);
+    CHECKRESULT(jsig == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jsig, 0, 64, (const jbyte*)signature);
     return jsig;
 }
@@ -789,6 +793,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_musig_pubnonce_serialize failed");
 
     jnonce = (*penv)->NewByteArray(penv, sizeof(nonce));
+    CHECKRESULT(jnonce == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jnonce, 0, sizeof(nonce), (const jbyte*)nonce);
     return jnonce;
 }
@@ -845,6 +850,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_musig_pubnonce_serialize failed");
 
     jnonce = (*penv)->NewByteArray(penv, sizeof(nonce));
+    CHECKRESULT(jnonce == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jnonce, 0, sizeof(nonce), (const jbyte*)nonce);
     return jnonce;
 }
@@ -881,21 +887,18 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     count = (*penv)->GetArrayLength(penv, jnonces);
     CHECKRESULT(count == 0, "public nonces count cannot be 0");
-    for (i = 0; i < count; i++) {
-        jnonce = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jnonces, i);
-        size = (*penv)->GetArrayLength(penv, jnonce);
-        CHECKRESULT(size != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, "invalid public nonce size");
-    }
 
     pubnonces = calloc(count, sizeof(secp256k1_musig_pubnonce*));
     CHECKRESULT(pubnonces == NULL, "memory allocation error");
 
     for (i = 0; i < count; i++) {
+        jnonce = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jnonces, i);
+        CHECKRESULT1(jnonce == NULL, "input value must not be NULL", free_nonces(pubnonces, count));
+        size = (*penv)->GetArrayLength(penv, jnonce);
+        CHECKRESULT1(size != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, "invalid public nonce size", free_nonces(pubnonces, count));
         pubnonces[i] = calloc(1, sizeof(secp256k1_musig_pubnonce));
         CHECKRESULT1(pubnonces[i] == NULL, "memory allocation error", free_nonces(pubnonces, count));
-        jnonce = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jnonces, i);
-        size = fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE;
-        (*penv)->GetByteArrayRegion(penv, jnonce, 0, size, in66);
+        (*penv)->GetByteArrayRegion(penv, jnonce, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, in66);
         result = secp256k1_musig_pubnonce_parse(ctx, pubnonces[i], (unsigned char*)in66);
         CHECKRESULT1(!result, "secp256k1_musig_pubnonce_parse failed", free_nonces(pubnonces, count));
     }
@@ -906,7 +909,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     result = secp256k1_musig_aggnonce_serialize(ctx, (unsigned char*)in66, &combined);
     CHECKRESULT(!result, "secp256k1_musig_aggnonce_serialize failed");
     jnonce = (*penv)->NewByteArray(penv, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE);
-    (*penv)->SetByteArrayRegion(penv, jnonce, 0, size, in66);
+    CHECKRESULT(jnonce == NULL, "memory allocation error");
+    (*penv)->SetByteArrayRegion(penv, jnonce, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, in66);
     return jnonce;
 }
 
@@ -931,11 +935,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     if (jpubkeys == NULL) return NULL;
     count = (*penv)->GetArrayLength(penv, jpubkeys);
     CHECKRESULT(count == 0, "pubkeys count cannot be 0");
-    for (i = 0; i < count; i++) {
-        jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
-        size = (*penv)->GetArrayLength(penv, jpubkey);
-        CHECKRESULT((size != 33) && (size != 65), "invalid public key size");
-    }
 
     if (jkeyaggcache != NULL) {
         size = (*penv)->GetArrayLength(penv, jkeyaggcache);
@@ -947,10 +946,12 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(pubkeys == NULL, "memory allocation error");
 
     for (i = 0; i < count; i++) {
+        jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
+        CHECKRESULT1(jpubkey == NULL, "input value must not be NULL", free_pubkeys(pubkeys, count));
+        size = (*penv)->GetArrayLength(penv, jpubkey);
+        CHECKRESULT1((size != 33) && (size != 65), "invalid public key size", free_pubkeys(pubkeys, count));
         pubkeys[i] = calloc(1, sizeof(secp256k1_pubkey));
         CHECKRESULT1(pubkeys[i] == NULL, "memory allocation error", free_pubkeys(pubkeys, count));
-        jpubkey = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpubkeys, i);
-        size = (*penv)->GetArrayLength(penv, jpubkey);
         (*penv)->GetByteArrayRegion(penv, jpubkey, 0, size, pub);
         result = secp256k1_ec_pubkey_parse(ctx, pubkeys[i], (unsigned char*)pub, size);
         CHECKRESULT1(!result, "secp256k1_ec_pubkey_parse failed", free_pubkeys(pubkeys, count));
@@ -962,6 +963,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_xonly_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 32);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 32, pub);
 
     if (jkeyaggcache != NULL) {
@@ -1003,6 +1005,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pub);
 
     (*penv)->SetByteArrayRegion(penv, jkeyaggcache, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, (const jbyte*)keyaggcache.data);
@@ -1043,6 +1046,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_ec_pubkey_serialize failed");
 
     jpubkey = (*penv)->NewByteArray(penv, 65);
+    CHECKRESULT(jpubkey == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpubkey, 0, 65, pub);
 
     (*penv)->SetByteArrayRegion(penv, jkeyaggcache, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, (const jbyte*)keyaggcache.data);
@@ -1086,6 +1090,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_musig_nonce_process failed");
 
     jsession = (*penv)->NewByteArray(penv, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE);
+    CHECKRESULT(jsession == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jsession, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE, (const jbyte*)session.data);
     return jsession;
 }
@@ -1135,6 +1140,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_musig_partial_sig_serialize failed");
 
     jpsig = (*penv)->NewByteArray(penv, 32);
+    CHECKRESULT(jpsig == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpsig, 0, 32, (const jbyte*)sig);
     return jpsig;
 }
@@ -1235,11 +1241,12 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(psigs == NULL, "memory allocation error");
 
     for (i = 0; i < count; i++) {
-        psigs[i] = calloc(1, sizeof(secp256k1_musig_partial_sig));
-        CHECKRESULT1(psigs[i] == NULL, "memory allocation error", free_partial_sigs(psigs, count));
         jpsig = (jbyteArray)(*penv)->GetObjectArrayElement(penv, jpsigs, i);
+        CHECKRESULT1(jpsig == NULL, "input value must not be NULL", free_partial_sigs(psigs, count));
         size = (*penv)->GetArrayLength(penv, jpsig);
         CHECKRESULT1(size != 32, "invalid partial signature size", free_partial_sigs(psigs, count));
+        psigs[i] = calloc(1, sizeof(secp256k1_musig_partial_sig));
+        CHECKRESULT1(psigs[i] == NULL, "memory allocation error", free_partial_sigs(psigs, count));
         (*penv)->GetByteArrayRegion(penv, jpsig, 0, 32, (jbyte*)sig64);
         result = secp256k1_musig_partial_sig_parse(ctx, psigs[i], sig64);
         CHECKRESULT1(!result, "secp256k1_musig_partial_sig_parse failed", free_partial_sigs(psigs, count));
@@ -1249,6 +1256,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     CHECKRESULT(!result, "secp256k1_musig_pubkey_agg failed");
 
     jpsig = (*penv)->NewByteArray(penv, 64);
+    CHECKRESULT(jpsig == NULL, "memory allocation error");
     (*penv)->SetByteArrayRegion(penv, jpsig, 0, 64, (const jbyte*)sig64);
     return jpsig;
 }

@@ -32,9 +32,18 @@ val copyJni by tasks.registering(Sync::class) {
     into(layout.buildDirectory.dir("jniResources/fr/acinq/secp256k1/jni/native/linux-x86_64"))
 }
 
+val copyJniArm64 by tasks.registering(Sync::class) {
+    ->
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
+    dependsOn(":jni:jvm:buildNativeLinuxArm64")
+    from(rootDir.resolve("jni/jvm/build/linuxArm64/libsecp256k1-jni.so"))
+    into(layout.buildDirectory.dir("jniResources/fr/acinq/secp256k1/jni/native/linux-aarch64"))
+}
+
 (tasks["processResources"] as ProcessResources).apply {
     onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
     dependsOn(copyJni)
+    dependsOn(copyJniArm64)
     from(layout.buildDirectory.dir("jniResources"))
 }
 
