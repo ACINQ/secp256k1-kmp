@@ -14,3 +14,7 @@ actual fun readResourceAsJson(filename: String): JsonElement {
     val format = Json { ignoreUnknownKeys = true }
     return format.parseToJsonElement(raw)
 }
+
+actual fun readEnvironmentVariable(name: String): String? {
+    return System.getenv(name)
+}

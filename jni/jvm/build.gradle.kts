@@ -31,6 +31,23 @@ val buildNativeHost by tasks.registering(Exec::class) {
     commandLine(bash, "build.sh")
 }
 
+val buildNativeLinuxArm64 by tasks.registering(Exec::class) {
+    ->
+    onlyIf { org.gradle.internal.os.OperatingSystem.current().isLinux }
+    group = "build"
+    dependsOn(":jni:generateHeaders")
+    dependsOn(":native:buildSecp256k1LinuxArm64")
+
+    val target = "linuxArm64"
+
+    inputs.files(projectDir.resolve("build.sh"))
+    outputs.dir(layout.buildDirectory.dir(target))
+
+    workingDir = projectDir
+    environment("TARGET", target)
+    commandLine(bash, "build.sh")
+}
+
 dependencies {
     api(project(":jni"))
 }

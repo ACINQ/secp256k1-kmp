@@ -98,6 +98,7 @@ if (includeAndroid) {
         }
 
         sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
+        sourceSets["androidTest"].assets.srcDir("src/commonTest/resources")
 
         afterEvaluate {
             tasks.withType<com.android.build.gradle.tasks.factory.AndroidUnitTest>().all {
