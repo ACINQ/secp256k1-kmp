@@ -79,8 +79,7 @@ jobs:
             base-devel
             autotools
             mingw-w64-x86_64-gcc
-          pacboy: >-
-            cmake:p
+            mingw-w64-x86_64-cmake
       - name: Setup Android
         if: matrix.os == 'ubuntu-latest'
         shell: bash
