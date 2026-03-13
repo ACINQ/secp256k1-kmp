@@ -148,7 +148,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 /*
  * Class:     fr_acinq_bitcoin_Secp256k1Bindings
  * Method:    secp256k1_ecdsa_sign
- * Signature: (J[B[B)[B
+ * Signature: (J[B[B[B)[B
  */
 JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1ecdsa_1sign(JNIEnv* penv, jclass clazz, jlong jctx, jbyteArray jmsg, jbyteArray jseckey, jbyteArray jndata)
 {
