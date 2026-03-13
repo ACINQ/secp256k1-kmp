@@ -22,8 +22,8 @@ public object NativeSecp256k1 : Secp256k1 {
         return Secp256k1CFunctions.secp256k1_ecdsa_verify(Secp256k1Context.getContext(), signature, message, pubkey) == 1
     }
 
-    override fun sign(message: ByteArray, privkey: ByteArray): ByteArray {
-        return Secp256k1CFunctions.secp256k1_ecdsa_sign(Secp256k1Context.getContext(), message, privkey)
+    override fun sign(message: ByteArray, privkey: ByteArray, ndata: ByteArray?): ByteArray {
+        return Secp256k1CFunctions.secp256k1_ecdsa_sign(Secp256k1Context.getContext(), message, privkey, ndata)
     }
 
     override fun signatureNormalize(sig: ByteArray): Pair<ByteArray, Boolean> {

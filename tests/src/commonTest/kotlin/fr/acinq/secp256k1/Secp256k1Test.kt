@@ -127,6 +127,115 @@ class Secp256k1Test {
     }
 
     @Test
+    fun signWithAuxData() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+        val pub = Secp256k1.pubkeyCreate(priv)
+
+        // Sign without ndata (standard RFC 6979)
+        val sig1 = Secp256k1.sign(message, priv)
+        val sig1Again = Secp256k1.sign(message, priv, null)
+        // null ndata should produce the same result as omitting it
+        assertContentEquals(sig1, sig1Again)
+
+        // Sign with ndata (different nonce)
+        val ndata = ByteArray(32).also { it[0] = 1 }
+        val sig2 = Secp256k1.sign(message, priv, ndata)
+        // ndata should produce a different valid signature
+        assertFalse(sig1.contentEquals(sig2))
+
+        // Both signatures must verify
+        assertTrue(Secp256k1.verify(sig1, message, pub))
+        assertTrue(Secp256k1.verify(sig2, message, pub))
+
+        // Signing with the same ndata is deterministic
+        val sig2Again = Secp256k1.sign(message, priv, ndata)
+        assertContentEquals(sig2, sig2Again)
+    }
+
+    @Test
+    fun signWithAuxDataRejectsInvalidSize() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+
+        assertFails { Secp256k1.sign(message, priv, ByteArray(31)) }
+        assertFails { Secp256k1.sign(message, priv, ByteArray(33)) }
+        assertFails { Secp256k1.sign(message, priv, ByteArray(0)) }
+    }
+
+    @Test
+    fun signWithZeroAuxDataDiffersFromNull() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+        val pub = Secp256k1.pubkeyCreate(priv)
+
+        val sigNull = Secp256k1.sign(message, priv, null)
+        val sigZeros = Secp256k1.sign(message, priv, ByteArray(32))
+
+        // All-zeros ndata is valid auxiliary data, not equivalent to null
+        assertFalse(sigNull.contentEquals(sigZeros))
+        assertTrue(Secp256k1.verify(sigZeros, message, pub))
+    }
+
+    @Test
+    fun signWithSequentialAuxDataProducesUniqueSigs() {
+        val message = Hex.decode("CF80CD8AED482D5D1527D7DC72FCEFF84E6326592848447D2DC0B0E87DFC9A90".lowercase())
+        val priv = Hex.decode("67E56582298859DDAE725F972992A07C6C4FB9F62A8FFF58CE3CA926A1063530".lowercase())
+        val pub = Secp256k1.pubkeyCreate(priv)
+
+        // Simulate R grinding: sequential counter values must each produce a unique valid signature
+        val sigs = (0..9).map { counter ->
+            val ndata = ByteArray(32).also { it[0] = counter.toByte() }
+            Secp256k1.sign(message, priv, ndata)
+        }
+
+        // All 10 signatures should be unique
+        val uniqueSigs = sigs.map { Hex.encode(it) }.toSet()
+        assertEquals(10, uniqueSigs.size)
+
+        // All 10 signatures should verify
+        sigs.forEach { sig -> assertTrue(Secp256k1.verify(sig, message, pub)) }
+    }
+
+    @Test
+    fun lowRGrindingProduces70ByteDerSignatures() {
+        // This key/message pair produces a default signature with a high R (first byte >= 0x80),
+        // resulting in a 71-byte DER encoding due to the 0x00 padding byte on R.
+        // Low-R grinding iterates ndata counter values until R's high bit is 0,
+        // yielding a 70-byte DER encoding.
+        val priv = Hex.decode("f59bf401ef6b31fd3d0afb18b4fe2bba0f5a32ee1fba4e792c31e55e1960e7b7")
+        val pub = Secp256k1.pubkeyCreate(priv)
+        val message = Hex.decode("0000000000000000000000000000000000000000000000000000000000000002")
+
+        // Default signature (no grinding) has high R (first byte 0x9f) -> 71-byte DER due to 0x00 padding on R
+        val defaultSig = Secp256k1.sign(message, priv)
+        assertEquals(
+            "9F0705DDD2F1A4D5719B673BEF282588788148E4FEE2669FE76AB488712D87636416CA1D0A4B32F8F7166F0D0535F23D3519DB5CF10C61F92291DB64FD79B0B7",
+            Hex.encode(defaultSig).uppercase(),
+        )
+        val defaultDer = Secp256k1.compact2der(defaultSig)
+        assertEquals(71, defaultDer.size)
+
+        // Grinding: counters 0-2 still produce high-R
+        for (counter in 0..2) {
+            val ndata = ByteArray(32).also { it[0] = counter.toByte() }
+            val sig = Secp256k1.sign(message, priv, ndata)
+            assertTrue((sig[0].toInt() and 0x80) != 0, "expected high R at counter=$counter")
+        }
+
+        // Counter 3 yields low-R (first byte 0x57) -> 70-byte DER
+        val ndata = ByteArray(32).also { it[0] = 3 }
+        val groundSig = Secp256k1.sign(message, priv, ndata)
+        assertEquals(
+            "57BDF9E1B1BC0F774DDF32E6D54179955B8893CB81F5CE99D6328F52C0E7973A26846AEC395635798AED03CB7E8E910837E31BE8CC4BA473F9E9B2E7C892BE29",
+            Hex.encode(groundSig).uppercase(),
+        )
+        assertTrue(Secp256k1.verify(groundSig, message, pub))
+        val groundDer = Secp256k1.compact2der(groundSig)
+        assertEquals(70, groundDer.size)
+    }
+
+    @Test
     fun normalizeEcdsaSignature() {
         val normalizedDerSig = Hex.decode("30440220182A108E1448DC8F1FB467D06A0F3BB8EA0533584CB954EF8DA112F1D60E39A202201C66F36DA211C087F3AF88B50EDF4F9BDAA6CF5FD6817E74DCA34DB12390C6E9".lowercase())
         val (normalizedCompactSig1, wasNotNormalized1) = Secp256k1.signatureNormalize(normalizedDerSig)
