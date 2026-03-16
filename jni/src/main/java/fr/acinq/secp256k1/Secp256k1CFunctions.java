@@ -59,7 +59,7 @@ public class Secp256k1CFunctions {
 
     public static native byte[] secp256k1_ec_pubkey_create(long ctx, byte[] seckey);
 
-    public static native byte[] secp256k1_ecdsa_sign(long ctx, byte[] msg, byte[] seckey);
+    public static native byte[] secp256k1_ecdsa_sign(long ctx, byte[] msg, byte[] seckey, byte[] ndata);
 
     public static native int secp256k1_ecdsa_verify(long ctx, byte[] sig, byte[] msg, byte[] pubkey);
 

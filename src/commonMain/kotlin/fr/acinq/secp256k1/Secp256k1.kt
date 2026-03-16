@@ -34,8 +34,10 @@ public interface Secp256k1 {
      *
      * @param message message to sign.
      * @param privkey signer's private key.
+     * @param ndata optional 32 bytes of auxiliary data passed to the nonce generation function.
+     *              This can be used to implement low-R grinding by passing a counter value.
      */
-    public fun sign(message: ByteArray, privkey: ByteArray): ByteArray
+    public fun sign(message: ByteArray, privkey: ByteArray, ndata: ByteArray? = null): ByteArray
 
     /**
      * Verify a Schnorr signature.
