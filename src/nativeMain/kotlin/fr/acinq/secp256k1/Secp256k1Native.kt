@@ -259,7 +259,7 @@ public object Secp256k1Native : Secp256k1 {
     }
 
     override fun der2compact(sig: ByteArray): ByteArray {
-        require(sig.size <= 73)
+        require(sig.size in 8..73)
         memScoped {
             val nSig = alloc<secp256k1_ecdsa_signature>()
             val nativeBytes = toNat(sig)

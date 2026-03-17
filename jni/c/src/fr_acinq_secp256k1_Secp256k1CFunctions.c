@@ -641,7 +641,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     if (jctx == 0) return 0;
     if (jsig == NULL) return 0;
     size = (*penv)->GetArrayLength(penv, jsig);
-    CHECKRESULT(size > 73, "invalid signature size");
+    CHECKRESULT(size < 8 || size > 73, "invalid DER signature size");
 
     (*penv)->GetByteArrayRegion(penv, jsig, 0, size, sig);
     result = secp256k1_ecdsa_signature_parse_der(ctx, &signature, (unsigned char*)sig, size);
@@ -1165,8 +1165,9 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1mu
     jsize pubkeySize;
     secp256k1_musig_keyagg_cache keyaggcache;
     secp256k1_musig_session session;
-    // we use the same buffer to copy a partial sig, a nonce and a pubkey, largest size is a nonce
-    jbyte buffer[fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE];
+    jbyte psig_buffer[32];
+    jbyte nonce_buffer[fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE];
+    jbyte pubkey_buffer[65];
     int result = 0;
 
     if (jctx == 0) return 0;
@@ -1187,16 +1188,16 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1mu
     if (jsession == NULL) return 0;
     CHECKRESULT((*penv)->GetArrayLength(penv, jsession) != fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE, "invalid session size");
 
-    (*penv)->GetByteArrayRegion(penv, jpsig, 0, 32, buffer);
-    result = secp256k1_musig_partial_sig_parse(ctx, &psig, (const unsigned char*)buffer);
+    (*penv)->GetByteArrayRegion(penv, jpsig, 0, 32, psig_buffer);
+    result = secp256k1_musig_partial_sig_parse(ctx, &psig, (const unsigned char*)psig_buffer);
     CHECKRESULT(!result, "secp256k1_musig_partial_sig_parse failed");
 
-    (*penv)->GetByteArrayRegion(penv, jpubnonce, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, buffer);
-    result = secp256k1_musig_pubnonce_parse(ctx, &pubnonce, (const unsigned char*)buffer);
+    (*penv)->GetByteArrayRegion(penv, jpubnonce, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, nonce_buffer);
+    result = secp256k1_musig_pubnonce_parse(ctx, &pubnonce, (const unsigned char*)nonce_buffer);
     CHECKRESULT(!result, "secp256k1_musig_pubnonce_parse failed");
 
-    (*penv)->GetByteArrayRegion(penv, jpubkey, 0, pubkeySize, buffer);
-    result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (const unsigned char*)buffer, pubkeySize);
+    (*penv)->GetByteArrayRegion(penv, jpubkey, 0, pubkeySize, pubkey_buffer);
+    result = secp256k1_ec_pubkey_parse(ctx, &pubkey, (const unsigned char*)pubkey_buffer, pubkeySize);
     CHECKRESULT(!result, "secp256k1_musig_pubkey_parse failed");
 
     (*penv)->GetByteArrayRegion(penv, jkeyaggcache, 0, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, (jbyte*)keyaggcache.data);

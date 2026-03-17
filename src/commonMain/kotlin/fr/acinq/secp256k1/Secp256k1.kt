@@ -23,7 +23,7 @@ public interface Secp256k1 {
     /**
      * Verify an ECDSA signature.
      *
-     * @param signature signature using either compact encoding (64 bytes) or der-encoding.
+     * @param signature signature in compact encoding (64 bytes).
      * @param message message signed.
      * @param pubkey signer's public key.
      */
