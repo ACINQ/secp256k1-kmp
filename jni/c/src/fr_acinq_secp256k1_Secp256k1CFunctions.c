@@ -647,7 +647,6 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     result = secp256k1_ecdsa_signature_parse_der(ctx, &signature, (unsigned char*)sig, size);
     CHECKRESULT(!result, "secp256k1_ecdsa_signature_parse_der failed");
 
-    size = 73;
     result = secp256k1_ecdsa_signature_serialize_compact(ctx, compact, &signature);
     CHECKRESULT(!result, "secp256k1_ecdsa_signature_serialize_der failed");
     jsig = (*penv)->NewByteArray(penv, 64);
