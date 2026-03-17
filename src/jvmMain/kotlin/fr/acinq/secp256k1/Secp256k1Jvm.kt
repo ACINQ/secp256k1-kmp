@@ -32,4 +32,4 @@ private fun tryLoad(platform: String): Secp256k1? {
 internal actual fun getSecpk256k1(): Secp256k1 =
     tryLoad("android")
         ?: tryLoad("jvm")
-        ?: error("Could not load native Secp256k1 JNI library. Have you added the JNI dependency?")
+        ?: error("Could not load native Secp256k1 JNI library. Did you add the JNI dependency?")
