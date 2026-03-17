@@ -78,33 +78,6 @@ internal object OSInfo {
                    if (abi != null && abi.startsWith("gnueabihf")) {
                        return "armv7"
                    }
-
-                   // For java7, we stil need to if run some shell commands to determine ABI of JVM
-                   val javaHome = System.getProperty("java.home")
-                   try {
-                       // determine if first JVM found uses ARM hard-float ABI
-                       var exitCode = Runtime.getRuntime().exec(arrayOf("which", "readelf")).waitFor()
-                       if (exitCode == 0) {
-                           val cmdarray = arrayOf(
-                               "/bin/sh", "-c", "find '" + javaHome +
-                                       "' -name 'libjvm.so' | head -1 | xargs readelf -A | " +
-                                       "grep 'Tag_ABI_VFP_args: VFP registers'"
-                           )
-                           exitCode = Runtime.getRuntime().exec(cmdarray).waitFor()
-                           if (exitCode == 0) {
-                               return "armv7"
-                           }
-                       } else {
-                           System.err.println(
-                               "WARNING! readelf not found. Cannot check if running on an armhf system, " +
-                                       "armel architecture will be presumed."
-                           )
-                       }
-                   } catch (e: IOException) {
-                       // ignored: fall back to "arm" arch (soft-float ABI)
-                   } catch (e: InterruptedException) {
-                       // ignored: fall back to "arm" arch (soft-float ABI)
-                   }
                }
            }
 
@@ -113,33 +86,6 @@ internal object OSInfo {
            val abi = System.getProperty("sun.arch.abi")
            if (abi != null && abi.startsWith("gnueabihf")) {
                return "armv7"
-           }
-
-           // For java7, we stil need to if run some shell commands to determine ABI of JVM
-           val javaHome = System.getProperty("java.home")
-           try {
-               // determine if first JVM found uses ARM hard-float ABI
-               var exitCode = Runtime.getRuntime().exec(arrayOf("which", "readelf")).waitFor()
-               if (exitCode == 0) {
-                   val cmdarray = arrayOf(
-                       "/bin/sh", "-c", "find '" + javaHome +
-                               "' -name 'libjvm.so' | head -1 | xargs readelf -A | " +
-                               "grep 'Tag_ABI_VFP_args: VFP registers'"
-                   )
-                   exitCode = Runtime.getRuntime().exec(cmdarray).waitFor()
-                   if (exitCode == 0) {
-                       return "armv7"
-                   }
-               } else {
-                   System.err.println(
-                       "WARNING! readelf not found. Cannot check if running on an armhf system, " +
-                               "armel architecture will be presumed."
-                   )
-               }
-           } catch (e: IOException) {
-               // ignored: fall back to "arm" arch (soft-float ABI)
-           } catch (e: InterruptedException) {
-               // ignored: fall back to "arm" arch (soft-float ABI)
            }
        }
        // Use armv5, soft-float ABI

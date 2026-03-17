@@ -23,7 +23,7 @@ public interface Secp256k1 {
     /**
      * Verify an ECDSA signature.
      *
-     * @param signature signature using either compact encoding (64 bytes) or der-encoding.
+     * @param signature signature in compact encoding (64 bytes).
      * @param message message signed.
      * @param pubkey signer's public key.
      */
@@ -139,6 +139,11 @@ public interface Secp256k1 {
      * Convert a compact ECDSA signature (64 bytes) to a der-encoded ECDSA signature.
      */
     public fun compact2der(sig: ByteArray): ByteArray
+
+    /**
+     * Convert a DER signature to compact format (64 bytes)
+     */
+    public fun der2compact(sig: ByteArray): ByteArray
 
     /**
      * Serialize a public key to compact form (33 bytes).
@@ -286,12 +291,7 @@ public interface Secp256k1 {
      * @return 64-byte aggregated schnorr signature.
      */
     public fun musigPartialSigAgg(session: ByteArray, psigs: Array<ByteArray>): ByteArray
-
-    /**
-     * Delete the secp256k1 context from dynamic memory.
-     */
-    public fun cleanup()
-
+    
     public companion object : Secp256k1 by getSecpk256k1() {
         @JvmStatic
         public fun get(): Secp256k1 = this

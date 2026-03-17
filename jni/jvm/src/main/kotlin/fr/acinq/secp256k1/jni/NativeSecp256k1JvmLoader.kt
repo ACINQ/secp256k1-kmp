@@ -147,8 +147,7 @@ public object NativeSecp256k1JvmLoader {
 
            loadNativeLibrary(targetDirectory, extractedLibFileName)
        } catch (e: IOException) {
-           System.err.println(e.message)
-           false
+           throw RuntimeException("Failed to extract native library $libFileName", e)
        }
    }
 
@@ -162,14 +161,8 @@ public object NativeSecp256k1JvmLoader {
    private fun loadNativeLibrary(path: String, name: String): Boolean {
        val libPath = File(path, name)
        return if (libPath.exists()) {
-           try {
-               System.load(File(path, name).absolutePath)
-               true
-           } catch (e: UnsatisfiedLinkError) {
-               System.err.println("Failed to load native library:$name. osinfo: ${OSInfo.nativeSuffix}")
-               System.err.println(e)
-               false
-           }
+           System.load(File(path, name).absolutePath)
+           true
        } else {
            false
        }
@@ -189,10 +182,11 @@ public object NativeSecp256k1JvmLoader {
        val libraryPath = System.getProperty("fr.acinq.secp256k1.lib.path")
        val libraryName = System.getProperty("fr.acinq.secp256k1.lib.name") ?: System.mapLibraryName("secp256k1-jni")
        if (libraryPath != null) {
-           if (loadNativeLibrary(libraryPath, libraryName)) {
-               extracted = true
-               return
+           if (!loadNativeLibrary(libraryPath, libraryName)) {
+               error("Native library $libraryName not found at fr.acinq.secp256k1.lib.path=$libraryPath")
            }
+           extracted = true
+           return
        }
 
        // Load the os-dependent library from the jar file
@@ -204,11 +198,9 @@ public object NativeSecp256k1JvmLoader {
        }
 
        // Try extracting the library from jar
-       if (extractAndLoadLibraryFile(embeddedLibraryPath, libraryName, tempDir.absolutePath)) {
-           extracted = true
-           return
+       if (!extractAndLoadLibraryFile(embeddedLibraryPath, libraryName, tempDir.absolutePath)) {
+           error("Failed to load native library $libraryName from $embeddedLibraryPath")
        }
-       extracted = false
-       return
+       extracted = true
    }
 }
