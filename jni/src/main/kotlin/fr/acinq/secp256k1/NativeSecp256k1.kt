@@ -205,8 +205,4 @@ public object NativeSecp256k1 : Secp256k1 {
         psigs.forEach { require(it.size == 32) { "partial signature must be 32 bytes" } }
         return Secp256k1CFunctions.secp256k1_musig_partial_sig_agg(Secp256k1Context.getContext(), session, psigs)
     }
-
-    override fun cleanup() {
-        return Secp256k1CFunctions.secp256k1_context_destroy(Secp256k1Context.getContext())
-    }
 }

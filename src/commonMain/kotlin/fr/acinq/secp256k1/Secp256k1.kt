@@ -291,12 +291,7 @@ public interface Secp256k1 {
      * @return 64-byte aggregated schnorr signature.
      */
     public fun musigPartialSigAgg(session: ByteArray, psigs: Array<ByteArray>): ByteArray
-
-    /**
-     * Delete the secp256k1 context from dynamic memory.
-     */
-    public fun cleanup()
-
+    
     public companion object : Secp256k1 by getSecpk256k1() {
         @JvmStatic
         public fun get(): Secp256k1 = this
