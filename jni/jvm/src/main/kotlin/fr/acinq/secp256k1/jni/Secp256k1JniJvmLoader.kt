@@ -1,7 +1,7 @@
 package fr.acinq.secp256k1.jni
 
 import fr.acinq.secp256k1.Secp256k1
-import fr.acinq.secp256k1.NativeSecp256k1
+import fr.acinq.secp256k1.Secp256k1Jni
 import java.io.*
 import java.util.*
 
@@ -14,7 +14,7 @@ import java.util.*
 *
 * @author leo
 */
-public object NativeSecp256k1JvmLoader {
+public object Secp256k1JniJvmLoader {
    private var extracted = false
 
    /**
@@ -32,7 +32,7 @@ public object NativeSecp256k1JvmLoader {
            cleanup()
        }
        loadSecp256k1NativeLibrary()
-       return NativeSecp256k1
+       return Secp256k1Jni
    }
 
    private val tempDir: File
@@ -106,7 +106,7 @@ public object NativeSecp256k1JvmLoader {
        val extractedLckFile = File(targetDirectory, extractedLckFileName)
        return try {
            // Extract a native library file into the target directory
-           val reader = NativeSecp256k1JvmLoader::class.java.getResourceAsStream(libPath)
+           val reader = Secp256k1JniJvmLoader::class.java.getResourceAsStream(libPath)
            if (!extractedLckFile.exists()) {
                FileOutputStream(extractedLckFile).close()
            }
@@ -132,7 +132,7 @@ public object NativeSecp256k1JvmLoader {
            extractedLibFile.setExecutable(true)
 
            // Check whether the contents are properly copied from the resource folder
-           NativeSecp256k1JvmLoader::class.java.getResourceAsStream(libPath).use { nativeIn ->
+           Secp256k1JniJvmLoader::class.java.getResourceAsStream(libPath).use { nativeIn ->
                FileInputStream(extractedLibFile).use { extractedLibIn ->
                    if (!nativeIn.contentsEquals(extractedLibIn)) {
                        throw RuntimeException(
@@ -190,9 +190,9 @@ public object NativeSecp256k1JvmLoader {
        }
 
        // Load the os-dependent library from the jar file
-       val packagePath = NativeSecp256k1JvmLoader::class.java.getPackage().name.replace("\\.".toRegex(), "/")
+       val packagePath = Secp256k1JniJvmLoader::class.java.getPackage().name.replace("\\.".toRegex(), "/")
        val embeddedLibraryPath = "/$packagePath/native/${OSInfo.nativeSuffix}"
-       val hasNativeLib = NativeSecp256k1JvmLoader::class.java.getResource("$embeddedLibraryPath/$libraryName") != null
+       val hasNativeLib = Secp256k1JniJvmLoader::class.java.getResource("$embeddedLibraryPath/$libraryName") != null
        if (!hasNativeLib) {
            error("No native library found: at $embeddedLibraryPath/$libraryName")
        }
