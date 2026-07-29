@@ -5,12 +5,32 @@ import platform.posix.memcpy
 import platform.posix.size_tVar
 import secp256k1.*
 
+private fun ByteArray.checkMusigMagic(magic: ByteArray, name: String) {
+    if (size < magic.size || !magic.indices.all { this[it] == magic[it] }) throw Secp256k1Exception("invalid $name")
+}
+
+/**
+ * Installed on the context in place of libsecp256k1's default illegal-argument callback, which
+ * aborts the process. Returning from here makes the libsecp256k1 call fail with 0, which the
+ * bindings below already turn into a [Secp256k1Exception]. It is deliberately stateless: the
+ * callback and its data pointer live on the context, which is shared by every thread, so recording
+ * anything here would race. The [checkMusigMagic] checks are the primary defence and this is the
+ * backstop for anything they miss.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private fun illegalArgumentCallback(message: CPointer<ByteVar>?, data: COpaquePointer?) {
+}
+
 @OptIn(ExperimentalUnsignedTypes::class, ExperimentalForeignApi::class)
 public object Secp256k1Native : Secp256k1 {
 
     private val ctx: CPointer<secp256k1_context> by lazy {
-        secp256k1_context_create((SECP256K1_FLAGS_TYPE_CONTEXT or SECP256K1_FLAGS_BIT_CONTEXT_SIGN or SECP256K1_FLAGS_BIT_CONTEXT_VERIFY).toUInt())
+        val context = secp256k1_context_create((SECP256K1_FLAGS_TYPE_CONTEXT or SECP256K1_FLAGS_BIT_CONTEXT_SIGN or SECP256K1_FLAGS_BIT_CONTEXT_VERIFY).toUInt())
             ?: error("Could not create secp256k1 context")
+        // secp256k1_context_set_illegal_callback needs exclusive access to the context. `lazy` is
+        // synchronized by default, so this runs once before any thread can observe `ctx`.
+        secp256k1_context_set_illegal_callback(context, staticCFunction(::illegalArgumentCallback), null)
+        context
     }
 
     private fun Int.requireSuccess(message: String): Int = if (this != 1) throw Secp256k1Exception(message) else this
@@ -306,6 +326,7 @@ public object Secp256k1Native : Secp256k1 {
         privkey?.let { require(it.size == 32) }
         msg32?.let { require(it.size == 32) }
         keyaggCache?.let { require(it.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
+        keyaggCache?.checkMusigMagic(Secp256k1.MUSIG_KEYAGG_CACHE_MAGIC, "keyagg cache")
         extraInput32?.let { require(it.size == 32) }
 
         val nonce = memScoped {
@@ -341,6 +362,7 @@ public object Secp256k1Native : Secp256k1 {
         require(privkey.size ==32)
         msg32?.let { require(it.size == 32) }
         keyaggCache?.let { require(it.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) }
+        keyaggCache?.checkMusigMagic(Secp256k1.MUSIG_KEYAGG_CACHE_MAGIC, "keyagg cache")
         extraInput32?.let { require(it.size == 32) }
         val nonce = memScoped {
             val secnonce = alloc<secp256k1_musig_secnonce>()
@@ -393,6 +415,7 @@ public object Secp256k1Native : Secp256k1 {
     override fun musigPubkeyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray {
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(tweak32.size == 32)
+        keyaggCache.checkMusigMagic(Secp256k1.MUSIG_KEYAGG_CACHE_MAGIC, "keyagg cache")
         memScoped {
             val nKeyAggCache = alloc<secp256k1_musig_keyagg_cache>()
             memcpy(nKeyAggCache.ptr, toNat(keyaggCache), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
@@ -406,6 +429,7 @@ public object Secp256k1Native : Secp256k1 {
     override fun musigPubkeyXonlyTweakAdd(keyaggCache: ByteArray, tweak32: ByteArray): ByteArray {
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(tweak32.size == 32)
+        keyaggCache.checkMusigMagic(Secp256k1.MUSIG_KEYAGG_CACHE_MAGIC, "keyagg cache")
         memScoped {
             val nKeyAggCache = alloc<secp256k1_musig_keyagg_cache>()
             memcpy(nKeyAggCache.ptr, toNat(keyaggCache), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
@@ -420,6 +444,7 @@ public object Secp256k1Native : Secp256k1 {
         require(aggnonce.size == Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(msg32.size == 32)
+        keyaggCache.checkMusigMagic(Secp256k1.MUSIG_KEYAGG_CACHE_MAGIC, "keyagg cache")
         memScoped {
             val nKeyAggCache = alloc<secp256k1_musig_keyagg_cache>()
             memcpy(nKeyAggCache.ptr, toNat(keyaggCache), Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE.toULong())
@@ -438,7 +463,9 @@ public object Secp256k1Native : Secp256k1 {
         require(privkey.size == 32)
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(session.size == Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE)
-        require(musigNonceValidate(secnonce, pubkeyCreate(privkey)))
+        keyaggCache.checkMusigMagic(Secp256k1.MUSIG_KEYAGG_CACHE_MAGIC, "keyagg cache")
+        session.checkMusigMagic(Secp256k1.MUSIG_SESSION_MAGIC, "session")
+        if (!musigNonceValidate(secnonce, pubkeyCreate(privkey))) throw Secp256k1Exception("invalid secret nonce")
 
         memScoped {
             val nSecnonce = alloc<secp256k1_musig_secnonce>()
@@ -463,6 +490,8 @@ public object Secp256k1Native : Secp256k1 {
         require(pubkey.size == 33 || pubkey.size == 65)
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
         require(session.size == Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE)
+        keyaggCache.checkMusigMagic(Secp256k1.MUSIG_KEYAGG_CACHE_MAGIC, "keyagg cache")
+        session.checkMusigMagic(Secp256k1.MUSIG_SESSION_MAGIC, "session")
 
         memScoped {
             val nPSig = allocPartialSig(psig)
@@ -480,6 +509,7 @@ public object Secp256k1Native : Secp256k1 {
         require(session.size == Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE)
         require(psigs.isNotEmpty())
         psigs.forEach { require(it.size == 32) }
+        session.checkMusigMagic(Secp256k1.MUSIG_SESSION_MAGIC, "session")
         memScoped {
             val nSession = alloc<secp256k1_musig_session>()
             memcpy(nSession.ptr, toNat(session), Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE.toULong())

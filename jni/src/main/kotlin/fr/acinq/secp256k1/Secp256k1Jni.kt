@@ -186,7 +186,7 @@ public object Secp256k1Jni : Secp256k1 {
         require(privkey.size == 32) { "private key must be 32 bytes" }
         require(keyaggCache.size == Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE) { "invalid keyagg cache size" }
         require(session.size == Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE) { "invalid session size" }
-        require(musigNonceValidate(secnonce, pubkeyCreate(privkey)))
+        if (!musigNonceValidate(secnonce, pubkeyCreate(privkey))) throw Secp256k1Exception("invalid secret nonce")
         return Secp256k1CFunctions.secp256k1_musig_partial_sign(Secp256k1Context.getContext(), secnonce, privkey, keyaggCache, session)
     }
 

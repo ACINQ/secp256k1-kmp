@@ -246,6 +246,7 @@ public interface Secp256k1 {
      */
     public fun musigNonceValidate(secretnonce: ByteArray, pubkey: ByteArray): Boolean {
         if (secretnonce.size != MUSIG2_SECRET_NONCE_SIZE) return false
+        if (!MUSIG2_SECNONCE_MAGIC.indices.all { secretnonce[it] == MUSIG2_SECNONCE_MAGIC[it] }) return false
         if (pubkey.size != 33 && pubkey.size != 65) return false
         val pk = Secp256k1.pubkeyParse(pubkey)
         // this is a bit hackish but the secp256k1 library does not export methods to do this cleanly
@@ -301,6 +302,18 @@ public interface Secp256k1 {
         public const val MUSIG2_PUBLIC_NONCE_SIZE: Int = 66
         public const val MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE: Int = 197
         public const val MUSIG2_PUBLIC_SESSION_SIZE: Int = 133
+        /*
+         * libsecp256k1 tags each of its opaque musig2 objects with a 4-byte magic prefix and validates it
+         * internally with ARG_CHECK, which invokes the context's illegal-argument callback. The default
+         * callback aborts the process, so a blob that has the right size but does not actually hold a
+         * musig2 object would kill the application instead of raising an exception. We check the prefix
+         * before handing the blob to libsecp256k1 so that these cases throw Secp256k1Exception.
+         *
+         * Keep in sync with native/secp256k1/src/modules/musig/{keyagg,session}_impl.h.
+         */
+        internal val MUSIG_KEYAGG_CACHE_MAGIC = byteArrayOf(0xf4.toByte(), 0xad.toByte(), 0xbb.toByte(), 0xdf.toByte())
+        internal val MUSIG_SESSION_MAGIC = byteArrayOf(0x9d.toByte(), 0xed.toByte(), 0xe9.toByte(), 0x17)
+        internal val MUSIG2_SECNONCE_MAGIC = byteArrayOf(0x22.toByte(), 0x0e.toByte(), 0xdc.toByte(), 0xf1.toByte())
         // @formatter:on
     }
 }

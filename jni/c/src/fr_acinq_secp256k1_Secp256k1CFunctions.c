@@ -12,9 +12,32 @@
 #include "include/secp256k1_recovery.h"
 #include "include/secp256k1_schnorrsig.h"
 
-#define SIG_FORMAT_UNKNOWN 0
-#define SIG_FORMAT_COMPACT 1
-#define SIG_FORMAT_DER 2
+/*
+ * libsecp256k1 tags each of its opaque musig2 objects with a 4-byte magic prefix and validates it
+ * internally with ARG_CHECK, which invokes the context's illegal-argument callback. The default
+ * callback aborts the process, so a blob that has the right size but does not actually hold a
+ * musig2 object would kill the JVM instead of raising an exception. We check the prefix before
+ * handing the blob to libsecp256k1 so that these cases throw Secp256k1Exception.
+ *
+ * Keep in sync with native/secp256k1/src/modules/musig/{keyagg,session}_impl.h.
+ */
+static const unsigned char MUSIG_KEYAGG_CACHE_MAGIC[4] = { 0xf4, 0xad, 0xbb, 0xdf };
+static const unsigned char MUSIG_SECNONCE_MAGIC[4] = { 0x22, 0x0e, 0xdc, 0xf1 };
+static const unsigned char MUSIG_SESSION_MAGIC[4] = { 0x9d, 0xed, 0xe9, 0x17 };
+
+#define CHECKMAGIC(data, magic, message) CHECKRESULT(memcmp((data), (magic), 4) != 0, message)
+
+/*
+ * Installed on every context we create, replacing the default callback that aborts the process.
+ * Returning from here makes the libsecp256k1 return undefined values, but in practice calls fail with 0,
+ * which the bindings below already turn into a Secp256k1Exception. 
+ * The CHECKMAGIC checks above are the primary defence; this is the backstop for anything missed.
+ */
+static void JNI_IllegalArgumentCallback(const char* message, void* data)
+{
+    (void)message;
+    (void)data;
+}
 
 static void JNI_ThrowByName(JNIEnv* penv, const char* name, const char* msg)
 {
@@ -78,7 +101,13 @@ static inline jbyteArray copy_bytes_to_java(JNIEnv* penv, const unsigned char* f
  */
 JNIEXPORT jlong JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1context_1create(JNIEnv* penv, jclass clazz, jint flags)
 {
-    return (jlong)secp256k1_context_create(flags);
+    secp256k1_context* ctx = secp256k1_context_create(flags);
+    if (ctx != NULL) {
+        /* secp256k1_context_set_illegal_callback needs exclusive access to the context, so it must
+           be done here, before the context is returned and can be shared between threads. */
+        secp256k1_context_set_illegal_callback(ctx, JNI_IllegalArgumentCallback, NULL);
+    }
+    return (jlong)ctx;
 }
 
 /*
@@ -679,6 +708,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     if (jkeyaggcache != NULL) {
         if (!get_bytes(penv, jkeyaggcache, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, keyaggcache.data, "keyagg cache")) return NULL;
+        CHECKMAGIC(keyaggcache.data, MUSIG_KEYAGG_CACHE_MAGIC, "invalid keyagg cache");
     }
 
     if (jextra_input32 != NULL) {
@@ -721,6 +751,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     if (jkeyaggcache != NULL) {
         if (!get_bytes(penv, jkeyaggcache, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, keyaggcache.data, "keyagg cache")) return NULL;
+        CHECKMAGIC(keyaggcache.data, MUSIG_KEYAGG_CACHE_MAGIC, "invalid keyagg cache");
     }
 
     if (jextra_input32 != NULL) {
@@ -864,6 +895,8 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     CHECKRESULT(ctx == NULL, "secp256k1 context cannot be null");
     if (!get_bytes(penv, jkeyaggcache, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, keyaggcache.data, "keyagg cache")) return NULL;
+    CHECKMAGIC(keyaggcache.data, MUSIG_KEYAGG_CACHE_MAGIC, "invalid keyagg cache");
+
     if (!get_bytes32(penv, jtweak32, tweak32, "tweak")) return NULL;
 
     result = secp256k1_musig_pubkey_ec_tweak_add(ctx, &pubkey, &keyaggcache, tweak32);
@@ -899,6 +932,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     CHECKRESULT(ctx == NULL, "secp256k1 context cannot be null");
     if (!get_bytes(penv, jkeyaggcache, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, keyaggcache.data, "keyagg cache")) return NULL;
+    CHECKMAGIC(keyaggcache.data, MUSIG_KEYAGG_CACHE_MAGIC, "invalid keyagg cache");
     if (!get_bytes32(penv, jtweak32, tweak32, "tweak")) return NULL;
 
     result = secp256k1_musig_pubkey_xonly_tweak_add(ctx, &pubkey, &keyaggcache, tweak32);
@@ -939,6 +973,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     if (!get_bytes32(penv, jmsg32, msg32, "message")) return NULL;
     if (!get_bytes(penv, jkeyaggcache, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, keyaggcache.data, "keyagg cache")) return NULL;
+    CHECKMAGIC(keyaggcache.data, MUSIG_KEYAGG_CACHE_MAGIC, "invalid keyagg cache");
 
     result = secp256k1_musig_nonce_process(ctx, &session, &aggnonce, msg32, &keyaggcache);
     CHECKRESULT(!result, "secp256k1_musig_nonce_process failed");
@@ -967,8 +1002,11 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
     result = secp256k1_keypair_create(ctx, &keypair, seckey);
     CHECKRESULT(!result, "secp256k1_keypair_create failed");
     if (!get_bytes(penv, jsecnonce, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SECRET_NONCE_SIZE, secnonce.data, "secret nonce")) return NULL;
+    CHECKMAGIC(secnonce.data, MUSIG_SECNONCE_MAGIC, "invalid secret nonce");
     if (!get_bytes(penv, jkeyaggcache, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, keyaggcache.data, "keyagg cache")) return NULL;
+    CHECKMAGIC(keyaggcache.data, MUSIG_KEYAGG_CACHE_MAGIC, "invalid keyagg cache");
     if (!get_bytes(penv, jsession, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE, session.data, "session")) return NULL;
+    CHECKMAGIC(session.data, MUSIG_SESSION_MAGIC, "invalid session");
 
     result = secp256k1_musig_partial_sign(ctx, &psig, &secnonce, &keypair, &keyaggcache, &session);
     CHECKRESULT(!result, "secp256k1_musig_partial_sign failed");
@@ -1001,7 +1039,9 @@ JNIEXPORT jint JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256k1_1mu
     if (!get_bytes(penv, jpubnonce, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_PUBLIC_NONCE_SIZE, nonce_buffer, "public nonce")) return 0;
     if (!get_pubkey(penv, ctx, jpubkey, &pubkey)) return 0;
     if (!get_bytes(penv, jkeyaggcache, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_KEYAGG_CACHE_SIZE, keyaggcache.data, "keyagg cache")) return 0;
+    CHECKMAGIC(keyaggcache.data, MUSIG_KEYAGG_CACHE_MAGIC, "invalid keyagg cache");
     if (!get_bytes(penv, jsession, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE, session.data, "session")) return 0;
+    CHECKMAGIC(session.data, MUSIG_SESSION_MAGIC, "invalid session");
 
     result = secp256k1_musig_partial_sig_parse(ctx, &psig, psig_buffer);
     CHECKRESULT(!result, "secp256k1_musig_partial_sig_parse failed");
@@ -1033,6 +1073,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
 
     CHECKRESULT(ctx == NULL, "secp256k1 context cannot be null");
     if (!get_bytes(penv, jsession, fr_acinq_secp256k1_Secp256k1CFunctions_SECP256K1_MUSIG_SESSION_SIZE, session.data, "session")) return NULL;
+    CHECKMAGIC(session.data, MUSIG_SESSION_MAGIC, "invalid session");
 
     CHECKRESULT(jpsigs == NULL, "partial signatures cannot be null");
     count = (*penv)->GetArrayLength(penv, jpsigs);
