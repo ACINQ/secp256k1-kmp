@@ -139,7 +139,7 @@ secp256k1-kmp follows 2 simples rules:
 
 To extend this library and support methods that have been added to specific versions of [secp256k1](https://github.com/bitcoin-core/secp256k1) you have to:
 - add new methods to the Secp256k1 interface src/commonMain/kotlin/fr/acinq/secp256k1/Secp256k1.kt (please follow rule #1 above and try and match secp256k1's interface as much as possible)
-- implement these new methods in jni/src/main/kotlin/fr/acinq/secp256k1/NativeSecp256k1.kt (JNI implementation) and src/nativeMain/kotlin/fr/acinq/secp256k1/Secp256k1Native.kt (native linux/ios/... implementation)
+- implement these new methods in jni/src/main/kotlin/fr/acinq/secp256k1/Secp256k1Jni.kt (JNI implementation) and src/nativeMain/kotlin/fr/acinq/secp256k1/Secp256k1Native.kt (native linux/ios/... implementation)
 - update the JNI interface src/main/java/fr/acinq/secp256k1/Secp256k1CFunctions.java (NativeSecp256k1 calls Secp256k1CFunctions)
 - generate a new JNI header file jni/c/headers/java/fr_acinq_secp256k1_Secp256k1CFunctions.h with `javac -h jni/c/headers/java jni/src/main/java/fr/acinq/secp256k1/Secp256k1CFunctions.java`
 - implement the new methods in jni/c/src/fr_acinq_secp256k1_Secp256k1CFunctions.c

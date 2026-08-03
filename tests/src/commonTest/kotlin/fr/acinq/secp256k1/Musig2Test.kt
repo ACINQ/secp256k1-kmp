@@ -287,4 +287,55 @@ class Musig2Test {
             }
         }
     }
+
+    /**
+     * The key aggregation cache, session and secret nonce are opaque blobs that libsecp256k1 tags with a magic prefix
+     * and validates with ARG_CHECK, whose default handler aborts the process. Passing a blob that has the right size
+     * but does not hold a musig2 object must raise an exception instead of killing the process: if any of these cases
+     * regresses, this test does not fail, it takes the whole test run down with SIGABRT.
+     */
+    @Test
+    fun rejectMalformedOpaqueBlobs() {
+        val privkey = Hex.decode("EEC1CB7D1B7254C5CAB0D9C61AB02E643D464A59FE6C96A7EFE871F07C5AEF54")
+        val pubkey = Secp256k1.pubkeyCreate(privkey)
+        val msg = ByteArray(32) { 0x22 }
+        val tweak = ByteArray(32) { 0x33 }
+
+        // A genuine signing session, so that exactly one blob is malformed in each case below.
+        val keyaggCache = ByteArray(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
+        Secp256k1.musigPubkeyAgg(arrayOf(pubkey), keyaggCache)
+        val nonce = Secp256k1.musigNonceGen(ByteArray(32) { 0x44 }, privkey, pubkey, msg, keyaggCache, null)
+        val secnonce = nonce.copyOfRange(0, Secp256k1.MUSIG2_SECRET_NONCE_SIZE)
+        val pubnonce = nonce.copyOfRange(Secp256k1.MUSIG2_SECRET_NONCE_SIZE, Secp256k1.MUSIG2_SECRET_NONCE_SIZE + Secp256k1.MUSIG2_PUBLIC_NONCE_SIZE)
+        val aggnonce = Secp256k1.musigNonceAgg(arrayOf(pubnonce))
+        val session = Secp256k1.musigNonceProcess(aggnonce, msg, keyaggCache)
+        val psig = Secp256k1.musigPartialSign(secnonce, privkey, keyaggCache, session)
+
+        // Sanity check: the valid blobs are still accepted, so the checks above are not rejecting everything.
+        assertEquals(1, Secp256k1.musigPartialSigVerify(psig, pubnonce, pubkey, keyaggCache, session))
+
+        // Right size, wrong content.
+        val badCache = ByteArray(Secp256k1.MUSIG2_PUBLIC_KEYAGG_CACHE_SIZE)
+        val badSession = ByteArray(Secp256k1.MUSIG2_PUBLIC_SESSION_SIZE)
+        val badSecnonce = ByteArray(Secp256k1.MUSIG2_SECRET_NONCE_SIZE)
+
+        assertFails { Secp256k1.musigNonceGen(ByteArray(32) { 0x55 }, privkey, pubkey, msg, badCache, null) }
+        assertFails { Secp256k1.musigNonceGenCounter(1UL, privkey, msg, badCache, null) }
+        assertFails { Secp256k1.musigPubkeyTweakAdd(badCache, tweak) }
+        assertFails { Secp256k1.musigPubkeyXonlyTweakAdd(badCache, tweak) }
+        assertFails { Secp256k1.musigNonceProcess(aggnonce, msg, badCache) }
+        assertFails { Secp256k1.musigPartialSign(badSecnonce, privkey, keyaggCache, session) }
+        assertFails { Secp256k1.musigPartialSign(secnonce, privkey, badCache, session) }
+        assertFails { Secp256k1.musigPartialSign(secnonce, privkey, keyaggCache, badSession) }
+        assertFails { Secp256k1.musigPartialSigVerify(psig, pubnonce, pubkey, badCache, session) }
+        assertFails { Secp256k1.musigPartialSigVerify(psig, pubnonce, pubkey, keyaggCache, badSession) }
+        assertFails { Secp256k1.musigPartialSigAgg(badSession, arrayOf(psig)) }
+
+        // right size, with the right magic bytes, but invalid
+        val zeroedSecnonce = secnonce.copyOf()
+        (4 until 68).forEach { zeroedSecnonce[it] = 0 }
+        // Our own checks let it through: only libsecp256k1 knows that a nonce of zero is unusable.
+        assertTrue(Secp256k1.musigNonceValidate(zeroedSecnonce, pubkey))
+        assertFails { Secp256k1.musigPartialSign(zeroedSecnonce, privkey, keyaggCache, session) }
+    }
 }
