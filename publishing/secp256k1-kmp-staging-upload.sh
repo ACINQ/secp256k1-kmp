@@ -1,8 +1,20 @@
-#!/bin/bash -x
+#!/bin/bash
 #
 # usage:
 # VERSION=XXX ./secp256k1-kmp-staging-upload.sh create # to create bundles, which include checksums and signatures (requires access to a valid gpg key)
 # VERSION=XXX ./secp256k1-kmp-staging-upload.sh upload # to upload bundles to sonatype's staging area (requires a valid portal token)
+# this script assumes that you have a ~/.m2/settings.xml file that contains the following server definition:
+
+#<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+#          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+#    <servers>
+#        <server>
+#            <id>central_portal</id>
+#            <username>${env.MVN_USER}</username>
+#            <password>${env.MVN_PASS}</password>
+#        </server>
+#    </servers>
+#</settings>
 
 if [[ -z "${VERSION}" ]]; then
   echo "VERSION is not defined"
