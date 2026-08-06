@@ -500,6 +500,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
             free(pubkeys);
             return NULL;
         }
+        (*penv)->DeleteLocalRef(penv, jpubkey);
     }
     result = secp256k1_ec_pubkey_combine(ctx, &combined, (const secp256k1_pubkey* const*)pubkey_ptrs, count);
     free(pubkey_ptrs);
@@ -806,6 +807,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
             free(pubnonces);
             return NULL;
         }
+        (*penv)->DeleteLocalRef(penv, jnonce);
         result = secp256k1_musig_pubnonce_parse(ctx, pubnonce_ptrs[i], in66);
         CHECKRESULT1(!result, "secp256k1_musig_pubnonce_parse failed", free(pubnonce_ptrs); free(pubnonces));
     }
@@ -860,6 +862,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
             free(pubkeys);
             return NULL;
         }
+        (*penv)->DeleteLocalRef(penv, jpubkey);
     }
     result = secp256k1_musig_pubkey_agg(ctx, &combined, jkeyaggcache == NULL ? NULL : &keyaggcache, (const secp256k1_pubkey* const*)pubkey_ptrs, count);
     free(pubkey_ptrs);
@@ -1092,6 +1095,7 @@ JNIEXPORT jbyteArray JNICALL Java_fr_acinq_secp256k1_Secp256k1CFunctions_secp256
             free(psigs);
             return NULL;
         }
+        (*penv)->DeleteLocalRef(penv, jpsig);
         result = secp256k1_musig_partial_sig_parse(ctx, psig_ptrs[i], sig64);
         CHECKRESULT1(!result, "secp256k1_musig_partial_sig_parse failed", free(psig_ptrs); free(psigs));
     }

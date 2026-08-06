@@ -676,4 +676,14 @@ class Secp256k1Test {
             assertTrue(Secp256k1.verify(sig1, message, pub))
         }
     }
+
+    @Test
+    fun aggregateManyPublicKeys() {
+        // this test is mostly useful on Android which limits the number of local references to 512
+        val count = 5000
+        val privs = (1.. count).map { Hex.decode(it.toString().padStart(64, '0')) } // works because digits are valid hex characters
+        val pubs = privs.map { Secp256k1.pubkeyCreate(it) }
+        val agg = Secp256k1.musigPubkeyAgg(pubs.toTypedArray(), null)
+        assertEquals("d5fda99e51e42025fc4d371e1b8f0af77bd3f0a9f508f94d54831e39f03d54a9", Hex.encode(agg))
+    }
 }
