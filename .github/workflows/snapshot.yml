@@ -22,7 +22,7 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: 'true'
       - name: Enable KVM
@@ -38,13 +38,13 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
       - name: Cached Konan
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.konan
           key: ${{ runner.os }}-konan-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-konan-
       - name: Cached Gradle
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.gradle
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
@@ -57,7 +57,7 @@ jobs:
           echo "ANDROID_NDK_VERSION=28.2.13676358" >> $GITHUB_ENV
       - name: Cached Android NDK
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ format('{0}/ndk/{1}', env.ANDROID_HOME, env.ANDROID_NDK_VERSION) }}
           key: ${{ runner.os }}-android-ndk-${{ env.ANDROID_NDK_VERSION }}
@@ -95,10 +95,10 @@ jobs:
         run: |
           echo "skip.android=true" > local.properties
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: 21
-          distribution: 'adopt'
+          distribution: 'temurin'
       - name: Check JVM
         if: matrix.os != 'windows-latest'
         run: ./gradlew jvmTest
@@ -142,7 +142,7 @@ jobs:
           cp -r ~/.m2/repository/* maven-local/snapshot
       - name: Upload linux artifacts
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: snapshot-linux
           path: |
@@ -150,7 +150,7 @@ jobs:
             !maven-local/**/maven-metadata-local.xml
       - name: Upload macos artifacts
         if: matrix.os == 'macOS-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: snapshot-macos
           path: |
@@ -158,7 +158,7 @@ jobs:
             !maven-local/**/maven-metadata-local.xml
       - name: Upload windows artifacts
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: snapshot-windows
           path: |
