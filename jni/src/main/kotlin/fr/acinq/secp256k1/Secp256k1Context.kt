@@ -16,21 +16,13 @@
 package fr.acinq.secp256k1
 
 /**
- * This class holds the context reference used in native methods
- * to handle ECDSA operations.
+ * This class holds the secp256k1 context reference used in JNI code
  */
 public object Secp256k1Context {
+    //static initializer
     @JvmStatic
-    public val isEnabled: Boolean //true if the library is loaded
-    private val context: Long //ref to pointer to context obj
+    private val context: Long = Secp256k1CFunctions.secp256k1_context_create(Secp256k1CFunctions.SECP256K1_CONTEXT_SIGN or Secp256k1CFunctions.SECP256K1_CONTEXT_VERIFY)
 
     @JvmStatic
-    public fun getContext(): Long {
-        return if (!isEnabled) -1 else context //sanity check
-    }
-
-    init { //static initializer
-        isEnabled = true
-        context = Secp256k1CFunctions.secp256k1_context_create(Secp256k1CFunctions.SECP256K1_CONTEXT_SIGN or Secp256k1CFunctions.SECP256K1_CONTEXT_VERIFY)
-    }
+    public fun getContext(): Long = if (context != 0L) context else throw Secp256k1Exception("cannot create secp256k1 context") // context can be NULL if there is no memory available
 }
